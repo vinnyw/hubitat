@@ -142,6 +142,6 @@ private getDeviceDebug() {
 }
 
 private getVersion() {
-	return "1.1.49"
+	return "1.0.00"
 }
 

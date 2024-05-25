@@ -1,60 +1,57 @@
+/**
+ *  Virtual Presence Sensor
+ *
+ *  Copyright 2020 vinnyw
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ */
 metadata {
+	definition (name: "Virtual Presence (Alexa)", namespace: "vinnyw", author: "vinnyw", mcdSync: true, cstHandler: true,
+		mnmn: "SmartThings", vid: "generic-switch", ocfDeviceType: "x.com.st.d.sensor.presence" ) {
 
-	definition (
-		name: "Virtual Switch (Alexa)",
-		namespace: "vinnyw",
-		author: "vinnyw",
-		filename: "virtualSwitchAlexa.groovy",
-		importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/master/drivers/virtualSwitchAlexa.groovy"
-	)
-	
-	{
-
-		capability "Actuator"
-		capability "Switch"
+		capability "Actuator"        
+		capability "Presence Sensor"
 		capability "Contact Sensor"
+		capability "Switch"
 		capability "Health Check"
 
-		command "on"
-		command "off"
+		command "arrived"
+		command "departed"
+	}
 
+	simulator {
+		// TODO
 	}
 
 	tiles {
-
-		standardTile("switch", "device.switch", decoration: "flat", width: 3, height: 2, canChangeIcon: true, canChangeBackground: true) {
-			state "off", label: '${currentValue}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff", nextState:"on"
-			state "on", label: '${currentValue}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#00A0DC", nextState:"off"
+		standardTile("presence", "device.presence", width: 3, height: 3, canChangeIcon: false, canChangeBackground: true) {
+			state("present", label: '${currentValue}', icon:"st.presence.tile.mobile-present", backgroundColor:"#00A0DC")
+			state("not present", label: '${currentValue}', icon:"st.presence.tile.mobile-not-present", backgroundColor:"#FFFFFF")
 		}
 
-		main(["switch"])
-		details(["switch"])
+		standardTile("switch", "device.switch", decoration: "flat", width: 3, height: 3, canChangeIcon: false, canChangeBackground: true) {
+			state("off", action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#00A0DC")
+			state("on", action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#FFFFFF")
+		}
+
+ 		main(["switch"])
+		details(["presense","switch"])
 	}
 
 	preferences {
 		input name: "deviceReset", type: "boolean", title: "Auto reset?", defaultValue: false, required: true
 		input name: "deviceEvent", type: "boolean", title: "Ignore state?", defaultValue: false, required: true
 		input name: "deviceDebug", type: "boolean", title: "Debug log?", defaultValue: false, required: true
-		input type: "paragraph", element: "paragraph", title: "Virtual Switch (Alexa)", description: "${version}", displayDuringSetup: false
+		input type: "paragraph", element: "paragraph", title: "Virtual Presense (Alexa)", description: "${version}", displayDuringSetup: false
 	}
 
-}
-
-static String version() { "1.0.0" }
-// @Field String 		VERSION = "1.0.0"
-// @Field List<String> LOG_LEVELS = ["error", "warn", "info", "debug", "trace"]
-// @Field String 		DEFAULT_LOG_LEVEL = LOG_LEVELS[1]
-
-def checkVersion() {
-	if (state.driverVersion == null || driverVersionAndTimeStamp() != state.driverVersion) {
-		logDebug "updating the settings from the current driver version ${state.driverVersion} to the new version ${driverVersionAndTimeStamp()}"
-		sendInfoEvent("Updated to version ${driverVersionAndTimeStamp()}")
-		state.driverVersion = driverVersionAndTimeStamp()
-		initializeVars(fullInit = false)
-	}
-	else {
-		// no version change
-	}
 }
 
 def installed() {
@@ -102,7 +99,8 @@ def on() {
 		return
 	}
 
-	sendEvent(name: "switch", value: "on", isStateChange: true)
+	sendEvent(name: "presence", value: "present", isStateChange: true)
+	sendEvent(name: "switch", value: "on", isStateChange: true, displayed: false)
 	sendEvent(name: "contact", value: "closed", isStateChange: true, displayed: false)
 
 	if (deviceReset) {
@@ -123,13 +121,30 @@ def off() {
 	}
 
 	unschedule()
-	sendEvent(name: "switch", value: "off", isStateChange: true)
+	sendEvent(name: "presence", value: "not present", isStateChange: true)
+	sendEvent(name: "switch", value: "off", isStateChange: true, displayed: false)
 
 	if (deviceReset) {
 		sendEvent(name: "contact", value: "", isStateChange: false, displayed: false)
 	} else {
 		sendEvent(name: "contact", value: "open", isStateChange: true, displayed: false)
 	}
+}
+
+def arrived() {
+	if (deviceDebug) {
+		writeLog("arrived()")
+	}
+
+	on()
+}
+
+def departed() {
+	if (deviceDebug) {
+		writeLog("departed()")
+	}
+
+	off()
 }
 
 private writeLog(message, type = "DEBUG") {
@@ -168,6 +183,6 @@ private getDeviceDebug() {
 }
 
 private getVersion() {
-	return "1.1.49"
+	return "1.0.3"
 }
 
