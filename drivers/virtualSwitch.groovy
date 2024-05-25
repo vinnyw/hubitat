@@ -1,7 +1,14 @@
 metadata {
-
-	definition ( name: "Virtual Switch", namespace: "vinnyw", author: "vinnyw", mcdSync: true,
-		mnmn: "SmartThings", vid: "generic-switch", ocfDeviceType: "oic.d.switch") {
+	
+	definition (
+		name: "Virtual Switch", 
+		namespace: "vinnyw", 
+		author: "vinnyw", 
+		filename: "virtualSwitch.groovy", 
+		importUrl: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/zigbee-generic-switch-expanded.groovy"
+	) 
+	
+	{
 
 		capability "Actuator"
 		capability "Switch"
@@ -20,6 +27,7 @@ metadata {
 
 		main(["switch"])
 		details(["switch"])
+
 	}
 
 	preferences {
