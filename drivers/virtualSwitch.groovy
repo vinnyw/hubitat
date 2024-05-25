@@ -5,11 +5,10 @@ metadata {
 		namespace: "vinnyw", 
 		author: "vinnyw", 
 		filename: "virtualSwitch.groovy", 
-		importUrl: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/zigbee-generic-switch-expanded.groovy"
+		importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/master/drivers/virtualSwitch.groovy"
 	) 
 	
 	{
-
 		capability "Actuator"
 		capability "Switch"
 		capability "Health Check"
