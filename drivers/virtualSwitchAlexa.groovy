@@ -7,98 +7,54 @@ metadata {
 		filename: "virtualSwitchAlexa.groovy",
 		importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/master/drivers/virtualSwitchAlexa.groovy"
 	)
-	
+
 	{
 
-		capability "Actuator"
-		capability "Switch"
-		capability "Contact Sensor"
-		capability "Health Check"
+	    capability "Sensor"
+        capability "Switch"
+        capability "Contact Sensor"
 
 		command "on"
 		command "off"
 
 	}
 
-	tiles {
-
-		standardTile("switch", "device.switch", decoration: "flat", width: 3, height: 2, canChangeIcon: true, canChangeBackground: true) {
-			state "off", label: '${currentValue}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff", nextState:"on"
-			state "on", label: '${currentValue}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#00A0DC", nextState:"off"
-		}
-
-		main(["switch"])
-		details(["switch"])
-	}
-
 	preferences {
-		input name: "deviceReset", type: "boolean", title: "Auto reset?", defaultValue: false, required: true
-		input name: "deviceEvent", type: "boolean", title: "Ignore state?", defaultValue: false, required: true
-		input name: "deviceDebug", type: "boolean", title: "Debug log?", defaultValue: false, required: true
-		input type: "paragraph", element: "paragraph", title: "Virtual Switch (Alexa)", description: "${version}", displayDuringSetup: false
+		input name: "deviceReset", type: "bool", title: "Auto reset?", defaultValue: false, required: true
+		input name: "deviceEvent", type: "bool", title: "Ignore state?", defaultValue: false, required: true
+		//input name: "deviceDebug", type: "bool", title: "Debug log?", defaultValue: false, required: true
 	}
 
-}
-
-static String version() { "1.0.0" }
-// @Field String 		VERSION = "1.0.0"
-// @Field List<String> LOG_LEVELS = ["error", "warn", "info", "debug", "trace"]
-// @Field String 		DEFAULT_LOG_LEVEL = LOG_LEVELS[1]
-
-def checkVersion() {
-	if (state.driverVersion == null || driverVersionAndTimeStamp() != state.driverVersion) {
-		logDebug "updating the settings from the current driver version ${state.driverVersion} to the new version ${driverVersionAndTimeStamp()}"
-		sendInfoEvent("Updated to version ${driverVersionAndTimeStamp()}")
-		state.driverVersion = driverVersionAndTimeStamp()
-		initializeVars(fullInit = false)
-	}
-	else {
-		// no version change
-	}
 }
 
 def installed() {
-	if (deviceDebug) {
-		writeLog("installed()")
-		writeLog("settings: $settings", "INFO")
-		writeLog("state: $state", "INFO")
-	}
-
-	state.clear()
 	initialize()
-	off()
-}
-
-private initialize() {
-	if (deviceDebug) {
-		writeLog("initialize()")
-		writeLog("settings: $settings", "INFO")
-		writeLog("state: $state", "INFO")
-	}
-
-	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme: "untracked"].encodeAsJson(), displayed: false)
-	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online", displayed: false)
-	sendEvent(name: "healthStatus", value: "online", displayed: false)
 }
 
 def updated() {
-	if (deviceDebug) {
-		writeLog("updated()")
-		writeLog("settings: $settings", "INFO")
-		writeLog("state: $state", "INFO")
-	}
+	initialize()
+}
 
+def initialize() {
+    //if (deviceDebug) {
+	//	writeLog("initialize()")
+	//	writeLog("settings: $settings", "INFO")
+	//	writeLog("state: $state", "INFO")
+	//}
+
+    sendEvent(name: "switch", value: "off")
+	sendEvent(name: "contact", value: "open")
 }
 
 def on() {
-	if (deviceDebug) {
-		writeLog("on()")
-	}
+	//if (deviceDebug) {
+	//	writeLog("on()")
+	//}
 
-	if ((device.currentValue("switch") == "on") && !deviceEvent) {
-		if (deviceDebug) {
-			writeLog("no action required.")
-		}
+	if (device.currentValue("switch") == "on") {
+		//if (deviceDebug) {
+		//	writeLog("no action required.")
+		//}
 		return
 	}
 
@@ -106,19 +62,20 @@ def on() {
 	sendEvent(name: "contact", value: "closed", isStateChange: true, displayed: false)
 
 	if (deviceReset) {
-		runIn(1, "off", [overwrite: true])
+		runIn(2, "off", [overwrite: true])
 	}
+
 }
 
 def off() {
-	if (deviceDebug) {
-		writeLog("off()")
-	}
+	//if (deviceDebug) {
+	//	writeLog("off()")
+	//}
 
-	if ((device.currentValue("switch") == "off") && !deviceEvent) {
-		if (deviceDebug) {
-			writeLog("no action required.")
-		}
+	if (device.currentValue("switch") == "off") {
+		//if (deviceDebug) {
+		//	writeLog("no action required.")
+		//}
 		return
 	}
 
@@ -155,19 +112,7 @@ private writeLog(message, type = "DEBUG") {
 	}
 }
 
-private getDeviceReset() {
-	return (settings.deviceReset != null) ? settings.deviceReset.toBoolean() : false
-}
-
-private getDeviceEvent() {
-	return (settings.deviceEvent != null) ? settings.deviceEvent.toBoolean() : false
-}
-
-private getDeviceDebug() {
-	return (settings.deviceDebug != null) ? settings.deviceDebug.toBoolean() : false
-}
-
 private getVersion() {
-	return "1.1.49"
+	return "1.0.0"
 }
 
