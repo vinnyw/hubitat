@@ -11,11 +11,10 @@ metadata {
 	{
 		capability "Actuator"
 		capability "Switch"
-		capability "Health Check"
-
+		capability "Sensor"
 		command "on"
 		command "off"
-	}
+    }
 
 	tiles {
 
@@ -30,10 +29,11 @@ metadata {
 	}
 
 	preferences {
-		input name: "deviceReset", type: "boolean", title: "Auto reset?", defaultValue: false, required: true
-		input name: "deviceEvent", type: "boolean", title: "Ignore state?", defaultValue: false, required: true
-		input name: "deviceDebug", type: "boolean", title: "Debug log?", defaultValue: false, required: true
-		input type: "paragraph", element: "paragraph", title: "Virtual Switch", description: "${version}", displayDuringSetup: false
+		input name: "deviceReset", type: "bool", title: "Auto reset?", defaultValue: false, required: true
+		input name: "deviceEvent", type: "bool", title: "Ignore state?", defaultValue: false, required: true
+		input name: "deviceDebug", type: "bool", title: "Debug log?", defaultValue: false, required: true
+
+		input type: "paragraph", element: "paragraph", description: "${version}"
 	}
 
 }
