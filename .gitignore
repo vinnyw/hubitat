@@ -1,0 +1,11 @@
+logs/
+temp/
+data/
+.vscode/
+.creds/
+.env
+*~
+*.swp
+.pyc
+**/__pycache__
+**/.DS_Store
