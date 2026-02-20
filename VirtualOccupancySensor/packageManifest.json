@@ -4,7 +4,7 @@
     "minimumHEVersion": "2.3.0",
     "version": "3.6.9",
     "dateReleased": "2026-02-20",
-    "releaseNotes": "• Case-insensitive logging\n• Invalid enum auto-correction with forced warning\n• Clean occupied/unoccupied buttons\n• Deterministic event suppression\n• Logging level enum (Off → Trace)",
+    "releaseNotes": "• Case-insensitive logging\n• Invalid enum auto-correction with forced warning\n• Clean occupied/unoccupied buttons\n• Deterministic event suppression\n• Logging level enum (Off → Trace)\n• Add missing capability",
     "documentationLink": "https://github.com/vinnyw/hubitat",
     "communityLink": "",
     "drivers": [

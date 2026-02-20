@@ -5,7 +5,7 @@
  *
  *  Author      : vinny wadding
  *  Namespace   : vinnyw
- *  Version     : 3.6.9
+ *  Version     : 3.6.10
  *  Date        : 2026-02-20
  *
  *  Description :
@@ -18,6 +18,7 @@
  *
  *      Capabilities:
  *          Sensor
+ *          Sensor
  *          Configuration
  *          Refresh
  *
@@ -28,7 +29,7 @@ import groovy.transform.Field
 
 /* ===================== CONSTANTS ===================== */
 
-@Field static final String DRIVER_VERSION = "3.6.9"
+@Field static final String DRIVER_VERSION = "3.6.10"
 @Field static final Integer Debug_AUTO_DISABLE_SECONDS = 1800
 
 /* ===================== METADATA ===================== */
@@ -40,6 +41,7 @@ metadata {
         author: "vinny wadding",
         importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/refs/heads/master/VirtualOccupancySensor/drivers/VirtualOccupancySensor.groovy"
     ) {
+        capability "Actuator"
         capability "Sensor"
         capability "Configuration"
         capability "Refresh"
