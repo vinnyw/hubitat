@@ -35,7 +35,7 @@ import groovy.transform.Field
 
 metadata {
     definition(
-        name: "Virtual Room Occupancy",
+        name: "Virtual Occupancy Sensor",
         namespace: "vinnyw",
         author: "vinny wadding",
         importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/refs/heads/master/VirtualOccupancySensor/drivers/VirtualOccupancySensor.groovy"
