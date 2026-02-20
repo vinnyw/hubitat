@@ -1,0 +1,19 @@
+{
+    "packageName": "Virtual Occupancy Sensor",
+    "author": "vinny wadding",
+    "minimumHEVersion": "2.3.0",
+    "version": "3.6.9",
+    "dateReleased": "2026-02-20",
+    "releaseNotes": "• Case-insensitive logging\n• Invalid enum auto-correction with forced warning\n• Clean occupied/unoccupied buttons\n• Deterministic event suppression\n• Logging level enum (Off → Trace)",
+    "documentationLink": "https://github.com/vinnyw/hubitat",
+    "communityLink": "",
+    "drivers": [
+        {
+            "id": "virtual-occupancy-sensor",
+            "name": "Virtual Occupancy Sensor",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/main/VirtualOccupancySensor/drivers/VirtualOccupancySensor.groovy",
+            "required": true
+        }
+    ]
+}
