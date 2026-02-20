@@ -1,10 +1,10 @@
 /**
  *  --------------------------------------------------------------------------------------------------------------
- *  Virtual Room Occupancy Sensor (Pure Custom Hidden Switch)
+ *  Virtual Occupancy Sensor
  *  --------------------------------------------------------------------------------------------------------------
  *
- *  Author      : Custom
- *  Namespace   : hubitat
+ *  Author      : vinny wadding
+ *  Namespace   : vinnyw
  *  Version     : 3.6.9
  *  Date        : 2026-02-20
  *
@@ -38,7 +38,7 @@ metadata {
         name: "Virtual Room Occupancy",
         namespace: "vinnyw",
         author: "vinny wadding",
-        importUrl: "https://raw.githubusercontent.com/yourusername/yourrepo/main/Virtual_Room_Occupancy.groovy"
+        importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/refs/heads/master/VirtualOccupancySensor/drivers/VirtualOccupancySensor.groovy"
     ) {
         capability "Sensor"
         capability "Configuration"
