@@ -99,7 +99,7 @@ def configure() {
     }
 
     if (!device.currentValue("switch")) {
-        sendEvent(name: "switch", value: "Off", displayed: false, isStateChange: false)
+        sendEvent(name: "switch", value: "off", displayed: false, isStateChange: false)
     }
 
     if (!device.currentValue("lastActivity")) {
