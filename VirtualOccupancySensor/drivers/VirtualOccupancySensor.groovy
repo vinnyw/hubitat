@@ -1,15 +1,15 @@
 /**
  *  --------------------------------------------------------------------------------------------------------------
- *  Virtual Room Occupancy Sensor (Pure Custom Hidden Switch)
+ *  Virtual Occupancy Sensor
  *  --------------------------------------------------------------------------------------------------------------
  *
- *  Author      : Custom
- *  Namespace   : hubitat
+ *  Author      : vinny wadding
+ *  Namespace   : vinnyw
  *  Version     : 3.7.0
  *  Date        : 2026-03-02
  *
  *  Description :
- *      Virtual occupancy device
+ *      Virtual occupancy sensor
  *
  *      Attributes:
  *          occupancy     (enum)    : occupied / unoccupied
