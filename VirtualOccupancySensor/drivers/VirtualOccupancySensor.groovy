@@ -9,7 +9,7 @@
  *  Date        : 2026-03-02
  *
  *  Description :
- *      Virtual occupancy device using custom attribute model.
+ *      Virtual occupancy device
  *
  *      Attributes:
  *          occupancy     (enum)    : occupied / unoccupied
@@ -32,10 +32,10 @@ import groovy.transform.Field
 
 metadata {
     definition(
-        name: "Virtual Room Occupancy Sensor (Pure Custom Hidden Switch)",
-        namespace: "hubitat",
-        author: "Custom",
-        importUrl: "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/Virtual_Room_Occupancy_Sensor.groovy"
+        name: "Virtual Occupancy Sensor",
+        namespace: "vinnyw",
+        author: "vinny wadding",
+        importUrl: "https://raw.githubusercontent.com/vinnyw/hubitat/refs/heads/master/VirtualOccupancySensor/drivers/VirtualOccupancySensor.groovy"
     ) {
         capability "Sensor"
         capability "Actuator"
@@ -43,7 +43,7 @@ metadata {
         capability "Refresh"
 
         attribute "occupancy", "enum", ["occupied", "unoccupied"]
-        attribute "switch", "string"
+        attribute "switch", "enum", ["on", "off"]
         attribute "lastActivity", "number"
 
         command "occupied"
@@ -111,6 +111,9 @@ def refresh() {
 
 def occupied() { changeOccupancyState("occupied", "on") }
 def unoccupied() { changeOccupancyState("unoccupied", "off") }
+
+def on()  { occupied() }
+def off() { unoccupied() }
 
 def toggleOccupancy() {
     if (device.currentValue("occupancy") == "occupied") {
