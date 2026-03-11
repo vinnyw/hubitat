@@ -1,0 +1,21 @@
+{
+    "id": "b78f4d86",
+    "packageName": "Virtual Presence Sensor",
+    "author": "vinny wadding",
+    "minimumHEVersion": "2.3.0",
+    "version": "1.2.0",
+    "dateReleased": "2026-03-11",
+    "releaseNotes": "• Mark events as digital\n• Debugging Tweaks\n• Initial Release",
+    "documentationLink": "https://github.com/vinnyw/hubitat",
+    "communityLink": "",
+    "tags": "Presence & Location, Misc. Devices",
+    "drivers": [
+        {
+            "id": "b78f4d86-da62-4cb2-9d5c-da7bbd7dc493",
+            "name": "Virtual Presence Sensor",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualPresenceSensor/Drivers/VirtualPresenceSensor.groovy",
+            "required": true
+        }
+    ]
+}
