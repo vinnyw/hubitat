@@ -9,7 +9,7 @@
  *  Date        : 2026-03-02
  *
  *  Description :
- *      Virtual occupancy sensor
+ *      Virtual Occupancy Sensor
  *
  *      Attributes:
  *          occupancy     (enum)    : occupied / unoccupied
