@@ -5,7 +5,7 @@
  *
  *  Author      : vinny wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.0
+ *  Version     : 1.2.0
  *  Date        : 2026-03-11
  *
  *  Description :
@@ -27,7 +27,7 @@
 
 import groovy.transform.Field
 
-@Field static final String DRIVER_VERSION = '1.1.0'
+@Field static final String DRIVER_VERSION = '1.2.0'
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 metadata {
@@ -87,22 +87,22 @@ def configure() {
     }
 
     if (!device.currentValue('presence')) {
-        sendEvent(name: 'presence', value: 'not present', isStateChange: false)
+        sendEvent(name: 'presence', value: 'not present', isStateChange: false, type: 'digital')
     }
 
     if (!device.currentValue('switch')) {
-        sendEvent(name: 'switch', value: 'off', displayed: false, isStateChange: false)
+        sendEvent(name: 'switch', value: 'off', displayed: false, isStateChange: false, type: 'digital')
     }
 
     if (!device.currentValue('lastActivity')) {
-        sendEvent(name: 'lastActivity', value: now(), displayed: false)
+        sendEvent(name: 'lastActivity', value: now(), displayed: false, type: 'digital')
     }
 }
 
 def refresh() {
-    sendEvent(name: 'presence', value: device.currentValue('presence'), isStateChange: false)
-    sendEvent(name: 'switch', value: device.currentValue('switch'), displayed: false, isStateChange: false)
-    sendEvent(name: 'lastActivity', value: device.currentValue('lastActivity'), displayed: false, isStateChange: false)
+    sendEvent(name: 'presence', value: device.currentValue('presence'), isStateChange: false, type: 'digital')
+    sendEvent(name: 'switch', value: device.currentValue('switch'), displayed: false, isStateChange: false, type: 'digital')
+    sendEvent(name: 'lastActivity', value: device.currentValue('lastActivity'), displayed: false, isStateChange: false, type: 'digital')
 
     if (txtEnable) {
         log.info "${device.displayName} was refreshed"
@@ -126,9 +126,9 @@ def togglePresence() {
 private void changePresenceState(String pres, String sw) {
     if (device.currentValue('presence') == pres) return
 
-    sendEvent(name: 'presence', value: pres)
-    sendEvent(name: 'switch', value: sw, displayed: false)
-    sendEvent(name: 'lastActivity', value: now(), displayed: false)
+    sendEvent(name: 'presence', value: pres, type: 'digital')
+    sendEvent(name: 'switch', value: sw, displayed: false, type: 'digital')
+    sendEvent(name: 'lastActivity', value: now(), displayed: false, type: 'digital')
 
     if (txtEnable) {
         log.info "${device.displayName} presence is ${pres}"
