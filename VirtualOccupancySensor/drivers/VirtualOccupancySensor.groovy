@@ -6,7 +6,7 @@
  *  Author      : vinny wadding
  *  Namespace   : vinnyw
  *  Version     : 3.7.1
- *  Date        : 2026-03-02
+ *  Date        : 2026-03-03
  *
  *  Description :
  *      Virtual Occupancy Sensor
