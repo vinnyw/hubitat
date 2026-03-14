@@ -24,8 +24,8 @@
 // @match        https://*/driver/list*
 
 // auto-update
-// @downloadURL  https://raw.githubusercontent.com/vinnyw/hubitat/main/Tools/Hubitat-Timestamp/hubitat-timestamp.user.js
-// @updateURL    https://raw.githubusercontent.com/vinnyw/hubitat/main/Tools/hubitat-timestamp/hubitat-timestamp-script/hubitat-timestamp.meta.js
+// @downloadURL  https://raw.githubusercontent.com/vinnyw/hubitat/master/Tools/Hubitat-Timestamp/hubitat-timestamp.user.js
+// @updateURL    https://raw.githubusercontent.com/vinnyw/hubitat/master/Tools/Hubitat-Timestamp/hubitat-timestamp.meta.js
 
 // @run-at       document-end
 // @grant        none
