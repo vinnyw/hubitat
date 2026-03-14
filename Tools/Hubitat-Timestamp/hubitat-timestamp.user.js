@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Hubitat Timestamp Converter
-// @version      16.2
+// @version      16.3
 // @description  Hubitat UI timestamp conversion
 // @namespace    vinnyw
 // @author       vinnyw
@@ -22,6 +22,10 @@
 // @match        https://*/driver/*
 // @match        http://*/driver/list*
 // @match        https://*/driver/list*
+// @match        http://*/library/*
+// @match        https://*/library/*
+// @match        http://*/library/list*
+// @match        https://*/library/list*
 
 // auto-update
 // @downloadURL  https://raw.githubusercontent.com/vinnyw/hubitat/master/Tools/Hubitat-Timestamp/hubitat-timestamp.user.js
