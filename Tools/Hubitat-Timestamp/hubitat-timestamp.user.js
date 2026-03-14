@@ -4,7 +4,7 @@
 // @description  Hubitat UI timestamp conversion
 // @namespace    vinnyw
 // @author       vinnyw
-
+//
 // pages 
 // @match        http://*/device/*
 // @match        https://*/device/*
@@ -26,11 +26,11 @@
 // @match        https://*/library/*
 // @match        http://*/library/list*
 // @match        https://*/library/list*
-
+//
 // auto-update
 // @downloadURL  https://raw.githubusercontent.com/vinnyw/hubitat/master/Tools/Hubitat-Timestamp/hubitat-timestamp.user.js
 // @updateURL    https://raw.githubusercontent.com/vinnyw/hubitat/master/Tools/Hubitat-Timestamp/hubitat-timestamp.meta.js
-
+//
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
