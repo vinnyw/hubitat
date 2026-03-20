@@ -1,0 +1,31 @@
+{
+  "packageName": "Neo Smart Controller Integration",
+  "author": "Vinny",
+  "version": "1.0.0",
+  "minimumHEVersion": "2.3.9",
+  "dateReleased": "2026-03-18",
+  "category": "Convenience",
+  "drivers": [
+    {
+      "id": "neo-controller-parent",
+      "name": "Neo Controller",
+      "namespace": "vinny",
+      "location": "drivers/NeoController.groovy",
+      "required": true
+    },
+    {
+      "id": "neo-room-child",
+      "name": "Neo Room",
+      "namespace": "vinny",
+      "location": "drivers/NeoRoom.groovy",
+      "required": true
+    },
+    {
+      "id": "neo-blind-child",
+      "name": "Neo Blind",
+      "namespace": "vinny",
+      "location": "drivers/NeoBlind.groovy",
+      "required": true
+    }
+  ]
+}
