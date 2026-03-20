@@ -23,9 +23,9 @@
  */
 
 /* groovylint-disable-next-line ImplicitReturnStatement */
-static String version() { '3.0.6g' }
+static String version() { '3.0.6h' }
 /* groovylint-disable-next-line ImplicitReturnStatement */
-static String timeStamp() { '2026/03/20 17:12' }
+static String timeStamp() { '2026/03/20 21:58' }
 
 @Field static final boolean _DEBUG = false
 
@@ -1022,8 +1022,8 @@ void parseGeneralCommandResponse(final Map descMap) { // library marker kkossev.
     final int commandId = hexStrToUnsignedInt(descMap.command) // library marker kkossev.commonLib, line 431
     switch (commandId) { // library marker kkossev.commonLib, line 432
         case 0x01:
-                // battery spam ignored
-                break // library marker kkossev.commonLib, line 435
+            // battery spam ignored
+            break // library marker kkossev.commonLib, line 435
         case 0x04: // write attribute response // library marker kkossev.commonLib, line 436
             parseWriteAttributeResponse(descMap) // library marker kkossev.commonLib, line 437
             break // library marker kkossev.commonLib, line 438
@@ -1519,8 +1519,8 @@ void parseGroupsCluster(final Map descMap) { // library marker kkossev.commonLib
             } // library marker kkossev.commonLib, line 928
             break // library marker kkossev.commonLib, line 929
         case 0x01:
-                // battery spam ignored
-                break // library marker kkossev.commonLib, line 944
+            // battery spam ignored
+            break // library marker kkossev.commonLib, line 944
         case 0x02: // Get group membership // library marker kkossev.commonLib, line 945
             final List<String> data = descMap.data as List<String> // library marker kkossev.commonLib, line 946
             final int capacity = hexStrToUnsignedInt(data[0]) // library marker kkossev.commonLib, line 947
@@ -1560,8 +1560,8 @@ void parseGroupsCluster(final Map descMap) { // library marker kkossev.commonLib
             logWarn 'not implemented!' // library marker kkossev.commonLib, line 981
             break // library marker kkossev.commonLib, line 982
         case 0x05:
-                // RSSI ignored
-                break // library marker kkossev.commonLib, line 987
+            // RSSI ignored
+            break // library marker kkossev.commonLib, line 987
         default: // library marker kkossev.commonLib, line 988
             logWarn "received unknown GROUPS cluster command: ${descMap.command} (${descMap})" // library marker kkossev.commonLib, line 989
             break // library marker kkossev.commonLib, line 990
@@ -3675,7 +3675,7 @@ void parseXiaomiClusterLib(final Map descMap) {
     if (attrInt in [0x0129]) {
         return
     }
- // library marker kkossev.xiaomiLib, line 68
+    // library marker kkossev.xiaomiLib, line 68
     if (settings.logEnable) { // library marker kkossev.xiaomiLib, line 69
         logTrace "zigbee received xiaomi cluster attribute 0x${descMap.attrId} (value ${descMap.value})" // library marker kkossev.xiaomiLib, line 70
     } // library marker kkossev.xiaomiLib, line 71
