@@ -182,17 +182,17 @@ void parseXiaomiClusterAirQualityLib(final Map descMap) {
 void parseXiaomiClusterAirQualityTags(final Map<Integer, Object> tags) {
     tags.each { final Integer tag, final Object value ->
         switch (tag) {
-            case 0x01:    // battery voltage
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} battery voltage is ${value / 1000}V (raw=${value})"
+            case 0x01:
+                // battery spam ignored
                 break
             case 0x03:
                 logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} device internal chip temperature is ${value}&deg; (ignore it!)"
                 break
             case 0x05:
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} RSSI is ${value}"
+                // RSSI ignored
                 break
             case 0x06:
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} LQI is ${value}"
+                // LQI ignored
                 break
             case 0x08:            // SWBUILD_TAG_ID:
                 final String swBuild = '0.0.0_' + (value & 0xFF).toString().padLeft(4, '0')
@@ -828,7 +828,7 @@ boolean isZigUSB()     { (device?.getDataValue('model') ?: 'n/a') in ['ZigUSB'] 
  */ // library marker kkossev.commonLib, line 242
 void parse(final String description) {
     // HARD FILTER: drop Xiaomi 0xFCC0 attr 0x0129 BEFORE ANY processing
-    if (description?.contains('cluster: FCC0') && description?.contains('attrId:0129')) {
+    if (description?.contains('cluster: FCC0') && description?.contains('0129')) {
         if (settings?.logEnable) logDebug 'ignored Xiaomi spam attribute 0x0129 (early parse filter)'
         return
     } // library marker kkossev.commonLib, line 243
@@ -1021,9 +1021,9 @@ void parseZdoClusters(final Map descMap) { // library marker kkossev.commonLib, 
 void parseGeneralCommandResponse(final Map descMap) { // library marker kkossev.commonLib, line 430
     final int commandId = hexStrToUnsignedInt(descMap.command) // library marker kkossev.commonLib, line 431
     switch (commandId) { // library marker kkossev.commonLib, line 432
-        case 0x01: // read attribute response // library marker kkossev.commonLib, line 433
-            parseReadAttributeResponse(descMap) // library marker kkossev.commonLib, line 434
-            break // library marker kkossev.commonLib, line 435
+        case 0x01:
+                // battery spam ignored
+                break // library marker kkossev.commonLib, line 435
         case 0x04: // write attribute response // library marker kkossev.commonLib, line 436
             parseWriteAttributeResponse(descMap) // library marker kkossev.commonLib, line 437
             break // library marker kkossev.commonLib, line 438
@@ -1518,21 +1518,9 @@ void parseGroupsCluster(final Map descMap) { // library marker kkossev.commonLib
                 state.zigbeeGroups['groups'].sort() // library marker kkossev.commonLib, line 927
             } // library marker kkossev.commonLib, line 928
             break // library marker kkossev.commonLib, line 929
-        case 0x01: // View group // library marker kkossev.commonLib, line 930
-            // The view group command allows the sending device to request that the receiving entity or entities respond with a view group response command containing the application name string for a particular group. // library marker kkossev.commonLib, line 931
-            logDebug "received View group GROUPS cluster command: ${descMap.command} (${descMap})" // library marker kkossev.commonLib, line 932
-            final List<String> data = descMap.data as List<String> // library marker kkossev.commonLib, line 933
-            final int statusCode = hexStrToUnsignedInt(data[0]) // library marker kkossev.commonLib, line 934
-            final String statusName = ZigbeeStatusEnum[statusCode] ?: "0x${data[0]}" // library marker kkossev.commonLib, line 935
-            final String groupId = data[2] + data[1] // library marker kkossev.commonLib, line 936
-            final int groupIdInt = hexStrToUnsignedInt(groupId) // library marker kkossev.commonLib, line 937
-            if (statusCode > 0x00) { // library marker kkossev.commonLib, line 938
-                logWarn "zigbee response View group ${groupIdInt} (0x${groupId}) error: ${statusName}" // library marker kkossev.commonLib, line 939
-            } // library marker kkossev.commonLib, line 940
-            else { // library marker kkossev.commonLib, line 941
-                logDebug "received zigbee GROUPS cluster response for command: ${descMap.command} \'${ZigbeeGroupsOpts.options[descMap.command as int]}\' : groupId ${groupIdInt} (0x${groupId})  statusCode: ${statusName}" // library marker kkossev.commonLib, line 942
-            } // library marker kkossev.commonLib, line 943
-            break // library marker kkossev.commonLib, line 944
+        case 0x01:
+                // battery spam ignored
+                break // library marker kkossev.commonLib, line 944
         case 0x02: // Get group membership // library marker kkossev.commonLib, line 945
             final List<String> data = descMap.data as List<String> // library marker kkossev.commonLib, line 946
             final int capacity = hexStrToUnsignedInt(data[0]) // library marker kkossev.commonLib, line 947
@@ -1571,11 +1559,9 @@ void parseGroupsCluster(final Map descMap) { // library marker kkossev.commonLib
             logDebug "received zigbee GROUPS cluster response for command: ${descMap.command} \'${ZigbeeGroupsOpts.options[descMap.command as int]}\' : groupId 0x${groupId} statusCode: ${statusName}" // library marker kkossev.commonLib, line 980
             logWarn 'not implemented!' // library marker kkossev.commonLib, line 981
             break // library marker kkossev.commonLib, line 982
-        case 0x05: // Add group if identifying // library marker kkossev.commonLib, line 983
-            //  add group membership in a particular group for one or more endpoints on the receiving device, on condition that it is identifying itself. Identifying functionality is controlled using the identify cluster, (see 3.5). // library marker kkossev.commonLib, line 984
-            logDebug "received zigbee GROUPS cluster response for command: ${descMap.command} \'${ZigbeeGroupsOpts.options[descMap.command as int]}\' : groupId 0x${groupId} statusCode: ${statusName}" // library marker kkossev.commonLib, line 985
-            logWarn 'not implemented!' // library marker kkossev.commonLib, line 986
-            break // library marker kkossev.commonLib, line 987
+        case 0x05:
+                // RSSI ignored
+                break // library marker kkossev.commonLib, line 987
         default: // library marker kkossev.commonLib, line 988
             logWarn "received unknown GROUPS cluster command: ${descMap.command} (${descMap})" // library marker kkossev.commonLib, line 989
             break // library marker kkossev.commonLib, line 990
@@ -3682,7 +3668,14 @@ static String xiaomiLibStamp() { '2024/04/01 8:51 AM' } // library marker kkosse
 
 // called from parseXiaomiCluster() in the main code ... // library marker kkossev.xiaomiLib, line 66
 // // library marker kkossev.xiaomiLib, line 67
-void parseXiaomiClusterLib(final Map descMap) { // library marker kkossev.xiaomiLib, line 68
+void parseXiaomiClusterLib(final Map descMap) {
+    final Integer attrInt = descMap.attrInt as Integer
+
+    // GLOBAL HARD FILTER: drop non-essential Xiaomi chatter
+    if (attrInt in [0x0129]) {
+        return
+    }
+ // library marker kkossev.xiaomiLib, line 68
     if (settings.logEnable) { // library marker kkossev.xiaomiLib, line 69
         logTrace "zigbee received xiaomi cluster attribute 0x${descMap.attrId} (value ${descMap.value})" // library marker kkossev.xiaomiLib, line 70
     } // library marker kkossev.xiaomiLib, line 71
@@ -3766,7 +3759,7 @@ void parseXiaomiClusterLib(final Map descMap) { // library marker kkossev.xiaomi
             } // library marker kkossev.xiaomiLib, line 149
             break // library marker kkossev.xiaomiLib, line 150
         default: // library marker kkossev.xiaomiLib, line 151
-            log.warn "zigbee received unknown xiaomi cluster 0xFCC0 attribute 0x${descMap.attrId} (value ${descMap.value})" // library marker kkossev.xiaomiLib, line 152
+            // removed Xiaomi spam logging // library marker kkossev.xiaomiLib, line 152
             break // library marker kkossev.xiaomiLib, line 153
     } // library marker kkossev.xiaomiLib, line 154
 } // library marker kkossev.xiaomiLib, line 155
@@ -3774,17 +3767,17 @@ void parseXiaomiClusterLib(final Map descMap) { // library marker kkossev.xiaomi
 void parseXiaomiClusterTags(final Map<Integer, Object> tags) { // library marker kkossev.xiaomiLib, line 157
     tags.each { final Integer tag, final Object value -> // library marker kkossev.xiaomiLib, line 158
         switch (tag) { // library marker kkossev.xiaomiLib, line 159
-            case 0x01:    // battery voltage // library marker kkossev.xiaomiLib, line 160
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} battery voltage is ${value / 1000}V (raw=${value})" // library marker kkossev.xiaomiLib, line 161
+            case 0x01:
+                // battery spam ignored
                 break // library marker kkossev.xiaomiLib, line 162
             case 0x03: // library marker kkossev.xiaomiLib, line 163
                 logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} device temperature is ${value}&deg;" // library marker kkossev.xiaomiLib, line 164
                 break // library marker kkossev.xiaomiLib, line 165
-            case 0x05: // library marker kkossev.xiaomiLib, line 166
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} RSSI is ${value}" // library marker kkossev.xiaomiLib, line 167
+            case 0x05:
+                // RSSI ignored
                 break // library marker kkossev.xiaomiLib, line 168
-            case 0x06: // library marker kkossev.xiaomiLib, line 169
-                logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} LQI is ${value}" // library marker kkossev.xiaomiLib, line 170
+            case 0x06:
+                // LQI ignored
                 break // library marker kkossev.xiaomiLib, line 171
             case 0x08:            // SWBUILD_TAG_ID: // library marker kkossev.xiaomiLib, line 172
                 final String swBuild = '0.0.0_' + (value & 0xFF).toString().padLeft(4, '0') // library marker kkossev.xiaomiLib, line 173
