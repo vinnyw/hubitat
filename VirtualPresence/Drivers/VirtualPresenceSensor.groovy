@@ -35,7 +35,7 @@ metadata {
         name: 'Virtual Presence Sensor',
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
-        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualPresenceSensor/Drivers/VirtualPresenceSensor.groovy'
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualPresence/Drivers/VirtualPresenceSensor.groovy'
     ) {
         capability 'Sensor'
         capability 'Actuator'
