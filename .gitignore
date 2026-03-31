@@ -1,5 +1,7 @@
+**/_*
+**/.DS_Store
 .vscode/
 .env
 *~
 *.swp
-**/.DS_Store
+out/
