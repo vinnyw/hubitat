@@ -1,3 +1,4 @@
+import groovy.transform.Field
 import java.math.RoundingMode
 
 @Field static final String DRIVER_VERSION = '2.6.0'
