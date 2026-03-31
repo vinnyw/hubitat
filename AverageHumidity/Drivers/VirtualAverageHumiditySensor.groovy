@@ -8,7 +8,7 @@ metadata {
         name: 'Virtual Average Humidity Sensor',
         namespace: 'vinnyw',
         author: 'vinny wadding',
-        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/{dirname}/Drivers/VirtualOccupancySensor.groovy'
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/VirtualAverageHumiditySensor.groovy'
     ) {
         capability 'Sensor'
         capability 'RelativeHumidityMeasurement'
