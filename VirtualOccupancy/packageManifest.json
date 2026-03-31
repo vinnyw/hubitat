@@ -14,7 +14,7 @@
             "id": "885f8281-8d43-4ea3-b973-9749d45504b3",
             "name": "Virtual Occupancy Sensor",
             "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancySensor/Drivers/VirtualOccupancySensor.groovy",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancy/Drivers/VirtualOccupancySensor.groovy",
             "required": true
         }
     ]
