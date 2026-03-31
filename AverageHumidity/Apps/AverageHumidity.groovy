@@ -16,10 +16,6 @@ def getVersion() {
     return '2.7.0'
 }
 
-def childVersions = childApps.collect {
-    it.respondsTo('getVersion') ? it.getVersion() : 'unknown'
-}.unique().join(', ')
-
 preferences {
     page(name: 'mainPage')
 }
