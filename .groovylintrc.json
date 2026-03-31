@@ -25,6 +25,13 @@
     "MethodReturnTypeRequired": {
       "enabled": false
     },
+    // "NoDef": {
+    //   "enabled": false
+    // },
+    "convention.MethodReturnTypeRequired": {
+      "enabled": true,
+      "ignoreMethodNames": "updated,installed,initialize"
+    },
     "UnnecessaryGetter": {
       "enabled": false
     },
