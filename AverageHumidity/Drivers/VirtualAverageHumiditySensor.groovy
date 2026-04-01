@@ -3,7 +3,7 @@
  *  Virtual Average Humidity Sensor
  *  --------------------------------------------------------------------------------------------------------------
  *
- *  Author      : vinny wadding
+ *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : 2.6.0
  *  Date        : 2026-04-01
@@ -15,8 +15,7 @@
  *      Attributes:
  *          humidity        (number)  : relative humidity (%)
  *          humidityDisplay (string)  : formatted humidity string
- *          lastUpdated     (number)  : epoch time (Long)
- *          driverVersion   (string)  : driver version
+ *          lastActivity    (number)  : epoch time (Long)
  *
  *      Capabilities:
  *          RelativeHumidityMeasurement
@@ -36,7 +35,7 @@ metadata {
     definition(
         name: 'Virtual Average Humidity Sensor',
         namespace: 'vinnyw',
-        author: 'vinny wadding',
+        author: 'Vinny Wadding',
         importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/VirtualAverageHumiditySensor.groovy'
     ) {
         capability 'RelativeHumidityMeasurement'
@@ -44,8 +43,7 @@ metadata {
         capability 'Refresh'
 
         attribute 'humidityDisplay', 'string'
-        attribute 'lastUpdated', 'number'
-        attribute 'driverVersion', 'string'
+        attribute 'lastActivity', 'number'
     }
 
     preferences {
@@ -64,7 +62,7 @@ def installed() { configure() }
 def updated() { configure() }
 
 def configure() {
-    unschedule() // anti-stacking
+    unschedule()
 
     List allowed = ['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
     String raw = logLevel
@@ -76,7 +74,6 @@ def configure() {
         normalized = 'OFF'
     }
 
-    // Auto-disable debug/trace logging
     if (normalized in ['DEBUG', 'TRACE']) {
         runIn(DEBUG_AUTO_DISABLE_SECONDS, disableDebugLogging)
     }
@@ -90,25 +87,13 @@ def configure() {
         log.info "${device.displayName}: Driver upgraded from v${previousVersion} to v${DRIVER_VERSION}"
     }
 
-    // UI-visible version
-    if (device.currentValue('driverVersion') != DRIVER_VERSION) {
-        sendEvent(
-            name: 'driverVersion',
-            value: DRIVER_VERSION,
-            isStateChange: false,
-            displayed: false,
-            type: 'digital'
-        )
-    }
-
     if (!device.currentValue('lastActivity')) {
         sendEvent(
             name: 'lastActivity',
             value: now(),
             isStateChange: false,
             displayed: false,
-            type: 'digital'
-        )
+            type: 'digital')
     }
 }
 
@@ -144,8 +129,8 @@ def setHumidity(val, decimals = 0, unit = '%') {
             sendEvent(
                 name: 'humidity',
                 value: rounded,
-                isStateChange: true,
                 unit: (unit == 'none' ? '' : unit),
+                isStateChange: true,
                 type: 'digital'
             )
         }
@@ -165,7 +150,7 @@ def setHumidity(val, decimals = 0, unit = '%') {
 
         Long nowTs = now()
         Long previousTs = null
-        Object existingTs = device.currentValue('lastUpdated')
+        Object existingTs = device.currentValue('lastActivity')
         if (existingTs != null) {
             try {
                 previousTs = existingTs as Long
@@ -175,8 +160,10 @@ def setHumidity(val, decimals = 0, unit = '%') {
 
         if (previousTs == null || humidityChanged || (nowTs - previousTs) > 1000L) {
             sendEvent(
-                name: 'lastUpdated',
-                value: nowTs,
+                name: 'lastActivity',
+                value: now(),
+                isStateChange: false,
+                displayed: false,
                 type: 'digital'
             )
         }
