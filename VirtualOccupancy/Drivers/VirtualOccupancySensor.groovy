@@ -3,9 +3,9 @@
  *  Virtual Occupancy Sensor
  *  --------------------------------------------------------------------------------------------------------------
  *
- *  Author      : vinny wadding
+ *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 3.7.1
+ *  Version     : 3.7.2
  *  Date        : 2026-03-02
  *
  *  Description :
@@ -27,14 +27,14 @@
 
 import groovy.transform.Field
 
-@Field static final String DRIVER_VERSION = '3.7.1'
+@Field static final String DRIVER_VERSION = '3.7.2'
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 metadata {
     definition(
         name: 'Virtual Occupancy Sensor',
         namespace: 'vinnyw',
-        author: 'vinny wadding',
+        author: 'Vinny Wadding',
         importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancy/Drivers/VirtualOccupancySensor.groovy'
     ) {
         capability 'Sensor'
@@ -63,8 +63,13 @@ metadata {
     }
 }
 
-def installed() { configure() }
-def updated() { configure() }
+def installed() {
+    configure()
+}
+
+def updated() {
+    configure()
+}
 
 def configure() {
     List allowed = ['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
@@ -86,33 +91,80 @@ def configure() {
     }
 
     if (!device.currentValue('occupancy')) {
-        sendEvent(name: 'occupancy', value: 'unoccupied', isStateChange: false, type: 'digital')
+        sendEvent(
+            name: 'occupancy',
+            value: 'unoccupied',
+            isStateChange: true,
+            type: 'digital'
+        )
     }
 
     if (!device.currentValue('switch')) {
-        sendEvent(name: 'switch', value: 'off', displayed: false, isStateChange: false, type: 'digital')
+        sendEvent(
+            name: 'switch',
+            value: 'off',
+            displayed: false,
+            isStateChange: true,
+            type: 'digital'
+        )
     }
 
     if (!device.currentValue('lastActivity')) {
-        sendEvent(name: 'lastActivity', value: now(), displayed: false, type: 'digital')
+        sendEvent(
+            name: 'lastActivity',
+            value: now(),
+            displayed: false,
+            isStateChange: false,
+            type: 'digital'
+        )
     }
 }
 
 def refresh() {
-    sendEvent(name: 'occupancy', value: device.currentValue('occupancy'), isStateChange: false, type: 'digital')
-    sendEvent(name: 'switch', value: device.currentValue('switch'), displayed: false, isStateChange: false, type: 'digital')
-    sendEvent(name: 'lastActivity', value: device.currentValue('lastActivity'), displayed: false, isStateChange: false, type: 'digital')
+    sendEvent(
+        name: 'occupancy',
+        value: device.currentValue('occupancy'),
+        displayed: true,
+        isStateChange: false,
+        type: 'digital'
+    )
+
+    sendEvent(
+        name: 'switch',
+        value: device.currentValue('switch'),
+        displayed: false,
+        isStateChange: false,
+        type: 'digital'
+    )
+
+    sendEvent(
+        name: 'lastActivity',
+        value: device.currentValue('lastActivity'),
+        displayed: false,
+        isStateChange: false,
+        type: 'digital'
+    )
 
     if (txtEnable) {
         log.info "${device.displayName} was refreshed"
     }
 }
 
-def occupied() { changeOccupancyState('occupied', 'on') }
-def unoccupied() { changeOccupancyState('unoccupied', 'off') }
+def occupied() {
+    changeOccupancyState('occupied', 'on')
+}
 
-def on()  { occupied() }
-def off() { unoccupied() }
+def unoccupied() {
+    changeOccupancyState('unoccupied', 'off')
+}
+
+def on()  {
+    occupied()
+}
+
+def off() {
+    unoccupied()
+}
 
 def toggleOccupancy() {
     if (device.currentValue('occupancy') == 'occupied') {
@@ -125,9 +177,29 @@ def toggleOccupancy() {
 private void changeOccupancyState(String occ, String sw) {
     if (device.currentValue('occupancy') == occ) return
 
-    sendEvent(name: 'occupancy', value: occ, type: 'digital')
-    sendEvent(name: 'switch', value: sw, displayed: false, type: 'digital')
-    sendEvent(name: 'lastActivity', value: now(), displayed: false, type: 'digital')
+    sendEvent(
+        name: 'occupancy',
+        value: occ,
+        displayed: true,
+        isStateChange: true,
+        type: 'digital'
+    )
+
+    sendEvent(
+        name: 'switch',
+        value: sw,
+        displayed: false,
+        isStateChange: true,
+        type: 'digital'
+    )
+
+    sendEvent(
+        name: 'lastActivity',
+        value: now(),
+        displayed: false,
+        isStateChange: false,
+        type: 'digital'
+    )
 
     if (txtEnable) {
         log.info "${device.displayName} occupancy is ${occ}"
