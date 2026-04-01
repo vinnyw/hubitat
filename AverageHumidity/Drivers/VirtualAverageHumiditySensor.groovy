@@ -1,3 +1,31 @@
+/**
+ *  --------------------------------------------------------------------------------------------------------------
+ *  Virtual Average Humidity Sensor
+ *  --------------------------------------------------------------------------------------------------------------
+ *
+ *  Author      : vinny wadding
+ *  Namespace   : vinnyw
+ *  Version     : 2.6.0
+ *  Date        : 2026-04-01
+ *
+ *  Description :
+ *      Virtual humidity sensor that receives externally calculated average values
+ *      and updates humidity with controlled precision and display formatting.
+ *
+ *      Attributes:
+ *          humidity        (number)  : relative humidity (%)
+ *          humidityDisplay (string)  : formatted humidity string
+ *          lastUpdated     (number)  : epoch time (Long)
+ *          driverVersion   (string)  : driver version
+ *
+ *      Capabilities:
+ *          RelativeHumidityMeasurement
+ *          Sensor
+ *          Refresh
+ *
+ *  --------------------------------------------------------------------------------------------------------------
+ */
+
 import groovy.transform.Field
 import java.math.RoundingMode
 
@@ -11,12 +39,13 @@ metadata {
         author: 'vinny wadding',
         importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/VirtualAverageHumiditySensor.groovy'
     ) {
-        capability 'Sensor'
         capability 'RelativeHumidityMeasurement'
+        capability 'Sensor'
         capability 'Refresh'
 
         attribute 'humidityDisplay', 'string'
         attribute 'lastUpdated', 'number'
+        attribute 'driverVersion', 'string'
     }
 
     preferences {
@@ -35,6 +64,8 @@ def installed() { configure() }
 def updated() { configure() }
 
 def configure() {
+    unschedule() // anti-stacking
+
     List allowed = ['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
     String raw = logLevel
     String normalized = (raw ?: 'OFF').toUpperCase()
@@ -42,6 +73,12 @@ def configure() {
     if (!allowed.contains(normalized)) {
         device.updateSetting('logLevel', [value: 'Off', type: 'enum'])
         log.warn "${device.displayName}: Invalid logLevel '${raw}' detected. Auto-corrected to Off."
+        normalized = 'OFF'
+    }
+
+    // Auto-disable debug/trace logging
+    if (normalized in ['DEBUG', 'TRACE']) {
+        runIn(DEBUG_AUTO_DISABLE_SECONDS, disableDebugLogging)
     }
 
     String previousVersion = state.driverVersion
@@ -53,9 +90,31 @@ def configure() {
         log.info "${device.displayName}: Driver upgraded from v${previousVersion} to v${DRIVER_VERSION}"
     }
 
-    if (!device.currentValue('lastActivity')) {
-        sendEvent(name: 'lastActivity', value: now(), displayed: false, type: 'digital')
+    // UI-visible version
+    if (device.currentValue('driverVersion') != DRIVER_VERSION) {
+        sendEvent(
+            name: 'driverVersion',
+            value: DRIVER_VERSION,
+            isStateChange: false,
+            displayed: false,
+            type: 'digital'
+        )
     }
+
+    if (!device.currentValue('lastActivity')) {
+        sendEvent(
+            name: 'lastActivity',
+            value: now(),
+            isStateChange: false,
+            displayed: false,
+            type: 'digital'
+        )
+    }
+}
+
+def disableDebugLogging() {
+    device.updateSetting('logLevel', [value: 'Off', type: 'enum'])
+    log.warn "${device.displayName}: Debug logging automatically disabled after 30 minutes"
 }
 
 def refresh() {
@@ -85,6 +144,7 @@ def setHumidity(val, decimals = 0, unit = '%') {
             sendEvent(
                 name: 'humidity',
                 value: rounded,
+                isStateChange: true,
                 unit: (unit == 'none' ? '' : unit),
                 type: 'digital'
             )
