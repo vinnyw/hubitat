@@ -78,7 +78,7 @@ def mainPage() {
         }
 
         section(hideable: true, hidden: true, title: 'Advanced...') {
-            input 'thisName', 'text', title: 'App Name (Optional)', submitOnChange: true
+            input 'thisName', 'text', title: 'App Name<span style=\'font-size:9px; color:#CC5500; white-space:nowrap; margin-left:6px;\'>(optional)</span>', submitOnChange: true
         }
 
         String Version = getDisplayVersionValue(getVersion())
@@ -160,7 +160,7 @@ def uninstalled() {
         try {
             childApp.deleteManagedChildDevice()
         } catch (Exception e) {
-            log.warn "Failed cleanup for child app '${childApp?.label}': ${e.message}"
+            log.warn "Failed cleanup for childapp '${childApp?.label}': ${e.message}"
         }
     }
 }
