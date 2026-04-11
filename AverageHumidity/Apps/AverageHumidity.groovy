@@ -88,7 +88,7 @@ def mainPage() {
         // }
 
         section() {
-        	paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>App ${htmlEncode(Version)}</div>"
+        	paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(Version)}</div>"
         }
 
     }
