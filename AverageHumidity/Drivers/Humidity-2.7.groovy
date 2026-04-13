@@ -1,0 +1,352 @@
+/**
+ *  --------------------------------------------------------------------------------------------------------------
+ *  Humidity Child Device
+ *  --------------------------------------------------------------------------------------------------------------
+ *
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : Parent-managed (via child app -> parent app)
+ *  Date        : 2026-04-13
+ *
+ *  Description :
+ *      Virtual humidity child device managed by the Humidity child app.
+ *
+ *      Attributes:
+ *          humidity         (number) : humidity value
+ *          humidityDisplay  (string) : formatted humidity value
+ *          lastActivity     (number) : epoch time (Long)
+ *          trend            (string) : trend token
+ *          trendDisplay     (string) : formatted trend text
+ *
+ *      Capabilities:
+ *          RelativeHumidityMeasurement
+ *          Sensor
+ *          Refresh
+ *          Configuration
+ *
+ *  --------------------------------------------------------------------------------------------------------------
+ */
+
+import groovy.transform.Field
+import java.math.RoundingMode
+
+
+metadata {
+    definition(
+        name: 'Humidity-2.7',
+        namespace: 'vinnyw',
+        author: 'Vinny Wadding'
+    ) {
+        capability 'RelativeHumidityMeasurement'
+        capability 'Sensor'
+        capability 'Refresh'
+        capability 'Configuration'
+
+        attribute 'humidityDisplay', 'string'
+        attribute 'trend', 'string'
+        attribute 'trendDisplay', 'string'
+        attribute 'lastActivity', 'number'
+
+        command 'clearTrend'
+    }
+
+    preferences {
+        input name: 'txtEnable', type: 'bool',
+              title: 'Enable description text logging',
+              defaultValue: true
+
+        input name: 'debugEnable', type: 'bool',
+              title: 'Enable debug logging',
+              defaultValue: false
+    }
+}
+
+
+//
+//    VERSION
+//
+
+def getVersion() {
+    return parent?.getChildAppVersion() ?: 'unknown'
+}
+
+
+//
+//    UI / PREFERENCES
+//
+
+// Preferences are declared in metadata { preferences { ... } } above.
+
+
+//
+//    LIFECYCLE
+//
+
+def configure() {
+    Map cfg = parent?.getChildDriverLoggingConfig()
+    if (cfg instanceof Map) {
+        applyParentLogging(cfg.txtEnable, cfg.debugEnable, cfg.debugAutoDisableSeconds)
+    }
+
+    scheduleDebugAutoDisableIfNeeded()
+
+    String previousVersion = state.driverVersion
+    String currentVersion = getVersion()
+    state.driverVersion = currentVersion
+
+    if (!previousVersion) {
+        log.info "${device.displayName}: Driver installed (v${currentVersion})"
+    } else if (previousVersion != currentVersion) {
+        log.info "${device.displayName}: Driver upgraded from v${previousVersion} to v${currentVersion}"
+    }
+
+    if (device.currentValue('humidityDisplay') == null) {
+        sendEvent(name: 'humidityDisplay', value: '', isStateChange: false, type: 'digital')
+    }
+
+    if (device.currentValue('trend') == null) {
+        sendEvent(name: 'trend', value: '', isStateChange: false, type: 'digital')
+    }
+
+    if (device.currentValue('trendDisplay') == null) {
+        sendEvent(name: 'trendDisplay', value: '', isStateChange: false, type: 'digital')
+    }
+
+    if (device.currentValue('lastActivity') == null) {
+        sendEvent(
+            name: 'lastActivity',
+            value: now(),
+            isStateChange: false,
+            type: 'digital'
+        )
+    }
+
+    logDebug("Configure completed with txtEnable=${settings?.txtEnable}, debugEnable=${settings?.debugEnable}, version=${currentVersion}")
+}
+
+def installed() {
+    configure()
+}
+
+def updated() {
+    parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
+    configure()
+}
+
+
+//
+//    COMMANDS
+//
+
+def clearTrend() {
+    boolean changed = false
+    changed = updateSingleTrendAttribute('trend', '') || changed
+    changed = updateSingleTrendAttribute('trendDisplay', '') || changed
+
+    if (changed) {
+        logDebug('Trend cleared')
+    }
+}
+
+def refresh() {
+    logDebug('Refresh requested; delegating sensor pull/recalculation to child app')
+    parent?.childRefreshRequest()
+}
+
+def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null) {
+    if (val == null) {
+        logWarn('setHumidity called with null value')
+        return
+    }
+
+    Integer places = 0
+    try {
+        places = decimals as Integer
+    } catch (Exception ignored) {
+        places = 0
+    }
+
+    BigDecimal newValue
+    try {
+        newValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
+    } catch (Exception e) {
+        logError("Invalid humidity value '${val}': ${e.message}")
+        return
+    }
+
+    BigDecimal currentValue = null
+    def currentRaw = device.currentValue('humidity')
+    if (currentRaw != null && currentRaw.toString() != '') {
+        try {
+            currentValue = new BigDecimal(currentRaw.toString()).setScale(places, RoundingMode.HALF_UP)
+        } catch (Exception ignored) {
+            currentValue = null
+        }
+    }
+
+    String normalizedUnit = unit == null ? '%' : unit.toString()
+    String display = normalizedUnit == 'none' ? "${newValue}" : "${newValue}${normalizedUnit}"
+    boolean changed = false
+
+    if (currentValue == null || currentValue.compareTo(newValue) != 0) {
+        sendEvent(name: 'humidity', value: newValue, unit: '%', isStateChange: true, type: 'digital')
+        sendEvent(name: 'lastActivity', value: now(), isStateChange: false, type: 'digital')
+        changed = true
+    }
+
+    if ((device.currentValue('humidityDisplay') ?: '') != display) {
+        sendEvent(name: 'humidityDisplay', value: display, isStateChange: false, type: 'digital')
+        changed = true
+    }
+
+    changed = updateTrendAttributes(trend, trendDisplay) || changed
+
+    if (changed) {
+        if (descriptionTextLoggingEnabled()) {
+            log.info "${device.displayName} humidity is ${display}"
+        }
+        logDebug("Updated humidity=${newValue}, display=${display}, trend=${trend}, trendDisplay=${trendDisplay}")
+    } else {
+        logDebug("No attribute changes required for humidity=${newValue}")
+    }
+}
+
+
+//
+//    LOGGING CONFIGURATION & SYNC
+//
+
+private void applyParentLogging(txtEnableValue, debugEnableValue, debugAutoDisableSecondsValue) {
+    Boolean descEnabled = normalizeBoolean(txtEnableValue, true)
+    Boolean debugEnabled = normalizeBoolean(debugEnableValue, false)
+
+    updateBooleanSettingIfChanged('txtEnable', descEnabled)
+    updateBooleanSettingIfChanged('debugEnable', debugEnabled)
+
+    // Parent app is the source of truth for debug auto-disable timeout.
+    // The driver does not persist this value in state.
+}
+
+private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
+    Boolean currentValue = normalizeBoolean(settings?."${name}", newValue)
+    if (currentValue != newValue) {
+        device.updateSetting(name, [value: newValue, type: 'bool'])
+    }
+}
+
+
+//
+//    LOGGING SCHEDULER
+//
+
+private Integer debugAutoDisableMinutes() {
+    return (int) (debugAutoDisableSeconds() / 60)
+}
+
+private Integer debugAutoDisableSeconds() {
+    return getParentDebugAutoDisableSeconds()
+}
+
+def logsOff() {
+    if (!debugLoggingEnabled()) return
+
+    updateBooleanSettingIfChanged('debugEnable', false)
+
+    try {
+        parent?.updateLoggingFromDriver(settings?.txtEnable, false)
+    } catch (Exception ignored) {
+    }
+
+    log.warn "${device.displayName}: Debug logging disabled automatically after ${debugAutoDisableMinutes()} minutes"
+}
+
+private Integer getParentDebugAutoDisableSeconds() {
+    try {
+        return normalizeDebugAutoDisableSeconds(parent?.getDebugAutoDisableSeconds())
+    } catch (Exception ignored) {
+        return 1800
+    }
+}
+
+private Integer normalizeDebugAutoDisableSeconds(value) {
+    try {
+        Integer seconds = value as Integer
+        return seconds > 0 ? seconds : 1800
+    } catch (Exception ignored) {
+        return 1800
+    }
+}
+
+private void scheduleDebugAutoDisableIfNeeded() {
+    unschedule('logsOff')
+
+    if (debugLoggingEnabled()) {
+        runIn(debugAutoDisableSeconds(), 'logsOff')
+        logDebug("Debug logging will automatically turn off in ${debugAutoDisableMinutes()} minutes")
+    }
+}
+
+
+//
+//    LOGGING HELPERS
+//
+
+private Boolean debugLoggingEnabled() {
+    return normalizeBoolean(settings?.debugEnable, false)
+}
+
+private Boolean descriptionTextLoggingEnabled() {
+    return normalizeBoolean(settings?.txtEnable, true)
+}
+
+private void logDebug(String msg) {
+    if (debugLoggingEnabled()) log.debug "${device.displayName}: ${msg}"
+}
+
+private void logError(String msg) {
+    if (debugLoggingEnabled()) log.error "${device.displayName}: ${msg}"
+}
+
+private void logWarn(String msg) {
+    if (debugLoggingEnabled()) log.warn "${device.displayName}: ${msg}"
+}
+
+private Boolean normalizeBoolean(value, Boolean defaultValue) {
+    if (value == null) return defaultValue
+    if (value instanceof Boolean) return value
+    String s = value.toString().trim().toLowerCase()
+    if (s == 'true') return true
+    if (s == 'false') return false
+    return defaultValue
+}
+
+
+//
+//    TREND HELPERS
+//
+
+private boolean updateSingleTrendAttribute(String name, String value) {
+    String normalized = value == null ? '' : value.toString()
+    String currentValue = device.currentValue(name)?.toString() ?: ''
+
+    if (currentValue != normalized) {
+        sendEvent(name: name, value: normalized, isStateChange: false, type: 'digital')
+        return true
+    }
+
+    return false
+}
+
+private boolean updateTrendAttributes(String trend, String trendDisplay) {
+    boolean changed = false
+
+    if (trend == null && trendDisplay == null) {
+        changed = updateSingleTrendAttribute('trend', '') || changed
+        changed = updateSingleTrendAttribute('trendDisplay', '') || changed
+        return changed
+    }
+
+    changed = updateSingleTrendAttribute('trend', trend) || changed
+    changed = updateSingleTrendAttribute('trendDisplay', trendDisplay) || changed
+    return changed
+}
