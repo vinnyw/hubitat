@@ -118,12 +118,6 @@ private String htmlEncode(Object value) {
 
 
 //
-//    DISPLAY HELPERS
-//
-
-
-
-//
 //    LIFECYCLE
 //
 
@@ -152,56 +146,3 @@ def updated() {
     enforceLabel()
     initialize()
 }
-
-
-//
-//    EVENT HANDLERS
-//
-
-
-
-//
-//    CHILD DEVICE MANAGEMENT
-//
-
-
-
-//
-//    LOGGING CONFIGURATION & SYNC
-//
-
-
-
-//
-//    SENSOR HELPERS
-//
-
-
-
-//
-//    LOGGING SCHEDULER
-//
-
-
-
-//
-//    LOGGING HELPERS
-//
-
-
-
-//
-//    TREND STATE
-//
-
-
-
-//
-//    TREND STORAGE
-//
-
-
-
-//
-//    TREND CALCULATION
-//
