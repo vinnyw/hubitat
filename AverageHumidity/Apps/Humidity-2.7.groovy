@@ -33,6 +33,12 @@ def getChildAppVersion() {
     return getVersion()
 }
 
+private String extractShortVersion(String version) {
+    String raw = version?.toString()?.trim() ?: '0.0'
+    def matcher = raw =~ /(\d+\.\d+)/
+    return matcher.find() ? matcher.group(1) : raw
+}
+
 private String getDisplayVersionValue(Object versionValue) {
     String version = versionValue?.toString()?.trim()
     return version ? "v${version}" : 'unknown'
@@ -473,19 +479,19 @@ private Boolean ensureManagedChildDevice() {
     if (!child) {
         try {
             Map options = [
-                name : desiredLabel ?: 'Humidity-2.7',
-                label: desiredLabel ?: 'Humidity-2.7',
+                name       : "Humidity-${extractShortVersion()}",
+                label      : desiredLabel ?: "Humidity-${extractShortVersion()}",
                 isComponent: false
             ]
 
             addChildDevice(
                 'vinnyw',
-                'Humidity-2.7',
+                "Humidity-${extractShortVersion()}",
                 dni,
                 options
             )
         } catch (Exception e) {
-            log.warn "Unable to create managed child device. Verify driver 'Humidity-2.7' (namespace 'vinnyw') is installed. ${e.message}"
+            log.warn "Unable to create managed child device. Verify driver $Humidity-${extractShortVersion()} (namespace 'vinnyw') is installed. ${e.message}"
             return false
         }
         child = getChildDevice(dni)
