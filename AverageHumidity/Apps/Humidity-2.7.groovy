@@ -1,4 +1,4 @@
- definition(
+definition(
     name: 'Humidity-2.7',
     namespace: 'vinnyw',
     author: 'Vinny Wadding',
@@ -630,11 +630,11 @@ private void logDebug(String msg) {
 }
 
 private void logError(String msg) {
-    log.error "${app.label}: ${msg}"
+    if (debugLoggingEnabled()) log.error "${app.label}: ${msg}"
 }
 
 private void logWarn(String msg) {
-    log.warn "${app.label}: ${msg}"
+    if (debugLoggingEnabled()) log.warn "${app.label}: ${msg}"
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {

@@ -38,17 +38,17 @@ private String extractShortVersion(String version) {
     return matcher.find() ? matcher.group(1) : raw
 }
 
-private String getDisplayVersionValue(Object versionValue) {
-    String version = versionValue?.toString()?.trim()
-    return version ? "v${version}" : 'unknown'
-}
-
 Integer getDebugAutoDisableMinutes() {
     return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
 }
 
 Integer getDebugAutoDisableSeconds() {
     return DEBUG_AUTO_DISABLE_SECONDS
+}
+
+private String getDisplayVersionValue(Object versionValue) {
+    String version = versionValue?.toString()?.trim()
+    return version ? "v${version}" : 'unknown'
 }
 
 def getShortVersion() {
@@ -118,6 +118,12 @@ private String htmlEncode(Object value) {
 
 
 //
+//    DISPLAY HELPERS
+//
+
+
+
+//
 //    LIFECYCLE
 //
 
@@ -146,3 +152,56 @@ def updated() {
     enforceLabel()
     initialize()
 }
+
+
+//
+//    EVENT HANDLERS
+//
+
+
+
+//
+//    CHILD DEVICE MANAGEMENT
+//
+
+
+
+//
+//    LOGGING CONFIGURATION & SYNC
+//
+
+
+
+//
+//    SENSOR HELPERS
+//
+
+
+
+//
+//    LOGGING SCHEDULER
+//
+
+
+
+//
+//    LOGGING HELPERS
+//
+
+
+
+//
+//    TREND STATE
+//
+
+
+
+//
+//    TREND STORAGE
+//
+
+
+
+//
+//    TREND CALCULATION
+//
