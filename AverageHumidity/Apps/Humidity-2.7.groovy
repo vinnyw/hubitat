@@ -455,7 +455,7 @@ def refresh() {
 //
 
 private String childDni() {
-    return "avg-humidity-${app.id}"
+    return "Humidity-${getChildAppVersion()}-${app.id}"
 }
 
 def deleteManagedChildDevice() {
@@ -472,15 +472,15 @@ private Boolean ensureManagedChildDevice() {
 
     if (!child) {
         try {
-            Map options = [isComponent: false]
-            if (desiredLabel) {
-                options.name = desiredLabel
-                options.label = desiredLabel
-            }
+            Map options = [
+                name : desiredLabel ?: "Humidity-${getChildAppVersion()}",
+                label: desiredLabel ?: "Humidity-${getChildAppVersion()}",
+                isComponent: false
+            ]
 
             addChildDevice(
                 'vinnyw',
-                'Humidity-2.7',
+                "Humidity-${getChildAppVersion()}",
                 dni,
                 options
             )
@@ -497,6 +497,7 @@ private Boolean ensureManagedChildDevice() {
 
     return child != null
 }
+
 
 
 //
