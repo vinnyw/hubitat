@@ -473,14 +473,14 @@ private Boolean ensureManagedChildDevice() {
     if (!child) {
         try {
             Map options = [
-                name : desiredLabel ?: "Humidity-${getChildAppVersion()}",
-                label: desiredLabel ?: "Humidity-${getChildAppVersion()}",
+                name : desiredLabel ?: 'Humidity-2.7',
+                label: desiredLabel ?: 'Humidity-2.7',
                 isComponent: false
             ]
 
             addChildDevice(
                 'vinnyw',
-                "Humidity-${getChildAppVersion()}",
+                'Humidity-2.7',
                 dni,
                 options
             )
@@ -497,7 +497,6 @@ private Boolean ensureManagedChildDevice() {
 
     return child != null
 }
-
 
 
 //
