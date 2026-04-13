@@ -1,0 +1,37 @@
+{
+    "packageName": "Average Humidity Suite",
+    "author": "Vinny Wadding",
+    "minimumHEVersion": "2.3.0",
+    "version": "2.7.49",
+    "dateReleased": "2026-04-13",
+    "releaseNotes": "Replaced logging level with txtEnable/debugEnable, kept child app and driver logging settings synchronized bidirectionally, renamed debug auto-disable constant, and commented out unused methods.",
+    "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageHumidity",
+    "communityLink": "https://community.hubitat.com/",
+    "category": "Convenience",
+    "tags": "Convenience, Sensors, Automation",
+    "drivers": [
+        {
+            "id": "avg-humidity-driver",
+            "name": "Humidity-2.7",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/Humidity-2.7.groovy",
+            "required": true
+        }
+    ],
+    "apps": [
+        {
+            "id": "avg-humidity-parent",
+            "name": "Average Humidity",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/AverageHumidity.groovy",
+            "required": true
+        },
+        {
+            "id": "avg-humidity-child",
+            "name": "Humidity-2.7",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/Humidity-2.7.groovy",
+            "required": true
+        }
+    ]
+}
