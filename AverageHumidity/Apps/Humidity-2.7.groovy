@@ -677,11 +677,23 @@ private Map updateTrendAndGetValues(BigDecimal roundedHumidity) {
     }
 
     List<Map> history = getHistoryEntries()
-    history << [ts: now(), value: roundedHumidity.toString()]
-    while (history.size() > configuredTrendDepth()) {
-        history.remove(0)
+
+    BigDecimal lastValue = null
+    if (history) {
+        try {
+            lastValue = new BigDecimal(history.last().value.toString())
+        } catch (Exception ignored) {
+            lastValue = null
+        }
     }
-    saveHistoryEntries(history)
+
+    if (lastValue == null || lastValue.compareTo(roundedHumidity) != 0) {
+        history << [ts: now(), value: roundedHumidity.toString()]
+        while (history.size() > configuredTrendDepth()) {
+            history.remove(0)
+        }
+        saveHistoryEntries(history)
+    }
 
     return calculateTrend(history, selectedTrendDisplay())
 }
