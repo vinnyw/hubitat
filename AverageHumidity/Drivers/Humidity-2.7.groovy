@@ -12,11 +12,11 @@
  *      Virtual humidity child device managed by the Humidity child app.
  *
  *      Attributes:
- *          humidity         (number) : humidity value
- *          humidityDisplay  (string) : formatted humidity value
+ *          humidity         (number) : humidity
+ *          humidityDisplay  (string) : formatted humidity
+ *          trend            (string) : trend 
+ *          trendDisplay     (string) : formatted trend
  *          lastActivity     (number) : epoch time (Long)
- *          trend            (string) : trend token
- *          trendDisplay     (string) : formatted trend text
  *
  *      Capabilities:
  *          RelativeHumidityMeasurement
