@@ -14,21 +14,23 @@ definition(
     installOnOpen: true
 )
 
+import groovy.transform.Field
+
+@Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
+
 
 //
-//    __   _____ _ __ ___(_) ___  _ __
-//    \ \ / / _ \ '__/ __| |/ _ \| '_ \
-//     \ V /  __/ |  \__ \ | (_) | | | |
-//      \_/ \___|_|  |___/_|\___/|_| |_|
+//    VERSION
 //
 
 def getVersion() {
-    return '2.7.47'
+    return '2.7.49'
 }
 
-def getShortVersion() {
-    return extractShortVersion(getVersion())
-}
+
+//
+//    VERSION HELPERS
+//
 
 private String extractShortVersion(String version) {
     String raw = version?.toString()?.trim() ?: '0.0'
@@ -38,25 +40,24 @@ private String extractShortVersion(String version) {
 
 private String getDisplayVersionValue(Object versionValue) {
     String version = versionValue?.toString()?.trim()
-    return version ? "v${version}" : 'Unknown'
+    return version ? "v${version}" : 'unknown'
 }
 
-private String htmlEncode(Object value) {
-    String s = value?.toString() ?: ''
-    return s
-        .replace('&', '&amp;')
-        .replace('<', '&lt;')
-        .replace('>', '&gt;')
-        .replace('"', '&quot;')
-        .replace("'", '&#39;')
+Integer getDebugAutoDisableMinutes() {
+    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
+}
+
+Integer getDebugAutoDisableSeconds() {
+    return DEBUG_AUTO_DISABLE_SECONDS
+}
+
+def getShortVersion() {
+    return extractShortVersion(getVersion())
 }
 
 
-//      _       _             __
-//     (_)_ __ | |_ ___ _ __ / _| __ _  ___ ___
-//     | | '_ \| __/ _ \ '__| |_ / _` |/ __/ _ \
-//     | | | | | ||  __/ |  |  _| (_| | (_|  __/
-//     |_|_| |_|\__\___|_|  |_|  \__,_|\___\___|
+//
+//    UI / PREFERENCES
 //
 
 preferences {
@@ -77,22 +78,23 @@ def mainPage() {
             )
         }
 
-        section(hideable: true, hidden: true, title: 'Advanced...') {
-            input 'thisName', 'text', title: 'App Name<span style=\'font-size:9px; color:#CC5500; white-space:nowrap; margin-left:6px;\'>(optional)</span>', submitOnChange: true
+        section(hideable: true, hidden: true, title: 'Advanced Options') {
+            input 'thisName', 'text', title: 'Custom name for this app<span style=\'font-size:9px; color:#CC5500; white-space:nowrap; margin-left:6px;\'>(optional)</span>', submitOnChange: true
         }
 
         String Version = getDisplayVersionValue(getVersion())
 
-        // section() {
-        //     paragraph "<hr style='background-color:#9E9E9E; height: 1px; border: 0; margin: 0.5rem 0 0.75rem 0;'><div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>App ${htmlEncode(Version)}</div>"
-        // }
-
         section() {
-        	paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(Version)}</div>"
+            paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(Version)}</div>"
         }
-
     }
 }
+
+
+
+//
+//    UI DEFAULTS & VALIDATION HELPERS
+//
 
 private void enforceLabel() {
     String defaultName = 'Average Humidity'
@@ -104,53 +106,27 @@ private void enforceLabel() {
     }
 }
 
-
-//           _     _ _     _                
-//       ___| |__ (_) | __| |_ __ ___ _ __  
-//      / __| '_ \| | |/ _` | '__/ _ \ '_ \ 
-//     | (__| | | | | | (_| | | |  __/ | | |
-//      \___|_| |_|_|_|\__,_|_|  \___|_| |_|
-//                                   
-
-private String getInstalledChildVersionsSummary() {
-    List<String> versions = []
-
-    (getChildApps() ?: []).each { childApp ->
-        try {
-            def version = childApp?.respondsTo('getVersion') ? childApp.getVersion() : null
-            String value = version?.toString()?.trim()
-            if (value) {
-                versions << "v${value}"
-            }
-        } catch (Exception e) {
-            log.warn "Unable to read child version for '${childApp?.label ?: childApp?.name ?: 'unknown'}': ${e.message}"
-        }
-    }
-
-    versions = versions.unique()
-    return versions ? versions.join(', ') : null
+private String htmlEncode(Object value) {
+    String s = value?.toString() ?: ''
+    return s
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('"', '&quot;')
+        .replace("'", '&#39;')
 }
 
 
-//                      __  __       _     _ 
-//       ___  ___ __ _ / _|/ _| ___ | | __| |
-//      / __|/ __/ _` | |_| |_ / _ \| |/ _` |
-//      \__ \ (_| (_| |  _|  _| (_) | | (_| |
-//      |___/\___\__,_|_| |_|  \___/|_|\__,_|
-//                                           
+
+//
+//    LIFECYCLE
+//
 
 def initialize() {
     // ⚠️ NOTE: ParentApp should NOT manage devices or subscriptions.
 }
 
 def installed() {
-    enforceLabel()
-    initialize()
-}
-
-def updated() {
-    unsubscribe()
-    unschedule()
     enforceLabel()
     initialize()
 }
@@ -163,4 +139,11 @@ def uninstalled() {
             log.warn "Failed cleanup for childapp '${childApp?.label}': ${e.message}"
         }
     }
+}
+
+def updated() {
+    unsubscribe()
+    unschedule()
+    enforceLabel()
+    initialize()
 }
