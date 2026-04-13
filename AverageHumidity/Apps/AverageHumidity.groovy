@@ -79,7 +79,7 @@ def mainPage() {
         }
 
         section(hideable: true, hidden: true, title: 'Advanced Options') {
-            input 'thisName', 'text', title: 'Custom name for this app<span style=\'font-size:9px; color:#CC5500; white-space:nowrap; margin-left:6px;\'>(optional)</span>', submitOnChange: true
+            input 'thisName', 'text', title: 'Custom name for this app', submitOnChange: true
         }
 
         String Version = getDisplayVersionValue(getVersion())
@@ -115,7 +115,6 @@ private String htmlEncode(Object value) {
         .replace('"', '&quot;')
         .replace("'", '&#39;')
 }
-
 
 
 //
