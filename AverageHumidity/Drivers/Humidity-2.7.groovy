@@ -94,10 +94,14 @@ def configure() {
     String currentVersion = getVersion()
     state.driverVersion = currentVersion
 
+    String prevDisplay = previousVersion == 'unknown' ? 'unknown' : "v${previousVersion}"
+    String currDisplay = currentVersion == 'unknown' ? 'unknown' : "v${currentVersion}"
+
     if (!previousVersion) {
-        log.info "${device.displayName}: Driver installed (v${currentVersion})"
-    } else if (previousVersion != currentVersion) {
-        log.info "${device.displayName}: Driver upgraded from v${previousVersion} to v${currentVersion}"
+        log.info "${device.displayName}: Driver installed (${currDisplay})"
+    }
+    else if (previousVersion != currentVersion) {
+        log.info "${device.displayName}: Driver upgraded from ${prevDisplay} to ${currDisplay}"
     }
 
     if (device.currentValue('humidityDisplay') == null) {
