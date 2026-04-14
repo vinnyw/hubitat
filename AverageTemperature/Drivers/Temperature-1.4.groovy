@@ -12,11 +12,11 @@
  *      Virtual temperature child device managed by the Temperature child app.
  *
  *      Attributes:
- *          temperature      (number) : temperature value
+ *          temperature        (number) : temperature value
  *          temperatureDisplay (string) : formatted temperature value
- *          trend            (string) : trend 
- *          trendDisplay     (string) : formatted trend
- *          lastActivity     (number) : epoch time (Long)
+ *          trend              (string) : trend 
+ *          trendDisplay       (string) : formatted trend
+ *          lastActivity       (number) : epoch time (Long)
  *
  *      Capabilities:
  *          TemperatureMeasurement
