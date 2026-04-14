@@ -117,7 +117,7 @@ def mainPage() {
                 type: 'enum',
                 title: 'Unit',
                 options: temperatureUnitDisplayOptions(),
-                defaultValue: selectedUnitDisplay(),
+                defaultValue: selectedUnitDisplaySetting(),
                 required: true
             )
 
@@ -181,7 +181,7 @@ def mainPage() {
 
 private void applyDefaultSettings() {
     ensureEnumSetting('unitPrecision', ['0', '1', '2'], '0')
-    ensureEnumSetting('unitDisplay', temperatureUnitDisplayKeys(), defaultTemperatureDisplayUnit())
+    ensureEnumSetting('unitDisplay', temperatureUnitDisplayKeys(), 'auto')
     ensureEnumSetting('trendDisplay', ['off', 'simple', 'detailed'], 'off')
     ensureEnumSetting('trendWindow', trendWindowOptions().keySet() as List, '30')
     ensureEnumSetting('trendHistory', ['auto', 'manual'], 'auto')
@@ -305,9 +305,14 @@ private String selectedTrendWindow() {
     return configuredTrendWindowMinutes().toString()
 }
 
+private String selectedUnitDisplaySetting() {
+    String unit = settings?.unitDisplay?.toString() ?: 'auto'
+    return temperatureUnitDisplayKeys().contains(unit) ? unit : 'auto'
+}
+
 private String selectedUnitDisplay() {
-    String unit = settings?.unitDisplay?.toString() ?: defaultTemperatureDisplayUnit()
-    return temperatureUnitDisplayKeys().contains(unit) ? unit : defaultTemperatureDisplayUnit()
+    String unit = selectedUnitDisplaySetting()
+    return unit == 'auto' ? defaultTemperatureDisplayUnit() : unit
 }
 
 private String selectedUnitPrecision() {
@@ -330,10 +335,9 @@ private Map<String, String> trendWindowOptions() {
     ]
 }
 
-
-
 private Map<String, String> temperatureUnitDisplayOptions() {
     return [
+        'auto': 'Auto (recommended)',
         'none': 'None',
         '°C'  : '°C',
         '°F'  : '°F'
