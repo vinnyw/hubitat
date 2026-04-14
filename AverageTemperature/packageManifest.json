@@ -1,0 +1,38 @@
+{
+    "id": "c3496739",
+    "packageName": "Average Temperature",
+    "author": "Vinny Wadding",
+    "minimumHEVersion": "2.3.0",
+    "version": "1.4.7",
+    "dateReleased": "2026-04-13",
+    "releaseNotes": "",
+    "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageTemperature",
+    "communityLink": "https://community.hubitat.com/",
+    "category": "Convenience",
+    "tags": "Convenience, Sensors, Automation",
+    "drivers": [
+        {
+            "id": "c3496739-85f2-43c7-9315-1ac379e9a56b",
+            "name": "Temperature-1.4",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/Drivers/Temperature-1.4.groovy",
+            "required": true
+        }
+    ],
+    "apps": [
+        {
+            "id": "c3496739-b259-414c-8828-641d2005768c",
+            "name": "Average Temperature",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/Apps/AverageTemperature.groovy",
+            "required": true
+        },
+        {
+            "id": "c3496739-22af-4c68-9b62-41dad048cbd3",
+            "name": "Temperature-1.4",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/Apps/Temperature-1.4.groovy",
+            "required": true
+        }
+    ]
+}
