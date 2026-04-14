@@ -155,7 +155,7 @@ def mainPage() {
                     input(
                         name: 'trendDepth',
                         type: 'number',
-                        title: 'Trend Depth',
+                        title: 'Depth',
                         defaultValue: configuredTrendDepth(),
                         range: '3..100',
                         required: true
