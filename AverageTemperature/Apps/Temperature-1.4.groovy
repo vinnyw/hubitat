@@ -135,7 +135,7 @@ def mainPage() {
                 input(
                     name: 'trendWindow',
                     type: 'enum',
-                    title: 'Evaluation Window',
+                    title: 'Window',
                     options: trendWindowOptions(),
                     defaultValue: selectedTrendWindow(),
                     required: true
@@ -162,7 +162,7 @@ def mainPage() {
                     )
                 }
 
-                paragraph 'Trend is calculated from the averaged values inside the selected elapsed-time window.'
+                paragraph 'Trend is calculated from the averaged History values inside the selected elapsed-time window.'
             } else {
                 paragraph 'Trend tracking is disabled.'
             }
