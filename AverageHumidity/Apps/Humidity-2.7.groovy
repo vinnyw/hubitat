@@ -21,22 +21,23 @@ import java.math.RoundingMode
 //
 
 def getVersion() {
-    return parent?.getVersion() ?: 'unknown'
+    return getParentVersionValue() ?: 'unknown'
 }
 
-
-//
-//    VERSION HELPERS
-//
-
-def getChildAppVersion() {
-    return getVersion()
+private String getParentVersionValue() {
+    String version = parent?.getVersion()?.toString()?.trim()
+    return version ?: null
 }
 
 private String extractShortVersion(String version) {
-    String raw = version?.toString()?.trim() ?: '0.0'
-    def matcher = raw =~ /(\d+\.\d+)/
-    return matcher.find() ? matcher.group(1) : raw
+    if (!version) return null
+    def matcher = version =~ /(\d+\.\d+)/
+    return matcher.find() ? matcher.group(1) : null
+}
+
+private String getChildDriverType() {
+    String shortVersion = extractShortVersion(getParentVersionValue())
+    return shortVersion ? "Humidity-${shortVersion}" : null
 }
 
 private String getDisplayVersionValue(Object versionValue) {
@@ -57,7 +58,6 @@ def mainPage() {
     applyDefaultSettings()
     prepareAdvancedUiSession()
 
-    def child = getChildDevice(childDni())
     String versionLabel = getDisplayVersionValue(getVersion())
 
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
@@ -95,7 +95,7 @@ def mainPage() {
                   title: 'Enable debug logging',
                   defaultValue: false
         }
-        
+
         section(
             hideable: true,
             hidden: !(state?.advancedExpanded == true),
@@ -155,7 +155,7 @@ def mainPage() {
                     input(
                         name: 'trendDepth',
                         type: 'number',
-                        title: 'Trend Depth', //number of averaged values to keep
+                        title: 'Trend Depth',
                         defaultValue: configuredTrendDepth(),
                         range: '3..100',
                         required: true
@@ -171,7 +171,6 @@ def mainPage() {
         section() {
             paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(versionLabel)}</div>"
         }
-
     }
 }
 
@@ -318,15 +317,15 @@ private String selectedUnitPrecision() {
 
 private Map<String, String> trendWindowOptions() {
     return [
-        '5': '5 minutes',
-        '15': '15 minutes',
-        '30': '30 minutes',
-        '60': '1 hour',
-        '180': '3 hours',
-        '360': '6 hours',
-        '720': '12 hours',
-        '1440': '24 hours',
-        '4320': '3 days',
+        '5'    : '5 minutes',
+        '15'   : '15 minutes',
+        '30'   : '30 minutes',
+        '60'   : '1 hour',
+        '180'  : '3 hours',
+        '360'  : '6 hours',
+        '720'  : '12 hours',
+        '1440' : '24 hours',
+        '4320' : '3 days',
         '10080': '7 days'
     ]
 }
@@ -400,7 +399,7 @@ def updated() {
 //
 
 def childRefreshRequest() {
-    if (!getChildDevice(childDni())) {
+    if (!getManagedChildDevice()) {
         ensureManagedChildDevice()
     }
     refresh()
@@ -435,14 +434,14 @@ def refresh() {
     BigDecimal average = calculateAverage(values)
     BigDecimal rounded = average.setScale(places, RoundingMode.HALF_UP)
 
-    def child = getChildDevice(childDni())
+    def child = getManagedChildDevice()
     if (!child) {
         log.warn "Managed child device is missing for ${app?.label ?: childDni()}, attempting recreation"
         if (!ensureManagedChildDevice()) {
             log.warn "Managed child device could not be recreated for ${app?.label ?: childDni()}"
             return
         }
-        child = getChildDevice(childDni())
+        child = getManagedChildDevice()
         if (!child) {
             log.warn "Managed child device is still unavailable for ${app?.label ?: childDni()}"
             return
@@ -460,38 +459,100 @@ def refresh() {
 //    CHILD DEVICE MANAGEMENT
 //
 
+private String getStableChildDni() {
+    return "Humidity-${app?.id ?: 'pending'}"
+}
+
+private String getLegacyVersionedChildDni() {
+    String version = getParentVersionValue()
+    return (version && app?.id) ? "Humidity-${version}-${app.id}" : null
+}
+
+private Boolean isManagedChildDni(String dni) {
+    if (!dni || !app?.id) return false
+    if (dni == getStableChildDni()) return true
+
+    String legacy = getLegacyVersionedChildDni()
+    if (legacy && dni == legacy) return true
+
+    return dni.startsWith('Humidity-') && dni.endsWith("-${app.id}")
+}
+
 private String childDni() {
-    return "Humidity-${getChildAppVersion()}-${app.id}"
+    String cached = state?.managedChildDni?.toString()
+    if (cached && getChildDevice(cached)) {
+        return cached
+    }
+
+    String stable = getStableChildDni()
+    if (getChildDevice(stable)) {
+        state.managedChildDni = stable
+        return stable
+    }
+
+    String legacy = getLegacyVersionedChildDni()
+    if (legacy && getChildDevice(legacy)) {
+        state.managedChildDni = legacy
+        return legacy
+    }
+
+    def discovered = getChildDevices()?.find { dev ->
+        isManagedChildDni(dev?.deviceNetworkId?.toString())
+    }
+
+    String resolved = discovered?.deviceNetworkId ?: stable
+    state.managedChildDni = resolved
+    return resolved
+}
+
+private def getManagedChildDevice() {
+    return getChildDevice(childDni())
 }
 
 def deleteManagedChildDevice() {
-    def child = getChildDevice(childDni())
-    if (child) {
-        deleteChildDevice(child.deviceNetworkId)
+    List children = getChildDevices()?.findAll { dev ->
+        isManagedChildDni(dev?.deviceNetworkId?.toString())
+    } ?: []
+
+    children.each { child ->
+        try {
+            deleteChildDevice(child.deviceNetworkId)
+        } catch (Exception e) {
+            log.warn "Unable to delete managed child device ${child?.deviceNetworkId}: ${e.message}"
+        }
     }
+
+    state.remove('managedChildDni')
 }
 
 private Boolean ensureManagedChildDevice() {
     String dni = childDni()
-    def child = getChildDevice(dni)
+    String driverType = getChildDriverType()
     String desiredLabel = app?.label?.toString()?.trim()
+
+    if (!driverType) {
+        log.warn "Unable to determine managed child driver type because parent version is unavailable. Parent version='${getVersion()}'."
+        return false
+    }
+
+    def child = getChildDevice(dni)
 
     if (!child) {
         try {
             Map options = [
-                name       : "Humidity-${extractShortVersion()}",
-                label      : desiredLabel ?: "Humidity-${extractShortVersion()}",
+                name       : driverType,
+                label      : desiredLabel ?: driverType,
                 isComponent: false
             ]
 
             addChildDevice(
                 'vinnyw',
-                "Humidity-${extractShortVersion()}",
+                driverType,
                 dni,
                 options
             )
         } catch (Exception e) {
-            log.warn "Unable to create managed child device. Verify driver $Humidity-${extractShortVersion()} (namespace 'vinnyw') is installed. ${e.message}"
+            log.warn "Unable to create managed child device. Verify driver ${driverType} (namespace 'vinnyw') is installed. ${e.message}"
             return false
         }
         child = getChildDevice(dni)
@@ -519,7 +580,7 @@ def getChildDriverLoggingConfig() {
 }
 
 def syncChildSettings() {
-    def child = getChildDevice(childDni())
+    def child = getManagedChildDevice()
     if (!child) return
 
     try {
@@ -557,8 +618,10 @@ private List getSelectedDevices() {
         selected = [selected]
     }
 
+    String managedDni = childDni()
+
     return selected.findAll { dev ->
-        dev && dev.deviceNetworkId != childDni()
+        dev && dev.deviceNetworkId != managedDni
     }
 }
 
@@ -659,7 +722,7 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
 
 private void clearTrendStateAndAttribute() {
     state.remove('humidityHistory')
-    def child = getChildDevice(childDni())
+    def child = getManagedChildDevice()
     child?.clearTrend()
 }
 
@@ -775,7 +838,6 @@ private Map calculateTrend(List<Map> history, String mode) {
     BigDecimal ratePerHour = delta.divide(elapsedHours, 6, RoundingMode.HALF_UP)
     BigDecimal absRatePerHour = ratePerHour.abs()
 
-    // Deadband to avoid noise / tiny oscillations
     if (absRatePerHour < 0.10G) {
         return [trend: 'steady', trendDisplay: 'steady']
     }
