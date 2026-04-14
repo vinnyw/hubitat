@@ -67,7 +67,7 @@ metadata {
 //
 
 def getVersion() {
-    return parent?.getChildAppVersion() ?: 'unknown'
+    return parent?.getVersion() ?: 'unknown'
 }
 
 
