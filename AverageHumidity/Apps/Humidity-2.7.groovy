@@ -135,7 +135,7 @@ def mainPage() {
                 input(
                     name: 'trendWindow',
                     type: 'enum',
-                    title: 'Trend Evaluation Window',
+                    title: 'Evaluation Window',
                     options: trendWindowOptions(),
                     defaultValue: selectedTrendWindow(),
                     required: true
@@ -144,7 +144,7 @@ def mainPage() {
                 input(
                     name: 'trendHistory',
                     type: 'enum',
-                    title: 'Trend History',
+                    title: 'History',
                     options: ['auto': 'Auto (recommended)', 'manual': 'Manual'],
                     defaultValue: selectedTrendHistory(),
                     submitOnChange: true,
