@@ -337,8 +337,8 @@ private Map<String, String> trendWindowOptions() {
 
 private Map<String, String> temperatureUnitDisplayOptions() {
     return [
-        'auto': 'Auto (recommended)',
         'none': 'None',
+        'auto': 'Auto (recommended)',
         '°C'  : '°C',
         '°F'  : '°F'
     ]
