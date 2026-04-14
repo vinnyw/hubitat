@@ -213,32 +213,24 @@ private String htmlEncode(Object value) {
 }
 
 private void prepareAdvancedUiSession() {
-    boolean freshPageLoad = true
-    boolean advancedSubmitRefresh = false
+    String currentSignature = currentAdvancedUiSignature()
+    String previousSignature = state?.advancedUiSignature?.toString()
 
-    try {
-        Map p = (params instanceof Map) ? (Map) params : [:]
-        freshPageLoad = p.isEmpty()
+    boolean advancedSubmitRefresh = previousSignature != null && currentSignature != previousSignature
 
-        advancedSubmitRefresh =
-            p.containsKey('unitPrecision') ||
-            p.containsKey('unitDisplay') ||
-            p.containsKey('trendDisplay') ||
-            p.containsKey('trendWindow') ||
-            p.containsKey('trendHistory') ||
-            p.containsKey('trendDepth') ||
-            p.containsKey('txtEnable') ||
-            p.containsKey('debugEnable')
-    } catch (Exception ignored) {
-        freshPageLoad = true
-        advancedSubmitRefresh = false
-    }
+    state.advancedExpanded = advancedSubmitRefresh
+    state.advancedUiSignature = currentSignature
+}
 
-    if (freshPageLoad) {
-        state.advancedExpanded = false
-    } else if (advancedSubmitRefresh) {
-        state.advancedExpanded = true
-    }
+private String currentAdvancedUiSignature() {
+    return [
+        selectedUnitPrecision(),
+        selectedUnitDisplay(),
+        selectedTrendDisplay(),
+        selectedTrendWindow(),
+        selectedTrendHistory(),
+        configuredTrendDepth()
+    ].collect { it?.toString() ?: '' }.join('|')
 }
 
 
@@ -374,6 +366,7 @@ def initialize() {
 def installed() {
     state.setupComplete = true
     state.remove('advancedExpanded')
+    state.remove('advancedUiSignature')
     if (!parent) {
         log.warn 'Child app install is incomplete because the parent app was not finalized.'
         return
@@ -390,6 +383,7 @@ def updated() {
     unsubscribe()
     unschedule()
     state.remove('advancedExpanded')
+    state.remove('advancedUiSignature')
     initialize()
 }
 
