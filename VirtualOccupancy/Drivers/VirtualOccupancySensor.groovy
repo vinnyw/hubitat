@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 3.7.2
- *  Date        : 2026-03-02
+ *  Version     : 3.7.4
+ *  Date        : 2026-04-15
  *
  *  Description :
  *      Virtual occupancy sensor
@@ -27,7 +27,7 @@
 
 import groovy.transform.Field
 
-@Field static final String DRIVER_VERSION = '3.7.2'
+@Field static final String DRIVER_VERSION = '3.7.4'
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 metadata {
@@ -56,39 +56,39 @@ metadata {
               title: 'Enable descriptionText logging',
               defaultValue: true
 
-        input name: 'logLevel', type: 'enum',
-              title: 'Logging Level',
-              options: ['Off', 'Error', 'Warn', 'Info', 'Debug', 'Trace'],
-              defaultValue: 'Off'
+        input name: 'debugEnable', type: 'bool',
+              title: 'Enable debug logging',
+              defaultValue: false
     }
 }
 
-def installed() {
-    configure()
+
+//
+//    VERSION
+//
+
+def getVersion() {
+    return DRIVER_VERSION
 }
 
-def updated() {
-    configure()
-}
+
+//
+//    UI / PREFERENCES
+//
+
+// Preferences are declared in metadata { preferences { ... } } above.
+
+
+//
+//    LIFECYCLE
+//
 
 def configure() {
-    List allowed = ['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
-    String raw = logLevel
-    String normalized = (raw ?: 'OFF').toUpperCase()
-
-    if (!allowed.contains(normalized)) {
-        device.updateSetting('logLevel', [value: 'Off', type: 'enum'])
-        log.warn "${device.displayName}: Invalid logLevel '${raw}' detected. Auto-corrected to Off."
-    }
+    unschedule('logsOff')
 
     String previousVersion = state.driverVersion
-    state.driverVersion = DRIVER_VERSION
-
-    if (!previousVersion) {
-        log.info "${device.displayName}: Driver installed (v${DRIVER_VERSION})"
-    } else if (previousVersion != DRIVER_VERSION) {
-        log.info "${device.displayName}: Driver upgraded from v${previousVersion} to v${DRIVER_VERSION}"
-    }
+    String currentVersion = getVersion()
+    state.driverVersion = currentVersion
 
     if (!device.currentValue('occupancy')) {
         sendEvent(
@@ -118,6 +118,41 @@ def configure() {
             type: 'digital'
         )
     }
+
+    if (!previousVersion) {
+        logInfo("${device.displayName}: Driver installed (v${currentVersion})")
+    }
+    else if (previousVersion != currentVersion) {
+        logInfo("${device.displayName}: Driver upgraded from v${previousVersion} to v${currentVersion}")
+    }
+
+    scheduleDebugAutoDisableIfNeeded()
+}
+
+def installed() {
+    configure()
+}
+
+def updated() {
+    unschedule()
+    configure()
+}
+
+
+//
+//    COMMANDS
+//
+
+def off() {
+    unoccupied()
+}
+
+def occupied() {
+    changeOccupancyState('occupied', 'on')
+}
+
+def on() {
+    occupied()
 }
 
 def refresh() {
@@ -145,37 +180,91 @@ def refresh() {
         type: 'digital'
     )
 
-    if (txtEnable) {
-        log.info "${device.displayName} was refreshed"
-    }
+    logInfo("${device.displayName} was refreshed")
+    logDebug('refresh() emitted current attribute values')
 }
 
-def occupied() {
-    changeOccupancyState('occupied', 'on')
+def toggleOccupancy() {
+    if (device.currentValue('occupancy') == 'occupied') {
+        unoccupied()
+    }
+    else {
+        occupied()
+    }
 }
 
 def unoccupied() {
     changeOccupancyState('unoccupied', 'off')
 }
 
-def on()  {
-    occupied()
+
+//
+//    LOGGING SCHEDULER
+//
+
+private Integer debugAutoDisableMinutes() {
+    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
 }
 
-def off() {
-    unoccupied()
+private String debugAutoDisableText() {
+    if (DEBUG_AUTO_DISABLE_SECONDS < 60) {
+        return "${DEBUG_AUTO_DISABLE_SECONDS} seconds"
+    }
+
+    return "${debugAutoDisableMinutes()} minutes"
 }
 
-def toggleOccupancy() {
-    if (device.currentValue('occupancy') == 'occupied') {
-        unoccupied()
-    } else {
-        occupied()
+def logsOff() {
+    if (!debugLoggingEnabled()) return
+
+    device.updateSetting('debugEnable', [value: false, type: 'bool'])
+    log.warn "${device.displayName}: Debug logging automatically disabled after ${debugAutoDisableText()}"
+}
+
+private void scheduleDebugAutoDisableIfNeeded() {
+    unschedule('logsOff')
+
+    if (debugLoggingEnabled()) {
+        runIn(DEBUG_AUTO_DISABLE_SECONDS, 'logsOff', [overwrite: true])
+        log.debug "${device.displayName}: Debug logging will automatically turn off in ${debugAutoDisableText()}"
     }
 }
 
+
+//
+//    LOGGING HELPERS
+//
+
+private Boolean debugLoggingEnabled() {
+    return asBool(settings?.debugEnable)
+}
+
+private void logDebug(String msg) {
+    if (debugLoggingEnabled()) {
+        log.debug "${device.displayName}: ${msg}"
+    }
+}
+
+private void logInfo(String msg) {
+    if (asBool(settings?.txtEnable)) {
+        log.info msg
+    }
+}
+
+private Boolean asBool(value) {
+    return value in [true, 'true', 'True', 'TRUE', 1, '1']
+}
+
+
+//
+//    STATE HELPERS
+//
+
 private void changeOccupancyState(String occ, String sw) {
-    if (device.currentValue('occupancy') == occ) return
+    if (device.currentValue('occupancy') == occ) {
+        logDebug("occupancy already ${occ}; no event sent")
+        return
+    }
 
     sendEvent(
         name: 'occupancy',
@@ -201,7 +290,6 @@ private void changeOccupancyState(String occ, String sw) {
         type: 'digital'
     )
 
-    if (txtEnable) {
-        log.info "${device.displayName} occupancy is ${occ}"
-    }
+    logInfo("${device.displayName} occupancy is ${occ}")
+    logDebug("switch set to ${sw} and lastActivity updated")
 }
