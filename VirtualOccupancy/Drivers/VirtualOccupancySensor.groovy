@@ -278,7 +278,7 @@ private void changeOccupancyState(String occ, String sw) {
         name: 'switch',
         value: sw,
         displayed: false,
-        isStateChange: true,
+        isStateChange: false,
         type: 'digital'
     )
 
