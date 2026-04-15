@@ -52,7 +52,7 @@ metadata {
 
     preferences {
         input name: 'txtEnable', type: 'bool',
-              title: 'Enable description text logging',
+              title: 'Enable descriptionText logging',
               defaultValue: true
 
         input name: 'debugEnable', type: 'bool',
