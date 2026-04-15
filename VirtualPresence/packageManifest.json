@@ -3,7 +3,7 @@
     "packageName": "Virtual Presence Sensor",
     "author": "vinny wadding",
     "minimumHEVersion": "2.3.0",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "dateReleased": "2026-03-11",
     "releaseNotes": "• Mark events as digital\n• Debugging Tweaks\n• Initial Release",
     "documentationLink": "https://github.com/vinnyw/hubitat",
