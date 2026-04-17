@@ -38,14 +38,6 @@ private String extractShortVersion(String version) {
     return matcher.find() ? matcher.group(1) : raw
 }
 
-Integer getDebugAutoDisableMinutes() {
-    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
-}
-
-Integer getDebugAutoDisableSeconds() {
-    return DEBUG_AUTO_DISABLE_SECONDS
-}
-
 private String getDisplayVersionValue(Object versionValue) {
     String version = versionValue?.toString()?.trim()
     return version ? "v${version}" : 'unknown'
@@ -91,10 +83,17 @@ def mainPage() {
 }
 
 
-
 //
 //    UI DEFAULTS & VALIDATION HELPERS
 //
+
+Integer getDebugAutoDisableMinutes() {
+    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
+}
+
+Integer getDebugAutoDisableSeconds() {
+    return DEBUG_AUTO_DISABLE_SECONDS
+}
 
 private void enforceLabel() {
     String defaultName = 'Average Temperature'
