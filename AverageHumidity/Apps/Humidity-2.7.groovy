@@ -58,8 +58,6 @@ def mainPage() {
     applyDefaultSettings()
     prepareAdvancedUiSession()
 
-    String versionLabel = getDisplayVersionValue(getVersion())
-
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
 
         if (!state?.setupComplete) {
@@ -169,8 +167,10 @@ def mainPage() {
         }
 
         section() {
+            String versionLabel = getDisplayVersionValue(getVersion())
             paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(versionLabel)}</div>"
         }
+
     }
 }
 
