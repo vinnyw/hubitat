@@ -74,11 +74,11 @@ def mainPage() {
             input 'thisName', 'text', title: 'Custom name for this app', submitOnChange: true
         }
 
-        String Version = getDisplayVersionValue(getVersion())
-
         section() {
+            String Version = getDisplayVersionValue(getVersion())
             paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(Version)}</div>"
         }
+
     }
 }
 
