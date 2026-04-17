@@ -87,14 +87,6 @@ def mainPage() {
 //    UI DEFAULTS & VALIDATION HELPERS
 //
 
-Integer getDebugAutoDisableMinutes() {
-    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
-}
-
-Integer getDebugAutoDisableSeconds() {
-    return DEBUG_AUTO_DISABLE_SECONDS
-}
-
 private void enforceLabel() {
     String defaultName = 'Average Humidity'
     String customName = settings?.thisName?.toString()?.trim()
@@ -103,6 +95,14 @@ private void enforceLabel() {
     if (app?.label != newLabel) {
         app.updateLabel(newLabel)
     }
+}
+
+private Integer getDebugAutoDisableMinutes() {
+    return (int) (DEBUG_AUTO_DISABLE_SECONDS / 60)
+}
+
+private Integer getDebugAutoDisableSeconds() {
+    return DEBUG_AUTO_DISABLE_SECONDS
 }
 
 private String htmlEncode(Object value) {
