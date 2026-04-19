@@ -35,14 +35,14 @@ private String extractShortVersion(String version) {
     return matcher.find() ? matcher.group(1) : null
 }
 
-private String getChildDriverType() {
-    String shortVersion = extractShortVersion(getParentVersionValue())
-    return shortVersion ? "Humidity-${shortVersion}" : null
-}
-
 private String getDisplayVersionValue(Object versionValue) {
     String version = versionValue?.toString()?.trim()
     return version ? "v${version}" : 'unknown'
+}
+
+private String getChildDriverType() {
+    String shortVersion = extractShortVersion(getParentVersionValue())
+    return shortVersion ? "Humidity-${shortVersion}" : null
 }
 
 
