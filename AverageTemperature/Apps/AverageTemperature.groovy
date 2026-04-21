@@ -24,7 +24,7 @@ import groovy.transform.Field
 //
 
 def getVersion() {
-    return '1.4.4'
+    return '1.4.8'
 }
 
 

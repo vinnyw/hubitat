@@ -375,7 +375,7 @@ def initialize() {
     logDebug("Selected temperature devices after filtering: ${configured*.displayName}")
 
     if (configured) {
-        subscribe(configured, 'temperature', 'temperatureHandler')
+        subscribe(configured, 'temperature', 'temperatureHandler', [filterEvents: true])
         logDebug("Subscribed to temperature events for ${configured*.displayName}")
     } else {
         log.warn 'No valid devices selected for temperature averaging.'
@@ -422,11 +422,6 @@ def childRefreshRequest() {
 
 def temperatureHandler(evt) {
     if (!evt) return
-
-    try {
-        if (evt.isStateChange() == false) return
-    } catch (Exception ignored) {
-    }
 
     logDebug("Temperature event from ${evt.device?.displayName}: ${evt.value}")
     refresh()
