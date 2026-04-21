@@ -70,7 +70,7 @@ def mainPage() {
             )
         }
 
-        section(hideable: true, hidden: true, title: 'Advanced Options') {
+        section(hideable: true, hidden: true, title: 'Advanced') {
             input 'thisName', 'text', title: 'Custom name for this app', submitOnChange: true
         }
 

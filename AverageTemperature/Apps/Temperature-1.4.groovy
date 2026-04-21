@@ -97,7 +97,7 @@ def mainPage() {
         section(
             hideable: true,
             hidden: !(state?.advancedExpanded == true),
-            title: 'Advanced Options'
+            title: 'Advanced'
         ) {
             paragraph 'Optional tuning settings for display precision, units, and trend analysis. Most users can leave these at their defaults and only expand this section when finer control is needed.'
 
