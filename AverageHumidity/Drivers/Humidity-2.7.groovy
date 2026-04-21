@@ -6,7 +6,7 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-04-13
+ *  Date        : 2026-04-21
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.

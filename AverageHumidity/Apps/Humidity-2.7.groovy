@@ -354,7 +354,7 @@ def initialize() {
     logDebug("Selected humidity devices after filtering: ${configured*.displayName}")
 
     if (configured) {
-        subscribe(configured, 'humidity', 'humidityHandler')
+        subscribe(configured, 'humidity', 'humidityHandler', [filterEvents: true])
         logDebug("Subscribed to humidity events for ${configured*.displayName}")
     } else {
         log.warn 'No valid devices selected for humidity averaging.'
@@ -401,11 +401,6 @@ def childRefreshRequest() {
 
 def humidityHandler(evt) {
     if (!evt) return
-
-    try {
-        if (evt.isStateChange() == false) return
-    } catch (Exception ignored) {
-    }
 
     logDebug("Humidity event from ${evt.device?.displayName}: ${evt.value}")
     refresh()
