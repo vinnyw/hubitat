@@ -19,10 +19,14 @@
  *          lastActivity       (number) : epoch time (Long)
  *
  *      Capabilities:
- *          TemperatureMeasurement
  *          Sensor
  *          Refresh
  *          Configuration
+ *
+ *      Note:
+ *          This patched output driver intentionally does not declare TemperatureMeasurement.
+ *          It declares temperature as a custom attribute so this virtual output device is not
+ *          offered as a selectable source device in capability.temperatureMeasurement inputs.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -37,11 +41,11 @@ metadata {
         namespace: 'vinnyw',
         author: 'Vinny Wadding'
     ) {
-        capability 'TemperatureMeasurement'
         capability 'Sensor'
         capability 'Refresh'
         capability 'Configuration'
 
+        attribute 'temperature', 'number'
         attribute 'temperatureDisplay', 'string'
         attribute 'trend', 'string'
         attribute 'trendDisplay', 'string'
@@ -83,6 +87,8 @@ def getVersion() {
 //
 
 def configure() {
+    ensureAverageTemperatureOutputMarker()
+
     Map cfg = parent?.getChildDriverLoggingConfig()
     if (cfg instanceof Map) {
         applyParentLogging(cfg.txtEnable, cfg.debugEnable, cfg.debugAutoDisableSeconds)
@@ -228,6 +234,16 @@ private String eventTemperatureUnit() {
 
 private String eventTemperatureUnitSymbol() {
     return eventTemperatureUnit()
+}
+
+private void ensureAverageTemperatureOutputMarker() {
+    try {
+        if (getDataValue('averageTemperatureVirtualDevice') != 'true') {
+            updateDataValue('averageTemperatureVirtualDevice', 'true')
+        }
+    } catch (Exception e) {
+        logDebug("Unable to set Average Temperature output marker: ${e.message}")
+    }
 }
 
 //

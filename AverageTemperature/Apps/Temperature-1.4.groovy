@@ -72,10 +72,18 @@ def mainPage() {
             input(
                 name: 'sensors',
                 type: 'capability.temperatureMeasurement',
-                title: 'Sensors',
+                title: 'Physical temperature sensors',
                 multiple: true,
-                required: true
+                required: true,
+                showFilter: true,
+                submitOnChange: true
             )
+
+            String rejectedSensors = rejectedSelectedSensorSummary()
+            if (rejectedSensors) {
+                paragraph "<div style='color:#b85c00;'>Ignored non-source or invalid selected devices: ${htmlEncode(rejectedSensors)}</div>"
+            }
+
         }
 
         section(
@@ -620,7 +628,7 @@ private BigDecimal calculateAverage(List<BigDecimal> values) {
     return sum.divide(new BigDecimal(values.size()), 6, RoundingMode.HALF_UP)
 }
 
-private List getSelectedDevices() {
+private List normalizeSelectedSensorList() {
     def selected = settings?.sensors
     if (!selected) return []
 
@@ -628,10 +636,79 @@ private List getSelectedDevices() {
         selected = [selected]
     }
 
-    String managedDni = childDni()
-
     return selected.findAll { dev ->
-        dev && dev.deviceNetworkId != managedDni
+        dev != null
+    }
+}
+
+private List getSelectedDevices() {
+    return normalizeSelectedSensorList().findAll { dev ->
+        isEligibleTemperatureSourceDevice(dev)
+    }
+}
+
+private List getRejectedSelectedDevices() {
+    return normalizeSelectedSensorList().findAll { dev ->
+        !isEligibleTemperatureSourceDevice(dev)
+    }
+}
+
+private String rejectedSelectedSensorSummary() {
+    List rejected = getRejectedSelectedDevices()
+    if (!rejected) return null
+
+    return rejected.collect { dev ->
+        dev?.displayName ?: dev?.label ?: dev?.name ?: 'Unknown device'
+    }.join(', ')
+}
+
+private Boolean isEligibleTemperatureSourceDevice(dev) {
+    if (!dev) return false
+
+    if (isAverageTemperatureVirtualOutputDevice(dev)) {
+        return false
+    }
+
+    try {
+        if (dev.hasCapability('TemperatureMeasurement') != true) {
+            return false
+        }
+    } catch (Exception e) {
+        logDebug("Skipping ${dev?.displayName}: unable to verify TemperatureMeasurement capability: ${e.message}")
+        return false
+    }
+
+    try {
+        if (dev.hasAttribute('temperature') != true) {
+            return false
+        }
+    } catch (Exception e) {
+        logDebug("Skipping ${dev?.displayName}: unable to verify temperature attribute: ${e.message}")
+        return false
+    }
+
+    return true
+}
+
+private Boolean isAverageTemperatureVirtualOutputDevice(dev) {
+    if (!dev) return false
+
+    String dni = null
+    try {
+        dni = dev.deviceNetworkId?.toString()
+    } catch (Exception ignored) {
+        dni = null
+    }
+
+    if (isManagedChildDni(dni)) {
+        return true
+    }
+
+    try {
+        return dev.getDataValue('averageTemperatureVirtualDevice') == 'true'
+    } catch (Exception e) {
+        logDebug("Unable to read Average Temperature marker from ${dev?.displayName}: ${e.message}")
+        return false
     }
 }
 
