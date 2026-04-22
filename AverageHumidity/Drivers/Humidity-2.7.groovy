@@ -19,10 +19,14 @@
  *          lastActivity     (number) : epoch time (Long)
  *
  *      Capabilities:
- *          RelativeHumidityMeasurement
  *          Sensor
  *          Refresh
  *          Configuration
+ *
+ *      Note:
+ *          This patched output driver intentionally does not declare RelativeHumidityMeasurement.
+ *          It declares humidity as a custom attribute so this virtual output device is not
+ *          offered as a selectable source device in capability.relativeHumidityMeasurement inputs.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -37,11 +41,11 @@ metadata {
         namespace: 'vinnyw',
         author: 'Vinny Wadding'
     ) {
-        capability 'RelativeHumidityMeasurement'
         capability 'Sensor'
         capability 'Refresh'
         capability 'Configuration'
 
+        attribute 'humidity', 'number'
         attribute 'humidityDisplay', 'string'
         attribute 'trend', 'string'
         attribute 'trendDisplay', 'string'
@@ -83,6 +87,8 @@ def getVersion() {
 //
 
 def configure() {
+    ensureAverageHumidityOutputMarker()
+
     Map cfg = parent?.getChildDriverLoggingConfig()
     if (cfg instanceof Map) {
         applyParentLogging(cfg.txtEnable, cfg.debugEnable, cfg.debugAutoDisableSeconds)
@@ -215,6 +221,17 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     }
 }
 
+
+
+private void ensureAverageHumidityOutputMarker() {
+    try {
+        if (getDataValue('averageHumidityVirtualDevice') != 'true') {
+            updateDataValue('averageHumidityVirtualDevice', 'true')
+        }
+    } catch (Exception e) {
+        logDebug("Unable to set Average Humidity output marker: ${e.message}")
+    }
+}
 
 //
 //    LOGGING CONFIGURATION & SYNC
