@@ -84,7 +84,6 @@ def mainPage() {
                 paragraph "<div style='color:#b85c00;'>Ignored non-source or invalid selected devices: ${htmlEncode(rejectedSensors)}</div>"
             }
 
-            paragraph 'This selector uses the documented RelativeHumidityMeasurement capability. This patched package removes that capability from this app\'s averaged output driver so those virtual output devices are not offered as source sensors.'
         }
 
         section(
