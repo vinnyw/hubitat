@@ -1,38 +1,38 @@
 {
-    "id": "4668f9ce",
-    "packageName": "Average Humidity",
-    "author": "Vinny Wadding",
-    "minimumHEVersion": "2.3.0",
-    "version": "2.7.51",
-    "dateReleased": "2026-04-22",
-    "releaseNotes": "Local patch: remove RelativeHumidityMeasurement capability from this app's averaged virtual output driver, declare humidity as a custom attribute, add selector search, and reject Average Humidity output devices at runtime.",
-    "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageHumidity",
-    "communityLink": "https://community.hubitat.com/",
-    "category": "Convenience",
-    "tags": "Convenience, Sensors, Automation",
-    "drivers": [
-        {
-            "id": "4668f9ce-8ef9-4ac6-b143-f565dd2c4f75",
-            "name": "Humidity-2.7",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/Humidity-2.7.groovy",
-            "required": true
-        }
-    ],
-    "apps": [
-        {
-            "id": "4668f9ce-a4ca-4c8c-a3cb-cf1b0fd7b881",
-            "name": "Average Humidity",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/AverageHumidity.groovy",
-            "required": true
-        },
-        {
-            "id": "4668f9ce-f28f-46c4-b690-78bc3d1948b3",
-            "name": "Humidity-2.7",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/Humidity-2.7.groovy",
-            "required": true
-        }
-    ]
+  "id": "4668f9ce",
+  "packageName": "Average Humidity",
+  "author": "Vinny Wadding",
+  "minimumHEVersion": "2.3.0",
+  "version": "2.7.52",
+  "dateReleased": "2026-04-22",
+  "releaseNotes": "Local patch: restore RelativeHumidityMeasurement on the averaged virtual output driver for Rule Machine 5.1 and Button Controller 5.1 humidity compatibility while keeping selector search, runtime capability/attribute validation, output-device marking, and runtime rejection of this app suite\u2019s own averaged output devices as averaging inputs.",
+  "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageHumidity",
+  "communityLink": "https://community.hubitat.com/",
+  "category": "Convenience",
+  "tags": "Convenience, Sensors, Automation",
+  "drivers": [
+    {
+      "id": "4668f9ce-8ef9-4ac6-b143-f565dd2c4f75",
+      "name": "Humidity-2.7",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/Humidity-2.7.groovy",
+      "required": true
+    }
+  ],
+  "apps": [
+    {
+      "id": "4668f9ce-a4ca-4c8c-a3cb-cf1b0fd7b881",
+      "name": "Average Humidity",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/AverageHumidity.groovy",
+      "required": true
+    },
+    {
+      "id": "4668f9ce-f28f-46c4-b690-78bc3d1948b3",
+      "name": "Humidity-2.7",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/Humidity-2.7.groovy",
+      "required": true
+    }
+  ]
 }

@@ -6,7 +6,7 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-04-21
+ *  Date        : 2026-04-22
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
@@ -20,13 +20,15 @@
  *
  *      Capabilities:
  *          Sensor
+ *          RelativeHumidityMeasurement
  *          Refresh
  *          Configuration
  *
  *      Note:
- *          This patched output driver intentionally does not declare RelativeHumidityMeasurement.
- *          It declares humidity as a custom attribute so this virtual output device is not
- *          offered as a selectable source device in capability.relativeHumidityMeasurement inputs.
+ *          RelativeHumidityMeasurement is declared so Rule Machine 5.1 and Button Controller
+ *          5.1 can use this virtual output device as a standard humidity device. The child
+ *          app rejects this suite's own averaged output devices at runtime if they are
+ *          accidentally selected as inputs.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -42,10 +44,10 @@ metadata {
         author: 'Vinny Wadding'
     ) {
         capability 'Sensor'
+        capability 'RelativeHumidityMeasurement'
         capability 'Refresh'
         capability 'Configuration'
 
-        attribute 'humidity', 'number'
         attribute 'humidityDisplay', 'string'
         attribute 'trend', 'string'
         attribute 'trendDisplay', 'string'

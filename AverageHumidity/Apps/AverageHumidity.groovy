@@ -24,7 +24,7 @@ import groovy.transform.Field
 //
 
 def getVersion() {
-    return '2.7.51'
+    return '2.7.52'
 }
 
 
@@ -62,7 +62,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         section() {
             app(
-                title: "Add New",
+                title: "Add New Device",
                 name: 'childApps',
                 appName: "Humidity-${getShortVersion()}",
                 namespace: 'vinnyw',
