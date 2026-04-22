@@ -72,7 +72,7 @@ def mainPage() {
             input(
                 name: 'sensors',
                 type: 'capability.relativeHumidityMeasurement',
-                title: 'Physical humidity sensors',
+                title: 'Select Sensors',
                 multiple: true,
                 required: true,
                 showFilter: true,
