@@ -62,7 +62,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         section() {
             app(
-                title: "Add New Sensor",
+                title: "Add New",
                 name: 'childApps',
                 appName: "Temperature-${getShortVersion()}",
                 namespace: 'vinnyw',
