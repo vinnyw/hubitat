@@ -24,7 +24,7 @@ import groovy.transform.Field
 //
 
 def getVersion() {
-    return '1.4.10'
+    return '1.4.11'
 }
 
 
@@ -62,7 +62,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         section() {
             app(
-                title: "Add New",
+                title: "Add New Sensor",
                 name: 'childApps',
                 appName: "Temperature-${getShortVersion()}",
                 namespace: 'vinnyw',

@@ -20,13 +20,14 @@
  *
  *      Capabilities:
  *          Sensor
+ *          TemperatureMeasurement
  *          Refresh
  *          Configuration
  *
  *      Note:
- *          This patched output driver intentionally does not declare TemperatureMeasurement.
- *          It declares temperature as a custom attribute so this virtual output device is not
- *          offered as a selectable source device in capability.temperatureMeasurement inputs.
+ *          TemperatureMeasurement is declared so Rule Machine 5.1 can use this virtual output
+ *          device as a standard Temperature device. The child app rejects this suite's own
+ *          averaged output devices at runtime if they are accidentally selected as inputs.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -42,10 +43,10 @@ metadata {
         author: 'Vinny Wadding'
     ) {
         capability 'Sensor'
+        capability 'TemperatureMeasurement'
         capability 'Refresh'
         capability 'Configuration'
 
-        attribute 'temperature', 'number'
         attribute 'temperatureDisplay', 'string'
         attribute 'trend', 'string'
         attribute 'trendDisplay', 'string'

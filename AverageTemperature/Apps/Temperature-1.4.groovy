@@ -72,7 +72,7 @@ def mainPage() {
             input(
                 name: 'sensors',
                 type: 'capability.temperatureMeasurement',
-                title: 'Select Sensors',
+                title: 'Temperature sensors',
                 multiple: true,
                 required: true,
                 showFilter: true,
