@@ -1,38 +1,38 @@
 {
-    "id": "c3496739",
-    "packageName": "VoiceMonkey Integration",
-    "author": "Vinny Wadding",
-    "minimumHEVersion": "2.3.0",
-    "version": "1.1.32",
-    "dateReleased": "2026-05-01",
-    "releaseNotes": "Local patch: parent app now derives the child app name from the short version and the child app now derives the child driver name from the parent version, matching the AverageTemperature inclusion pattern.",
-    "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/VoiceMonkey",
-    "communityLink": "https://community.hubitat.com/",
-    "category": "Convenience",
-    "tags": "Convenience, Speech, Automation",
-    "drivers": [
-        {
-            "id": "c3496739-9d5a-41a1-b78a-127b55709c9d",
-            "name": "VoiceMonkeyDevice-1.1",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Drivers/VoiceMonkeyDevice-1.1.groovy",
-            "required": true
-        }
-    ],
-    "apps": [
-        {
-            "id": "c3496739-c82f-4046-8acd-f64aab79f3e9",
-            "name": "VoiceMonkey Integration",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkey.groovy",
-            "required": true
-        },
-        {
-            "id": "c3496739-c739-433b-a340-3fe150df5e5b",
-            "name": "VoiceMonkeyDevice-1.1",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkeyDevice-1.1.groovy",
-            "required": true
-        }
-    ]
+  "id": "c3496739",
+  "packageName": "VoiceMonkey Integration",
+  "author": "Vinny Wadding",
+  "minimumHEVersion": "2.3.0",
+  "version": "1.1.32",
+  "dateReleased": "2026-05-01",
+  "releaseNotes": "ASCII-only test patch for HPM install troubleshooting; parent app listed before child app.",
+  "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/VoiceMonkey",
+  "communityLink": "https://community.hubitat.com/",
+  "category": "Convenience",
+  "tags": "Convenience, Speech, Automation",
+  "drivers": [
+    {
+      "id": "c3496739-9d5a-41a1-b78a-127b55709c9d",
+      "name": "VoiceMonkeyDevice-1.1",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Drivers/VoiceMonkeyDevice-1.1.groovy",
+      "required": true
+    }
+  ],
+  "apps": [
+    {
+      "id": "c3496739-c82f-4046-8acd-f64aab79f3e9",
+      "name": "VoiceMonkey Integration",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkey.groovy",
+      "required": true
+    },
+    {
+      "id": "c3496739-c739-433b-a340-3fe150df5e5b",
+      "name": "VoiceMonkeyDevice-1.1",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkeyDevice-1.1.groovy",
+      "required": true
+    }
+  ]
 }

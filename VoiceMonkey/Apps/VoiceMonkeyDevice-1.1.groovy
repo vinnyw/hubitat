@@ -63,7 +63,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         if (!state?.setupComplete) {
             section('Important') {
-                paragraph '⚠️ Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
+                paragraph 'Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
             }
         }
 
@@ -550,8 +550,8 @@ private Map<String, String> voiceOptions() {
     options['Justin'] = 'English US (M) - Justin'
     options['Matthew'] = 'English US (M) - Matthew'
     options['Geraint'] = 'English Welsh (M) - Geraint'
-    options['Celine'] = 'French (F) - Céline'
-    options['Lea'] = 'French (F) - Léa'
+    options['Celine'] = 'French (F) - Celine'
+    options['Lea'] = 'French (F) - Lea'
     options['Mathieu'] = 'French (M) - Mathieu'
     options['Chantal'] = 'French Canadian (F) - Chantal'
     options['Marlene'] = 'German (F) - Marlene'
@@ -563,13 +563,13 @@ private Map<String, String> voiceOptions() {
     options['Takumi'] = 'Japanese (M) - Takumi'
     options['Mizuki'] = 'Japanese (F) - Mizuki'
     options['Camila'] = 'Portugese Brazilian (F) - Camila'
-    options['Vitoria'] = 'Portugese Brazilian (F) - Vitória'
+    options['Vitoria'] = 'Portugese Brazilian (F) - Vitoria'
     options['Ricardo'] = 'Portugese Brazilian (M) - Ricardo'
     options['Conchita'] = 'Spanish European (F) - Conchita'
     options['Lucia'] = 'Spanish European (F) - Lucia'
     options['Enrique'] = 'Spanish European (M) - Enrique'
     options['Mia'] = 'Spanish Mexican (F) - Mia'
-    options['Penelope'] = 'Spanish US (F) - Penélope'
+    options['Penelope'] = 'Spanish US (F) - Penelope'
     options['Lupe'] = 'Spanish US (F) - Lupe'
     options['Miguel'] = 'Spanish US (M) - Miguel'
     return options
