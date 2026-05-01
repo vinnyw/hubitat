@@ -1,8 +1,36 @@
+/**
+ *  --------------------------------------------------------------------------------------------------------------
+ *  VoiceMonkey Device
+ *  --------------------------------------------------------------------------------------------------------------
+ *
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : 1.1.32
+ *  Date        : 2026-05-01
+ *
+ *  Description :
+ *      VoiceMonkey child driver for queued speech dispatch.
+ *
+ *      Attributes:
+ *          queueStatus   (enum)    : status
+ *          queueSize     (number)  : queued item count
+ *          lastActivity  (string)  : formatted timestamp
+ *
+ *      Capabilities:
+ *          Sensor
+ *          Actuator
+ *          SpeechSynthesis
+ *          Configuration
+ *
+ *  --------------------------------------------------------------------------------------------------------------
+ */
+
 metadata {
     definition(
         name: 'VoiceMonkeyDevice-1.1',
         namespace: 'vinnyw',
-        author: 'Vinny Wadding'
+        author: 'Vinny Wadding',
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Drivers/VoiceMonkeyDevice-1.1.groovy'
     ) {
         capability 'Actuator'
         capability 'Sensor'
