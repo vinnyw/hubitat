@@ -18,7 +18,6 @@ import groovy.transform.Field
 
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
-
 //
 //    VERSION
 //
@@ -26,7 +25,6 @@ import groovy.transform.Field
 def getVersion() {
     return '2.7.52'
 }
-
 
 //
 //    VERSION HELPERS
@@ -47,7 +45,6 @@ def getShortVersion() {
     return extractShortVersion(getVersion())
 }
 
-
 //
 //    UI / PREFERENCES
 //
@@ -62,7 +59,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         section() {
             app(
-                title: "Add New Device",
+                title: 'Add New Device',
                 name: 'childApps',
                 appName: "Humidity-${getShortVersion()}",
                 namespace: 'vinnyw',
@@ -78,10 +75,8 @@ def mainPage() {
             String Version = getDisplayVersionValue(getVersion())
             paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(Version)}</div>"
         }
-
     }
 }
-
 
 //
 //    UI DEFAULTS & VALIDATION HELPERS
@@ -115,13 +110,12 @@ private String htmlEncode(Object value) {
         .replace("'", '&#39;')
 }
 
-
 //
 //    LIFECYCLE
 //
 
 def initialize() {
-    // ⚠️ NOTE: ParentApp should NOT manage devices or subscriptions.
+// ⚠️ NOTE: ParentApp should NOT manage devices or subscriptions.
 }
 
 def installed() {
