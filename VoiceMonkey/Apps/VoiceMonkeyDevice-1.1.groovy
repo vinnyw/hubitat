@@ -531,8 +531,8 @@ private List<Map<String, String>> languageOptions() {
     ]
 }
 
-private Map<String, String> voiceOptions() {
-    Map<String, String> options = new LinkedHashMap<String, String>()
+private Map voiceOptions() {
+    Map options = [:]
     options[''] = 'Alexa (default)'
     options['Nicole'] = 'English Australian (F) - Nicole'
     options['Russell'] = 'English Australian (M) - Russell'
@@ -683,7 +683,19 @@ def deferredQueueStateRefresh() {
     }
 }
 
-def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice = null, String chime = null) {
+def enqueueSpeakFromDevice(String deviceNetworkId, String text) {
+    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, null, null)
+}
+
+def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice) {
+    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, voice, null)
+}
+
+def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice, String chime) {
+    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, voice, chime)
+}
+
+private def enqueueSpeakFromDeviceInternal(String deviceNetworkId, String text, String voice, String chime) {
     if (deviceNetworkId != getChildDni()) return
 
     String message = sanitizeAnnouncementText(text)
@@ -757,7 +769,7 @@ def completePlayback() {
 
 private List getQueuedItems() {
     if (state.queue instanceof List) {
-        return new ArrayList(state.queue)
+        return state.queue.collect { it }
     }
 
     return []
@@ -1049,7 +1061,7 @@ private void syncLocalQueueState(child = null, String desiredStatus = null, Stri
 //
 
 private void markAcceptedForItem(Long itemId, String text) {
-    Map activeItem = (state.activeItem instanceof Map) ? new LinkedHashMap(state.activeItem as Map) : null
+    Map activeItem = (state.activeItem instanceof Map) ? (state.activeItem.collectEntries { k, v -> [(k): v] }) : null
     if (!activeItem || (itemId != null && safeLong(activeItem.id, null) != itemId)) {
         logDebug("Ignoring acceptance for non-active item ${itemId}")
         return
