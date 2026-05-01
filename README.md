@@ -4,6 +4,9 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/packageM
 ### Average Temperature
 https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/packageManifest.json
 
+### VoiceMonkey Integration
+https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/packageManifest.json
+
 ### Virtual Occupancy Sensor
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancy/packageManifest.json
 
