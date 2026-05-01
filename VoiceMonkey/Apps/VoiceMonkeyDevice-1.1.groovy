@@ -63,7 +63,7 @@ def mainPage() {
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         if (!state?.setupComplete) {
             section('Important') {
-                paragraph 'Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
+                paragraph '⚠️ Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
             }
         }
 
@@ -531,8 +531,8 @@ private List<Map<String, String>> languageOptions() {
     ]
 }
 
-private Map voiceOptions() {
-    Map options = [:]
+private Map<String, String> voiceOptions() {
+    Map<String, String> options = new LinkedHashMap<String, String>()
     options[''] = 'Alexa (default)'
     options['Nicole'] = 'English Australian (F) - Nicole'
     options['Russell'] = 'English Australian (M) - Russell'
@@ -550,8 +550,8 @@ private Map voiceOptions() {
     options['Justin'] = 'English US (M) - Justin'
     options['Matthew'] = 'English US (M) - Matthew'
     options['Geraint'] = 'English Welsh (M) - Geraint'
-    options['Celine'] = 'French (F) - Celine'
-    options['Lea'] = 'French (F) - Lea'
+    options['Celine'] = 'French (F) - Céline'
+    options['Lea'] = 'French (F) - Léa'
     options['Mathieu'] = 'French (M) - Mathieu'
     options['Chantal'] = 'French Canadian (F) - Chantal'
     options['Marlene'] = 'German (F) - Marlene'
@@ -563,13 +563,13 @@ private Map voiceOptions() {
     options['Takumi'] = 'Japanese (M) - Takumi'
     options['Mizuki'] = 'Japanese (F) - Mizuki'
     options['Camila'] = 'Portugese Brazilian (F) - Camila'
-    options['Vitoria'] = 'Portugese Brazilian (F) - Vitoria'
+    options['Vitoria'] = 'Portugese Brazilian (F) - Vitória'
     options['Ricardo'] = 'Portugese Brazilian (M) - Ricardo'
     options['Conchita'] = 'Spanish European (F) - Conchita'
     options['Lucia'] = 'Spanish European (F) - Lucia'
     options['Enrique'] = 'Spanish European (M) - Enrique'
     options['Mia'] = 'Spanish Mexican (F) - Mia'
-    options['Penelope'] = 'Spanish US (F) - Penelope'
+    options['Penelope'] = 'Spanish US (F) - Penélope'
     options['Lupe'] = 'Spanish US (F) - Lupe'
     options['Miguel'] = 'Spanish US (M) - Miguel'
     return options
@@ -683,19 +683,7 @@ def deferredQueueStateRefresh() {
     }
 }
 
-def enqueueSpeakFromDevice(String deviceNetworkId, String text) {
-    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, null, null)
-}
-
-def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice) {
-    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, voice, null)
-}
-
-def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice, String chime) {
-    enqueueSpeakFromDeviceInternal(deviceNetworkId, text, voice, chime)
-}
-
-private def enqueueSpeakFromDeviceInternal(String deviceNetworkId, String text, String voice, String chime) {
+def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice = null, String chime = null) {
     if (deviceNetworkId != getChildDni()) return
 
     String message = sanitizeAnnouncementText(text)
@@ -769,7 +757,7 @@ def completePlayback() {
 
 private List getQueuedItems() {
     if (state.queue instanceof List) {
-        return state.queue.collect { it }
+        return new ArrayList(state.queue)
     }
 
     return []
@@ -1061,7 +1049,7 @@ private void syncLocalQueueState(child = null, String desiredStatus = null, Stri
 //
 
 private void markAcceptedForItem(Long itemId, String text) {
-    Map activeItem = (state.activeItem instanceof Map) ? (state.activeItem.collectEntries { k, v -> [(k): v] }) : null
+    Map activeItem = (state.activeItem instanceof Map) ? new LinkedHashMap(state.activeItem as Map) : null
     if (!activeItem || (itemId != null && safeLong(activeItem.id, null) != itemId)) {
         logDebug("Ignoring acceptance for non-active item ${itemId}")
         return
@@ -1287,7 +1275,7 @@ private Double estimatePunctuationPauseSeconds(String text) {
 }
 
 private String sanitizeAnnouncementText(Object value) {
-    String text = value?
+    String text = value?.toString()
     if (text == null) return null
 
     String sanitized = text

@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.1.32",
   "dateReleased": "2026-05-01",
-  "releaseNotes": "Local patch: parent app now derives the child app name from the short version and the child app now derives the child driver name from the parent version, matching the AverageTemperature inclusion pattern.",
+  "releaseNotes": "Corrected package: parent app listed before child app for HPM, and child app compile fix applied while preserving non-English display names.",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/VoiceMonkey",
   "communityLink": "https://community.hubitat.com/",
   "category": "Convenience",
