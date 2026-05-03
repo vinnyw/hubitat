@@ -121,9 +121,15 @@ def mainPage() {
         section(hideable: true, hidden: false, title: 'Logging') {
             paragraph "Debug logging automatically turns off after ${debugAutoDisableMinutes()} minutes."
 
+            input name: 'txtEnable', type: 'bool',
+                  title: 'Enable descriptionText logging',
+                  defaultValue: true,
+                  submitOnChange: true
+
             input name: 'debugEnable', type: 'bool',
                   title: 'Enable debug logging',
-                  defaultValue: false
+                  defaultValue: false,
+                  submitOnChange: true
         }
 
         section(hideable: true, hidden: true, title: 'Advanced') {
@@ -235,8 +241,16 @@ private Boolean debugLoggingEnabled() {
     return normalizeBoolean(settings?.debugEnable, false)
 }
 
+private Boolean descriptionTextLoggingEnabled() {
+    return normalizeBoolean(settings?.txtEnable, true)
+}
+
 private void logDebug(String msg) {
     if (debugLoggingEnabled()) log.debug "${app.label}: ${msg}"
+}
+
+private void logInfo(String msg) {
+    if (descriptionTextLoggingEnabled()) log.info "${app.label}: ${msg}"
 }
 
 def logsOff() {
