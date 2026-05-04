@@ -1,21 +1,21 @@
 {
-  "id": "55066e1e",
+  "id": "ee9ec830",
   "packageName": "Candeo C-ZB-SR5BR Scene Remote",
   "author": "Vinny Wadding",
   "minimumHEVersion": "2.3.0",
   "version": "1.1.12",
   "dateReleased": "2026-05-04",
-  "releaseNotes": "Initial HPM package manifest for Candeo C-ZB-SR5BR Smart Scene Remote version 1.1.12.",
-  "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageTemperature",
+  "releaseNotes": "Community refactor of Candeo C-ZB-SR5BR driver to implement rotation clicks",
+  "documentationLink": "https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/",
   "communityLink": "https://community.hubitat.com/",
   "category": "Control",
   "tags": "Buttons, Zigbee",
   "drivers": [
     {
-      "id": "6a18682c-4e01-4f39-b032-dcbb8f0c3f43",
+      "id": "ee9ec830-0444-429d-be7a-1d446c1ff67f",
       "name": "Candeo C-ZB-SR5BR Scene Remote",
       "namespace": "vinnyw",
-      "location": "REPLACE_WITH_RAW_DRIVER_URL",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/Drivers/Candeo_CZB_SR5BR_Scene_Remote.groovy",
       "required": true
     }
   ]

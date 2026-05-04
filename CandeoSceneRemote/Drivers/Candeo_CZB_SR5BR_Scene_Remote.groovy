@@ -1,23 +1,58 @@
 /**
- *    Candeo C-ZB-SR5BR Smart Scene Remote
+ *  --------------------------------------------------------------------------------------------------------------
+ *  Candeo C-ZB-SR5BR Scene Remote
+ *  --------------------------------------------------------------------------------------------------------------
  *
- *    Optimized revision:
- *    - Removes unnecessary synthetic button events during install
- *    - Uses targeted scheduler cleanup instead of broad state clearing
- *    - Uses state only; avoids atomicState overhead with singleThreaded enabled
- *    - Reuses constant lookup maps instead of rebuilding them for each parse
- *    - Adds driver version tracking via script field constant
- *    - Simplifies preferences and adopts standard txt/debug logging toggles
- *    - Aligns rotation cooldown defaults across UI, stored settings, logs, and runtime fallbacks
- *     */
-
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : 1.1.12
+ *  Date        : 2026-05-04
+ *
+ *  Description :
+ *      Zigbee driver for the Candeo C-ZB-SR5BR scene remote.
+ *
+ *      Supports five front buttons plus rotary ring actions exposed as button events.
+ *      Rotation is sampled over a configurable time window and emitted as a single
+ *      button event, with button 6 used for clockwise rotation and button 7 used
+ *      for anticlockwise rotation.
+ *
+ *      Attributes:
+ *          rotationClickCount  (number) : signed click count for the last emitted rotation
+ *
+ *      Capabilities:
+ *          PushableButton
+ *          DoubleTapableButton
+ *          ReleasableButton
+ *          HoldableButton
+ *          Battery
+ *          Sensor
+ *          Configuration
+ *
+ *      Notes:
+ *          Buttons 1 through 5 are mapped from the remote's front buttons.
+ *          Button 6 represents clockwise ring rotation.
+ *          Button 7 represents anticlockwise ring rotation.
+ *
+ *          Battery reporting, rotation window, and rotation cooldown are configurable
+ *          in driver preferences.
+ *
+ *      Attribution and Disclaimer:
+ *          I am in no way claiming this driver to be wholly my original work.
+ *          This version is based heavily on the brilliant work of the Candeo
+ *          Engineering and Development teams.
+ *
+ *          The original driver can be found in the Candeo repository:
+ *          https://github.com/candeosmart/hubitat-zigbee/blob/main/Candeo%20C-ZB-SR5BR%20Smart%20Scene%20Remote.groovy
+ *
+ *  --------------------------------------------------------------------------------------------------------------
+ */
 import groovy.transform.Field
 
 metadata {
     definition(
-        name: 'Candeo C-ZB-SR5BR Smart Scene Remote',
-        namespace: 'Candeo',
-        author: 'Candeo',
+        name: 'Candeo C-ZB-SR5BR Scene Remote',
+        namespace: 'vinnyw',
+        author: 'Vinny Wadding'
         singleThreaded: true
     ) {
         capability 'PushableButton'
@@ -572,7 +607,7 @@ private Integer debugAutoDisable() {
 }
 
 private void updateEnumSettingIfChanged(String name, String newValue) {
-    String currentValue = settings?."${name}"?.toString()
+    String currentValue = settings?."${name}"?
     if (currentValue != newValue) {
         device.updateSetting(name, [value: newValue, type: 'enum'])
     }
