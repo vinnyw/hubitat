@@ -52,7 +52,7 @@ metadata {
     definition(
         name: 'Candeo C-ZB-SR5BR Scene Remote',
         namespace: 'vinnyw',
-        author: 'Vinny Wadding'
+        author: 'Vinny Wadding',
         singleThreaded: true
     ) {
         capability 'PushableButton'
