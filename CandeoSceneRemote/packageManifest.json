@@ -1,0 +1,22 @@
+{
+  "id": "55066e1e",
+  "packageName": "Candeo C-ZB-SR5BR Scene Remote",
+  "author": "Vinny Wadding",
+  "minimumHEVersion": "2.3.0",
+  "version": "1.1.12",
+  "dateReleased": "2026-05-04",
+  "releaseNotes": "Initial HPM package manifest for Candeo C-ZB-SR5BR Smart Scene Remote version 1.1.12.",
+  "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageTemperature",
+  "communityLink": "https://community.hubitat.com/",
+  "category": "Control",
+  "tags": "Buttons, Zigbee",
+  "drivers": [
+    {
+      "id": "6a18682c-4e01-4f39-b032-dcbb8f0c3f43",
+      "name": "Candeo C-ZB-SR5BR Scene Remote",
+      "namespace": "vinnyw",
+      "location": "REPLACE_WITH_RAW_DRIVER_URL",
+      "required": true
+    }
+  ]
+}
