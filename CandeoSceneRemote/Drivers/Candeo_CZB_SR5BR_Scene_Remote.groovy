@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.12
+ *  Version     : 1.1.13
  *  Date        : 2026-05-04
  *
  *  Description :
@@ -97,14 +97,23 @@ metadata {
     }
 }
 
+//
+//    DRIVER CONSTANTS
+//
+
+private @Field final String DRIVER_VERSION = '1.1.13'
 private @Field final String DRIVER_NAME = 'Candeo C-ZB-SR5BR'
-private @Field final String DRIVER_VERSION = '1.1.12'
-private @Field final Boolean DEBUG = false
+
+private @Field final String DEFAULT_BATTERYREPORT = '28800'
+private @Field final String DEFAULT_ROTATIONCOOLDOWN = '250'
+private @Field final String DEFAULT_ROTATIONWINDOW = '500'
+
 private @Field final Integer LOGSOFF = 1800
 private @Field final Integer ZIGBEEDELAY = 1000
-private @Field final String DEFAULT_BATTERYREPORT = '28800'
-private @Field final String DEFAULT_ROTATIONWINDOW = '500'
-private @Field final String DEFAULT_ROTATIONCOOLDOWN = '250'
+
+//
+//    PREFERENCE OPTIONS
+//
 
 private @Field final Map BATTERYREPORT = [
     '3600': '1h',
@@ -115,13 +124,6 @@ private @Field final Map BATTERYREPORT = [
     '28800': '8h',
     '43200': '12h',
     '64800': '18h'
-]
-
-private @Field final Map ROTATIONWINDOW = [
-    '250': '250ms',
-    '500': '500ms',
-    '750': '750ms',
-    '1000': '1000ms'
 ]
 
 private @Field final Map ROTATIONCOOLDOWN = [
@@ -138,13 +140,16 @@ private @Field final Map ROTATIONCOOLDOWN = [
     '500': '500ms'
 ]
 
-private @Field final Map BUTTON_NUMBERS = [
-    '01': 1,
-    '02': 2,
-    '04': 3,
-    '08': 4,
-    '10': 5
+private @Field final Map ROTATIONWINDOW = [
+    '250': '250ms',
+    '500': '500ms',
+    '750': '750ms',
+    '1000': '1000ms'
 ]
+
+//
+//    BUTTON AND RING MAPPINGS
+//
 
 private @Field final Map BUTTON_EVENTS = [
     '01': 'pushed',
@@ -153,29 +158,36 @@ private @Field final Map BUTTON_EVENTS = [
     '04': 'released'
 ]
 
+private @Field final Map BUTTON_NUMBERS = [
+    '01': 1,
+    '02': 2,
+    '04': 3,
+    '08': 4,
+    '10': 5
+]
+
 private @Field final Map RING_BUTTONS = [
     '01': 6,
     '02': 7
 ]
 
+//
+//    VERSION
+//
+
 String getVersion() {
     return DRIVER_VERSION
 }
 
-void installed() {
-    applyDefaultSettings()
-    initializeLifecycle(true)
-}
+//
+//    UI / PREFERENCES
+//
 
-void updated() {
-    applyDefaultSettings()
-    initializeLifecycle(false)
-}
+// Preferences are declared in metadata { preferences { ... } } above.
 
-void uninstalled() {
-    unschedule()
-    state.clear()
-}
+//
+//    LIFECYCLE
+//
 
 List<String> configure() {
     ensureDriverVersionState(false)
@@ -205,9 +217,46 @@ List<String> configure() {
     return cmds
 }
 
-void push(BigDecimal button) {
-    sendButtonEvent('pushed', button)
+private void initializeLifecycle(Boolean newInstall) {
+    unschedule('logsOff')
+    unschedule('emitRingRotationEvent')
+
+    resetRotationState(true)
+    initializeAttributes()
+    updateDriverVersionState()
+    scheduleDebugAutoDisableIfNeeded()
+
+    if (newInstall) {
+        logDebug('driver installed')
+    }
+    else {
+        logDebug('preferences updated')
+    }
+
+    logDebug("batteryReporting setting is: ${BATTERYREPORT[(settings?.batteryReporting ?: DEFAULT_BATTERYREPORT)]}")
+    logDebug("rotationWindow setting is: ${ROTATIONWINDOW[(settings?.rotationWindow ?: DEFAULT_ROTATIONWINDOW)]}")
+    logDebug("rotationCooldown setting is: ${ROTATIONCOOLDOWN[(settings?.rotationCooldown ?: DEFAULT_ROTATIONCOOLDOWN)]}")
+    logDebug('if you changed Battery Reporting, wake the remote if needed and press Configure')
 }
+
+void installed() {
+    applyDefaultSettings()
+    initializeLifecycle(true)
+}
+
+void uninstalled() {
+    unschedule()
+    state.clear()
+}
+
+void updated() {
+    applyDefaultSettings()
+    initializeLifecycle(false)
+}
+
+//
+//    COMMANDS
+//
 
 void doubleTap(BigDecimal button) {
     sendButtonEvent('doubleTapped', button)
@@ -217,9 +266,17 @@ void hold(BigDecimal button) {
     sendButtonEvent('held', button)
 }
 
+void push(BigDecimal button) {
+    sendButtonEvent('pushed', button)
+}
+
 void release(BigDecimal button) {
     sendButtonEvent('released', button)
 }
+
+//
+//    PARSING
+//
 
 List<Map<String, ?>> parse(String description) {
     if (!description) {
@@ -261,71 +318,6 @@ List<Map<String, ?>> parse(String description) {
     return null
 }
 
-private void initializeLifecycle(Boolean newInstall) {
-    unschedule('logsOff')
-    unschedule('emitRingRotationEvent')
-
-    resetRotationState(true)
-    initializeAttributes()
-    updateDriverVersionState()
-    scheduleDebugAutoDisableIfNeeded()
-
-    if (newInstall) {
-        logDebug('driver installed')
-    }
-    else {
-        logDebug('preferences updated')
-    }
-
-    logDebug("batteryReporting setting is: ${BATTERYREPORT[(settings?.batteryReporting ?: DEFAULT_BATTERYREPORT)]}")
-    logDebug("rotationWindow setting is: ${ROTATIONWINDOW[(settings?.rotationWindow ?: DEFAULT_ROTATIONWINDOW)]}")
-    logDebug("rotationCooldown setting is: ${ROTATIONCOOLDOWN[(settings?.rotationCooldown ?: DEFAULT_ROTATIONCOOLDOWN)]}")
-    logDebug('if you changed Battery Reporting, wake the remote if needed and press Configure')
-}
-
-private void applyDefaultSettings() {
-    updateBooleanSettingIfChanged('txtEnable', true)
-    updateBooleanSettingIfChanged('debugEnable', false)
-    updateEnumSettingIfChanged('batteryReporting', DEFAULT_BATTERYREPORT)
-    updateEnumSettingIfChanged('rotationWindow', DEFAULT_ROTATIONWINDOW)
-    updateEnumSettingIfChanged('rotationCooldown', DEFAULT_ROTATIONCOOLDOWN)
-}
-
-private void initializeAttributes() {
-    if ((device.currentValue('numberOfButtons') as Integer) != 7) {
-        sendEvent(name: 'numberOfButtons', value: 7, isStateChange: true)
-    }
-
-    if (device.currentValue('rotationClickCount') == null) {
-        sendEvent(name: 'rotationClickCount', value: 0, isStateChange: true)
-    }
-}
-
-private void updateDriverVersionState() {
-    ensureDriverVersionState(true)
-}
-
-private void ensureDriverVersionState(Boolean logChanges) {
-    String previousVersion = state.driverVersion
-    String currentVersion = getVersion()
-
-    if (previousVersion != currentVersion) {
-        state.driverVersion = currentVersion
-
-        if (logChanges) {
-            if (!previousVersion) {
-                logDescriptionText("Driver installed (v${currentVersion})")
-            }
-            else {
-                logDescriptionText("Driver upgraded from v${previousVersion} to v${currentVersion}")
-            }
-        }
-    }
-    else if (!state.driverVersion) {
-        state.driverVersion = currentVersion
-    }
-}
-
 private List<Map<String, ?>> processEvents(Map descriptionMap, List<Map<String, ?>> events) {
     if (descriptionMap.profileId == '0000') {
         logTrace('skipping ZDP profile message')
@@ -360,34 +352,6 @@ private List<Map<String, ?>> processEvents(Map descriptionMap, List<Map<String, 
     return events
 }
 
-private void processPowerConfigurationCluster(Map descriptionMap, List<Map<String, ?>> events) {
-    switch (descriptionMap.command) {
-        case '0A':
-        case '01':
-            if (descriptionMap.attrId == '0021' || descriptionMap.attrInt == 33) {
-                if (!descriptionMap.value) {
-                    logWarn('battery report missing value')
-                    return
-                }
-
-                Integer batteryValue = zigbee.convertHexToInt(descriptionMap.value).intdiv(2)
-                String descriptionText = "${device.displayName} battery percent is ${batteryValue}%"
-                logEvent(descriptionText)
-
-                events.add(createEvent(
-                    name: 'battery',
-                    value: batteryValue,
-                    unit: '%',
-                    descriptionText: descriptionText
-                ))
-            }
-            break
-        default:
-            logDebug("power configuration cluster command skipped: ${descriptionMap.command}")
-            break
-    }
-}
-
 private void processManufacturerSpecificCluster(Map descriptionMap, List<Map<String, ?>> events) {
     if (descriptionMap.command != '01') {
         logDebug("manufacturer specific command skipped: ${descriptionMap.command}")
@@ -419,6 +383,34 @@ private void processManufacturerSpecificCluster(Map descriptionMap, List<Map<Str
     }
 
     logDebug("unknown manufacturer payload type: ${commandData[0]}")
+}
+
+private void processPowerConfigurationCluster(Map descriptionMap, List<Map<String, ?>> events) {
+    switch (descriptionMap.command) {
+        case '0A':
+        case '01':
+            if (descriptionMap.attrId == '0021' || descriptionMap.attrInt == 33) {
+                if (!descriptionMap.value) {
+                    logWarn('battery report missing value')
+                    return
+                }
+
+                Integer batteryValue = zigbee.convertHexToInt(descriptionMap.value).intdiv(2)
+                String descriptionText = "${device.displayName} battery percent is ${batteryValue}%"
+                logEvent(descriptionText)
+
+                events.add(createEvent(
+                    name: 'battery',
+                    value: batteryValue,
+                    unit: '%',
+                    descriptionText: descriptionText
+                ))
+            }
+            break
+        default:
+            logDebug("power configuration cluster command skipped: ${descriptionMap.command}")
+            break
+    }
 }
 
 private void processRingRotation(List<String> commandData) {
@@ -472,36 +464,9 @@ private void processRingRotation(List<String> commandData) {
     logDebug("rotationClickCount is now ${state.rotationClickCount}")
 }
 
-void emitRingRotationEvent() {
-    Integer clickCount = (state.rotationClickCount ?: 0) as Integer
-    Integer buttonNumber = (state.rotationButton ?: 0) as Integer
-
-    resetRotationState(false)
-
-    if (buttonNumber == 0 || clickCount <= 0) {
-        logDebug('no rotation event emitted because no direction or clicks were recorded')
-        return
-    }
-
-    Integer signedClickCount = (buttonNumber == 7) ? -clickCount : clickCount
-    String descriptionText = "${device.displayName} rotation click count is ${signedClickCount}"
-
-    sendEvent(
-        name: 'rotationClickCount',
-        value: signedClickCount,
-        descriptionText: descriptionText,
-        isStateChange: true
-    )
-
-    sendButtonEvent('pushed', buttonNumber)
-
-    Integer cooldownTime = getRotationCooldown()
-    state.rotationCooldownUntil = (cooldownTime > 0) ? ((now() as Long) + cooldownTime) : 0L
-
-    if (cooldownTime > 0) {
-        logDebug("starting rotation cooldown of ${cooldownTime}ms")
-    }
-}
+//
+//    BUTTON EVENT HELPERS
+//
 
 private Map createButtonEvent(String action, Integer button) {
     String descriptionText = "${device.displayName} button ${button} is ${action}"
@@ -539,26 +504,38 @@ private void sendButtonEvent(String action, Integer button) {
     )
 }
 
-void logsOff() {
-    if (DEBUG) {
-        logDebug('DEBUG field variable is set, not disabling logging automatically')
+//
+//    ROTATION EVENT HELPERS
+//
+
+void emitRingRotationEvent() {
+    Integer clickCount = (state.rotationClickCount ?: 0) as Integer
+    Integer buttonNumber = (state.rotationButton ?: 0) as Integer
+
+    resetRotationState(false)
+
+    if (buttonNumber == 0 || clickCount <= 0) {
+        logDebug('no rotation event emitted because no direction or clicks were recorded')
         return
     }
 
-    if (!debugLoggingEnabled()) {
-        return
-    }
+    Integer signedClickCount = (buttonNumber == 7) ? -clickCount : clickCount
+    String descriptionText = "${device.displayName} rotation click count is ${signedClickCount}"
 
-    updateBooleanSettingIfChanged('debugEnable', false)
-    log.warn "${device.displayName}: Debug logging disabled automatically after ${debugAutoDisable()} minutes"
-}
+    sendEvent(
+        name: 'rotationClickCount',
+        value: signedClickCount,
+        descriptionText: descriptionText,
+        isStateChange: false
+    )
 
-private void scheduleDebugAutoDisableIfNeeded() {
-    unschedule('logsOff')
+    sendButtonEvent('pushed', buttonNumber)
 
-    if (debugLoggingEnabled()) {
-        runIn(LOGSOFF, 'logsOff', [overwrite: true])
-        logDebug("debug logging will automatically turn off in ${debugAutoDisable()} minutes")
+    Integer cooldownTime = getRotationCooldown()
+    state.rotationCooldownUntil = (cooldownTime > 0) ? ((now() as Long) + cooldownTime) : 0L
+
+    if (cooldownTime > 0) {
+        logDebug("starting rotation cooldown of ${cooldownTime}ms")
     }
 }
 
@@ -575,21 +552,45 @@ private void resetRotationState(Boolean clearCooldown) {
     }
 }
 
+//
+//    CONFIGURATION HELPERS
+//
+
+private void applyDefaultSettings() {
+    updateBooleanSettingIfChanged('txtEnable', true)
+    updateBooleanSettingIfChanged('debugEnable', false)
+    updateEnumSettingIfChanged('batteryReporting', DEFAULT_BATTERYREPORT)
+    updateEnumSettingIfChanged('rotationWindow', DEFAULT_ROTATIONWINDOW)
+    updateEnumSettingIfChanged('rotationCooldown', DEFAULT_ROTATIONCOOLDOWN)
+}
+
+private void ensureDriverVersionState(Boolean logChanges) {
+    String previousVersion = state.driverVersion
+    String currentVersion = getVersion()
+
+    if (previousVersion != currentVersion) {
+        state.driverVersion = currentVersion
+
+        if (logChanges) {
+            if (!previousVersion) {
+                logDescriptionText("Driver installed (v${currentVersion})")
+            }
+            else {
+                logDescriptionText("Driver upgraded from v${previousVersion} to v${currentVersion}")
+            }
+        }
+    }
+    else if (!state.driverVersion) {
+        state.driverVersion = currentVersion
+    }
+}
+
 private Integer getBatteryReport() {
     try {
         return (settings?.batteryReporting ?: DEFAULT_BATTERYREPORT) as Integer
     }
     catch (Exception ignored) {
         return DEFAULT_BATTERYREPORT as Integer
-    }
-}
-
-private Integer getRotationWindow() {
-    try {
-        return (settings?.rotationWindow ?: DEFAULT_ROTATIONWINDOW) as Integer
-    }
-    catch (Exception ignored) {
-        return DEFAULT_ROTATIONWINDOW as Integer
     }
 }
 
@@ -602,15 +603,38 @@ private Integer getRotationCooldown() {
     }
 }
 
-private Integer debugAutoDisable() {
-    return LOGSOFF.intdiv(60)
+private Integer getRotationWindow() {
+    try {
+        return (settings?.rotationWindow ?: DEFAULT_ROTATIONWINDOW) as Integer
+    }
+    catch (Exception ignored) {
+        return DEFAULT_ROTATIONWINDOW as Integer
+    }
 }
 
-private void updateEnumSettingIfChanged(String name, String newValue) {
-    String currentValue = settings?."${name}"?
-    if (currentValue != newValue) {
-        device.updateSetting(name, [value: newValue, type: 'enum'])
+private void initializeAttributes() {
+    if ((device.currentValue('numberOfButtons') as Integer) != 7) {
+        sendEvent(name: 'numberOfButtons', value: 7, isStateChange: true)
     }
+
+    if (device.currentValue('rotationClickCount') == null) {
+        sendEvent(name: 'rotationClickCount', value: 0, isStateChange: true)
+    }
+}
+
+private String intTo16bitUnsignedHex(Integer value, Boolean reverse = true) {
+    String hexStr = zigbee.convertToHexString(value.toInteger(), 4)
+    if (reverse) {
+        return hexStr.substring(2, 4) + hexStr.substring(0, 2)
+    }
+    return hexStr
+}
+
+private boolean isZigbee30() {
+    String model = getHubVersion()
+    String revision = model.split('-').last()
+    revision = revision.contains('Pro') ? '9' : revision
+    return (Integer.parseInt(revision) >= 8)
 }
 
 private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
@@ -618,6 +642,33 @@ private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
     if (currentValue != newValue) {
         device.updateSetting(name, [value: newValue, type: 'bool'])
     }
+}
+
+private void updateDriverVersionState() {
+    ensureDriverVersionState(true)
+}
+
+private void updateEnumSettingIfChanged(String name, String newValue) {
+    String currentValue = settings?."${name}"?.toString()
+    if (currentValue != newValue) {
+        device.updateSetting(name, [value: newValue, type: 'enum'])
+    }
+}
+
+//
+//    LOGGING CONFIGURATION
+//
+
+private Integer debugAutoDisable() {
+    return LOGSOFF.intdiv(60)
+}
+
+private Boolean debugLoggingEnabled() {
+    return normalizeBoolean(settings?.debugEnable, false)
+}
+
+private Boolean descriptionTextLoggingEnabled() {
+    return normalizeBoolean(settings?.txtEnable, true)
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
@@ -639,19 +690,31 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
     return defaultValue
 }
 
-private Boolean debugLoggingEnabled() {
-    return normalizeBoolean(settings?.debugEnable, false)
+//
+//    LOGGING SCHEDULER
+//
+
+void logsOff() {
+    if (!debugLoggingEnabled()) {
+        return
+    }
+
+    updateBooleanSettingIfChanged('debugEnable', false)
+    log.warn "${device.displayName}: Debug logging disabled automatically after ${debugAutoDisable()} minutes"
 }
 
-private Boolean descriptionTextLoggingEnabled() {
-    return normalizeBoolean(settings?.txtEnable, true)
-}
+private void scheduleDebugAutoDisableIfNeeded() {
+    unschedule('logsOff')
 
-private void logTrace(String msg) {
     if (debugLoggingEnabled()) {
-        log.trace(logMsg(msg))
+        runIn(LOGSOFF, 'logsOff', [overwrite: true])
+        logDebug("debug logging will automatically turn off in ${debugAutoDisable()} minutes")
     }
 }
+
+//
+//    LOGGING HELPERS
+//
 
 private void logDebug(String msg) {
     if (debugLoggingEnabled()) {
@@ -659,8 +722,10 @@ private void logDebug(String msg) {
     }
 }
 
-private void logWarn(String msg) {
-    log.warn(logMsg(msg))
+private void logDescriptionText(String msg) {
+    if (descriptionTextLoggingEnabled()) {
+        log.info "${device.displayName}: ${msg}"
+    }
 }
 
 private void logError(String msg) {
@@ -673,27 +738,16 @@ private void logEvent(String msg) {
     }
 }
 
-private void logDescriptionText(String msg) {
-    if (descriptionTextLoggingEnabled()) {
-        log.info "${device.displayName}: ${msg}"
-    }
-}
-
 private String logMsg(String msg) {
-    return "logging for ${DRIVER_NAME} v${getVersion()} -- ${msg}"
+    return "${DRIVER_NAME} (v${getVersion()}): ${msg}"
 }
 
-private String intTo16bitUnsignedHex(Integer value, Boolean reverse = true) {
-    String hexStr = zigbee.convertToHexString(value.toInteger(), 4)
-    if (reverse) {
-        return hexStr.substring(2, 4) + hexStr.substring(0, 2)
+private void logTrace(String msg) {
+    if (debugLoggingEnabled()) {
+        log.trace(logMsg(msg))
     }
-    return hexStr
 }
 
-private boolean isZigbee30() {
-    String model = getHubVersion()
-    String revision = model.split('-').last()
-    revision = revision.contains('Pro') ? '9' : revision
-    return (Integer.parseInt(revision) >= 8)
+private void logWarn(String msg) {
+    log.warn(logMsg(msg))
 }
