@@ -101,7 +101,7 @@ metadata {
 //    DRIVER CONSTANTS
 //
 
-private @Field final String DRIVER_VERSION = '1.1.13'
+private @Field final String DRIVER_VERSION = '1.1.15'
 private @Field final String DRIVER_NAME = 'Candeo C-ZB-SR5BR'
 
 private @Field final String DEFAULT_BATTERYREPORT = '28800'
@@ -240,7 +240,6 @@ private void initializeLifecycle(Boolean newInstall) {
 }
 
 void installed() {
-    applyDefaultSettings()
     initializeLifecycle(true)
 }
 
@@ -250,7 +249,6 @@ void uninstalled() {
 }
 
 void updated() {
-    applyDefaultSettings()
     initializeLifecycle(false)
 }
 
@@ -557,13 +555,6 @@ private void resetRotationState(Boolean clearCooldown) {
 //    CONFIGURATION HELPERS
 //
 
-private void applyDefaultSettings() {
-    updateBooleanSettingIfChanged('txtEnable', true)
-    updateBooleanSettingIfChanged('debugEnable', false)
-    updateEnumSettingIfChanged('batteryReporting', DEFAULT_BATTERYREPORT)
-    updateEnumSettingIfChanged('rotationWindow', DEFAULT_ROTATIONWINDOW)
-    updateEnumSettingIfChanged('rotationCooldown', DEFAULT_ROTATIONCOOLDOWN)
-}
 
 private void ensureDriverVersionState(Boolean logChanges) {
     String previousVersion = state.driverVersion
@@ -649,12 +640,6 @@ private void updateDriverVersionState() {
     ensureDriverVersionState(true)
 }
 
-private void updateEnumSettingIfChanged(String name, String newValue) {
-    String currentValue = settings?."${name}"?.toString()
-    if (currentValue != newValue) {
-        device.updateSetting(name, [value: newValue, type: 'enum'])
-    }
-}
 
 //
 //    LOGGING CONFIGURATION
