@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.14
- *  Date        : 2026-05-05
+ *  Version     : 1.1.13
+ *  Date        : 2026-05-04
  *
  *  Description :
  *      Zigbee driver for the Candeo C-ZB-SR5BR scene remote.
@@ -101,7 +101,7 @@ metadata {
 //    DRIVER CONSTANTS
 //
 
-private @Field final String DRIVER_VERSION = '1.1.14'
+private @Field final String DRIVER_VERSION = '1.1.13'
 private @Field final String DRIVER_NAME = 'Candeo C-ZB-SR5BR'
 
 private @Field final String DEFAULT_BATTERYREPORT = '28800'
@@ -240,6 +240,7 @@ private void initializeLifecycle(Boolean newInstall) {
 }
 
 void installed() {
+    applyDefaultSettings()
     initializeLifecycle(true)
 }
 
@@ -249,6 +250,7 @@ void uninstalled() {
 }
 
 void updated() {
+    applyDefaultSettings()
     initializeLifecycle(false)
 }
 
@@ -291,203 +293,192 @@ List<Map<String, ?>> parse(String description) {
     try {
         descriptionMap = zigbee.parseDescriptionAsMap(description)
     }
-    catch (Exception e) {
-        logError("failed to parse Zigbee description: ${e}")
+    catch (Exception ex) {
+        logError("zigbee.parseDescriptionAsMap failed: ${ex.message}")
         return null
     }
 
     if (!descriptionMap) {
-        logDebug('parsed descriptionMap was empty')
+        logWarn('no descriptionMap available')
         return null
     }
 
-    String cluster = safeHex(descriptionMap.cluster)
-    String attrId = safeHex(descriptionMap.attrId)
-    String command = safeHex(descriptionMap.command)
-    String value = safeHex(descriptionMap.value)
-    String data = safeHex(descriptionMap.data)
-    String clusterInt = safeHex(descriptionMap.clusterInt)
-    String profileId = safeHex(descriptionMap.profileId)
-
-    if (isBatteryReport(cluster, attrId, command)) {
-        Map event = getBatteryEvent(descriptionMap)
-        return event ? [event] : null
-    }
-
-    if (isButtonCommand(cluster, command, data)) {
-        Map event = getButtonEvent(descriptionMap)
-        return event ? [event] : null
-    }
-
-    if (isRingCommand(cluster, command, data)) {
-        handleRingRotation(descriptionMap)
+    if (descriptionMap == [:]) {
+        logWarn('descriptionMap is empty')
         return null
     }
 
-    if (profileId == '0000' || clusterInt == '0013') {
-        logDebug('ignoring device announcement or leave indication')
-        return null
+    List<Map<String, ?>> events = processEvents(descriptionMap, [])
+    if (events && !events.isEmpty()) {
+        logDebug("parse returning ${events.size()} event(s)")
+        return events
     }
 
-    logDebug("unhandled message: ${descriptionMap}")
+    logDebug("unhandled descriptionMap: ${descriptionMap}")
     return null
 }
 
-private Map<String, ?> getBatteryEvent(Map<String, ?> descriptionMap) {
-    String rawValue = safeHex(descriptionMap.value)
-    if (!rawValue) {
-        return null
+private List<Map<String, ?>> processEvents(Map descriptionMap, List<Map<String, ?>> events) {
+    if (descriptionMap.profileId == '0000') {
+        logTrace('skipping ZDP profile message')
+        return events
     }
 
-    Integer rawBattery
-    try {
-        rawBattery = Integer.parseInt(rawValue, 16)
-    }
-    catch (Exception ignored) {
-        return null
+    if (descriptionMap.profileId && descriptionMap.profileId != '0104') {
+        logDebug("skipping unsupported profileId ${descriptionMap.profileId}")
+        return events
     }
 
-    if (rawBattery == null || rawBattery <= 0 || rawBattery == 255) {
-        logDebug("ignoring invalid battery value ${rawBattery}")
-        return null
+    if (descriptionMap.cluster == '0001' || descriptionMap.clusterId == '0001' || descriptionMap.clusterInt == 1) {
+        processPowerConfigurationCluster(descriptionMap, events)
+    }
+    else if (descriptionMap.cluster == 'FF03' || descriptionMap.clusterId == 'FF03' || descriptionMap.clusterInt == 65283) {
+        processManufacturerSpecificCluster(descriptionMap, events)
+    }
+    else {
+        logDebug("skipped cluster ${descriptionMap.cluster ?: descriptionMap.clusterId ?: descriptionMap.clusterInt ?: 'unknown'}")
     }
 
-    Integer batteryPct = Math.min(100, Math.max(1, rawBattery))
-    String descriptionText = "${device.displayName} battery is ${batteryPct}%"
+    if (descriptionMap.additionalAttrs instanceof List) {
+        descriptionMap.additionalAttrs.each { Map attribute ->
+            attribute.clusterInt = descriptionMap.clusterInt
+            attribute.cluster = descriptionMap.cluster
+            attribute.clusterId = descriptionMap.clusterId
+            attribute.command = descriptionMap.command
+            processEvents(attribute, events)
+        }
+    }
 
-    logEvent(descriptionText)
-
-    return [
-        name           : 'battery',
-        value          : batteryPct,
-        unit           : '%',
-        descriptionText: descriptionText,
-        isStateChange  : false
-    ]
+    return events
 }
 
-private Map<String, ?> getButtonEvent(Map<String, ?> descriptionMap) {
-    String buttonData = firstDataByte(descriptionMap)
-    String action = BUTTON_EVENTS[buttonData]
-    Integer buttonNumber = BUTTON_NUMBERS[safeHex(descriptionMap.command)]
-
-    if (!action || !buttonNumber) {
-        return null
-    }
-
-    String descriptionText = "${device.displayName} button ${buttonNumber} is ${action}"
-    logEvent(descriptionText)
-
-    return [
-        name           : action,
-        value          : buttonNumber,
-        descriptionText: descriptionText,
-        isStateChange  : true
-    ]
-}
-
-private void handleRingRotation(Map<String, ?> descriptionMap) {
-    String directionKey = firstDataByte(descriptionMap)
-    Integer buttonNumber = RING_BUTTONS[directionKey]
-    Integer clickCount = parseUnsignedByte(safeHex(descriptionMap.value))
-
-    if (!buttonNumber || !clickCount || clickCount <= 0) {
-        logDebug("ignoring ring rotation with direction ${directionKey} and clickCount ${clickCount}")
+private void processManufacturerSpecificCluster(Map descriptionMap, List<Map<String, ?>> events) {
+    if (descriptionMap.command != '01') {
+        logDebug("manufacturer specific command skipped: ${descriptionMap.command}")
         return
     }
 
-    Long nowMs = now() as Long
+    List<String> commandData = descriptionMap.data
+    if (!(commandData instanceof List) || commandData.size() < 4) {
+        logWarn("manufacturer specific payload is incomplete: ${commandData}")
+        return
+    }
+
+    if (commandData[0] == '01') {
+        Integer buttonNumber = BUTTON_NUMBERS[commandData[2]] as Integer
+        String buttonEvent = BUTTON_EVENTS[commandData[3]] as String
+
+        if (buttonNumber && buttonEvent) {
+            events.add(createButtonEvent(buttonEvent, buttonNumber))
+        }
+        else {
+            logDebug("unknown button payload: ${commandData}")
+        }
+        return
+    }
+
+    if (commandData[0] == '03') {
+        processRingRotation(commandData)
+        return
+    }
+
+    logDebug("unknown manufacturer payload type: ${commandData[0]}")
+}
+
+private void processPowerConfigurationCluster(Map descriptionMap, List<Map<String, ?>> events) {
+    switch (descriptionMap.command) {
+        case '0A':
+        case '01':
+            if (descriptionMap.attrId == '0021' || descriptionMap.attrInt == 33) {
+                if (!descriptionMap.value) {
+                    logWarn('battery report missing value')
+                    return
+                }
+
+                Integer batteryValue = zigbee.convertHexToInt(descriptionMap.value).intdiv(2)
+                String descriptionText = "${device.displayName} battery percent is ${batteryValue}%"
+                logEvent(descriptionText)
+
+                events.add(createEvent(
+                    name: 'battery',
+                    value: batteryValue,
+                    unit: '%',
+                    descriptionText: descriptionText
+                ))
+            }
+            break
+        default:
+            logDebug("power configuration cluster command skipped: ${descriptionMap.command}")
+            break
+    }
+}
+
+private void processRingRotation(List<String> commandData) {
     Long cooldownUntil = (state.rotationCooldownUntil ?: 0L) as Long
+    Long nowMs = now() as Long
+
     if (cooldownUntil > nowMs) {
-        logDebug("ignoring ring rotation during cooldown until ${cooldownUntil}")
+        logDebug("ring rotation ignored during cooldown for ${cooldownUntil - nowMs}ms")
         return
     }
 
-    Integer activeButton = (state.rotationButton ?: 0) as Integer
-    Integer currentClicks = (state.rotationClickCount ?: 0) as Integer
-    Boolean active = (state.rotationActive ?: false) as Boolean
+    String commandEvent = commandData[2]
+    if (commandEvent != '01') {
+        logDebug('ring release or stop event ignored for sampled rotation mode')
+        return
+    }
 
-    if (!active || activeButton == 0) {
+    Integer buttonNumber = RING_BUTTONS[commandData[1]] as Integer
+    if (!buttonNumber) {
+        logDebug("unknown ring direction payload: ${commandData}")
+        return
+    }
+
+    Integer clickCount = 1
+    try {
+        clickCount = zigbee.convertHexToInt(commandData[3])
+        if (clickCount < 1) {
+            clickCount = 1
+        }
+    }
+    catch (Exception ex) {
+        logWarn("invalid ring click payload ${commandData[3]}: ${ex.message}")
+        clickCount = 1
+    }
+
+    if (!(state.rotationActive)) {
         state.rotationActive = true
         state.rotationButton = buttonNumber
-        state.rotationClickCount = clickCount
-        runInMillis(getRotationWindow(), 'emitRingRotationEvent', [overwrite: true])
-        logDebug("started rotation window for button ${buttonNumber} with ${clickCount} clicks")
-        return
+        state.rotationClickCount = 0
+
+        Integer sampleTime = getRotationWindow()
+        logDebug("starting rotation sample window of ${sampleTime}ms")
+        runInMillis(sampleTime, 'emitRingRotationEvent', [overwrite: true])
+    }
+    else if ((state.rotationButton as Integer) != buttonNumber) {
+        logDebug("ring direction changed from button ${state.rotationButton} to ${buttonNumber} inside sample window")
+        state.rotationButton = buttonNumber
     }
 
-    if (activeButton == buttonNumber) {
-        state.rotationClickCount = currentClicks + clickCount
-        runInMillis(getRotationWindow(), 'emitRingRotationEvent', [overwrite: true])
-        logDebug("extended rotation window for button ${buttonNumber}; total clicks ${state.rotationClickCount}")
-        return
-    }
-
-    emitRingRotationEvent()
-
-    state.rotationActive = true
-    state.rotationButton = buttonNumber
-    state.rotationClickCount = clickCount
-    runInMillis(getRotationWindow(), 'emitRingRotationEvent', [overwrite: true])
-    logDebug("started new rotation window after direction change for button ${buttonNumber} with ${clickCount} clicks")
+    state.rotationClickCount = ((state.rotationClickCount ?: 0) as Integer) + clickCount
+    logDebug("rotationClickCount is now ${state.rotationClickCount}")
 }
 
 //
-//    MESSAGE HELPERS
+//    BUTTON EVENT HELPERS
 //
 
-private Boolean isBatteryReport(String cluster, String attrId, String command) {
-    return (cluster == '0001' && attrId == '0021') || (cluster == '0001' && command == '0A')
+private Map createButtonEvent(String action, Integer button) {
+    String descriptionText = "${device.displayName} button ${button} is ${action}"
+    logEvent(descriptionText)
+
+    return createEvent(
+        name: action,
+        value: button,
+        descriptionText: descriptionText,
+        isStateChange: true
+    )
 }
-
-private Boolean isButtonCommand(String cluster, String command, String data) {
-    return cluster == '0006' && BUTTON_NUMBERS.containsKey(command) && BUTTON_EVENTS.containsKey(firstDataByte(data))
-}
-
-private Boolean isRingCommand(String cluster, String command, String data) {
-    return cluster == '0008' && command == 'FD' && RING_BUTTONS.containsKey(firstDataByte(data))
-}
-
-private String safeHex(value) {
-    if (value == null) {
-        return null
-    }
-    return value.toString().trim().toUpperCase()
-}
-
-private String firstDataByte(Map<String, ?> descriptionMap) {
-    return firstDataByte(safeHex(descriptionMap.data))
-}
-
-private String firstDataByte(String data) {
-    if (!data) {
-        return null
-    }
-
-    String normalized = data.replace(' ', '')
-    if (normalized.length() < 2) {
-        return null
-    }
-
-    return normalized.substring(0, 2).toUpperCase()
-}
-
-private Integer parseUnsignedByte(String hex) {
-    if (!hex) {
-        return null
-    }
-
-    try {
-        return Integer.parseInt(hex, 16)
-    }
-    catch (Exception ignored) {
-        return null
-    }
-}
-
-//
-//    COMMAND HELPERS
-//
 
 private void sendButtonEvent(String action, BigDecimal button) {
     if (button == null) {
@@ -566,6 +557,14 @@ private void resetRotationState(Boolean clearCooldown) {
 //    CONFIGURATION HELPERS
 //
 
+private void applyDefaultSettings() {
+    updateBooleanSettingIfChanged('txtEnable', true)
+    updateBooleanSettingIfChanged('debugEnable', false)
+    updateEnumSettingIfChanged('batteryReporting', DEFAULT_BATTERYREPORT)
+    updateEnumSettingIfChanged('rotationWindow', DEFAULT_ROTATIONWINDOW)
+    updateEnumSettingIfChanged('rotationCooldown', DEFAULT_ROTATIONCOOLDOWN)
+}
+
 private void ensureDriverVersionState(Boolean logChanges) {
     String previousVersion = state.driverVersion
     String currentVersion = getVersion()
@@ -614,10 +613,6 @@ private Integer getRotationWindow() {
     }
 }
 
-private String getHubVersion() {
-    return location?.hubs?.first()?.firmwareVersionString ?: '8'
-}
-
 private void initializeAttributes() {
     if ((device.currentValue('numberOfButtons') as Integer) != 7) {
         sendEvent(name: 'numberOfButtons', value: 7, display: false, isStateChange: false)
@@ -646,12 +641,19 @@ private boolean isZigbee30() {
 private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
     Boolean currentValue = normalizeBoolean(settings?."${name}", !newValue)
     if (currentValue != newValue) {
-        device.updateSetting(name, newValue)
+        device.updateSetting(name, [value: newValue, type: 'bool'])
     }
 }
 
 private void updateDriverVersionState() {
     ensureDriverVersionState(true)
+}
+
+private void updateEnumSettingIfChanged(String name, String newValue) {
+    String currentValue = settings?."${name}"?.toString()
+    if (currentValue != newValue) {
+        device.updateSetting(name, [value: newValue, type: 'enum'])
+    }
 }
 
 //
