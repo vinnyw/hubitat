@@ -3,7 +3,7 @@
   "packageName": "Candeo C-ZB-SR5BR Scene Remote",
   "author": "Vinny Wadding",
   "minimumHEVersion": "2.3.0",
-  "version": "1.1.12",
+  "version": "1.1.14",
   "dateReleased": "2026-05-04",
   "releaseNotes": "Community refactor of Candeo C-ZB-SR5BR driver to implement rotation clicks",
   "documentationLink": "https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/",
