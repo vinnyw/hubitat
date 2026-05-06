@@ -78,9 +78,9 @@ private void synchronizeDriverVersion() {
     state.driverVersion = currentVersion
 
     if (!previousVersion) {
-        log.info "driver version: ${formatDisplayVersion(currentVersion)}"
+        log.info "Driver Version: ${formatDisplayVersion(currentVersion)}"
     } else if (previousVersion != currentVersion) {
-        log.info "driver version: ${formatDisplayVersion(currentVersion)}"
+        log.info "Driver Version: ${formatDisplayVersion(currentVersion)}"
     }
 }
 
