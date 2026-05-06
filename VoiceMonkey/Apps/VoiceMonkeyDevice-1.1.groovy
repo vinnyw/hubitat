@@ -324,6 +324,10 @@ def getDefaultQueueBufferSeconds() {
 }
 
 private Integer getDefaultCompletionGuardSeconds() {
+    return 1
+}
+
+private Integer getDefaultFirstItemExtraGuardSeconds() {
     return 2
 }
 
@@ -703,16 +707,17 @@ def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice = n
     Long enqueueEpoch = now()
     Long queueId = nextQueueItemId(enqueueEpoch)
 
-    Map item = [
-        id          : queueId,
-        enqueueEpoch: enqueueEpoch,
-        text        : message,
-        voice       : cleanVoice,
-        chime       : cleanChime
-    ]
-
     List queue = getQueuedItems()
     Boolean wasIdleBeforeEnqueue = (queue.size() == 0 && state.processing != true && !(state.activeItem instanceof Map))
+
+    Map item = [
+        id            : queueId,
+        enqueueEpoch  : enqueueEpoch,
+        text          : message,
+        voice         : cleanVoice,
+        chime         : cleanChime,
+        firstAfterIdle: wasIdleBeforeEnqueue
+    ]
 
     queue << item
     state.queue = queue
@@ -1205,12 +1210,13 @@ private Integer estimateConservativeSpeechSeconds(String text, Map item) {
     String cleanText = stripSsmlForDuration(text)
     Integer words = countSpeechWords(cleanText)
     Integer chars = countSpeechCharacters(cleanText)
+    Boolean firstAfterIdle = normalizeBoolean(item?.firstAfterIdle, false)
 
     Double wordSeconds = words * 0.65d
     Double charSeconds = chars / 12.0d
     Double punctuationSeconds = estimatePunctuationPauseSeconds(cleanText)
-    Double startupSeconds = 2.0d
-    Double chimeSeconds = normalizeOptionalString(item?.chime) ? 1.5d : 0.0d
+    Double startupSeconds = firstAfterIdle ? 3.0d : 1.5d
+    Double chimeSeconds = normalizeOptionalString(item?.chime) ? 1.0d : 0.0d
 
     Double seconds = Math.max(wordSeconds, charSeconds) + punctuationSeconds + startupSeconds + chimeSeconds
     Integer rounded = Math.ceil(seconds).intValue()
@@ -1220,6 +1226,10 @@ private Integer estimateConservativeSpeechSeconds(String text, Map item) {
 
 private Integer estimateCompletionGuardSeconds(Map item) {
     Integer guardSeconds = getDefaultCompletionGuardSeconds()
+
+    if (normalizeBoolean(item?.firstAfterIdle, false)) {
+        guardSeconds = guardSeconds + getDefaultFirstItemExtraGuardSeconds()
+    }
 
     if (normalizeOptionalString(item?.chime)) {
         guardSeconds = guardSeconds + 1
@@ -1244,7 +1254,7 @@ private Integer estimateDurationSeconds(Map item) {
         duration = minimum
     }
 
-    logDebug("Estimated playback duration ${duration}s for item ${item?.id}; base=${durationBase}s, hubitat=${hubitatSeconds}s, conservative=${conservativeSeconds}s, completionGuard=${completionGuardSeconds}s, interMessageBuffer=${interMessageBuffer}s")
+    logDebug("Estimated playback duration ${duration}s for item ${item?.id}; base=${durationBase}s, hubitat=${hubitatSeconds}s, conservative=${conservativeSeconds}s, completionGuard=${completionGuardSeconds}s, firstAfterIdle=${normalizeBoolean(item?.firstAfterIdle, false)}, interMessageBuffer=${interMessageBuffer}s")
     return duration
 }
 
