@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.32
- *  Date        : 2026-05-01
+ *  Version     : 1.1.34
+ *  Date        : 2026-05-06
  *
  *  Description :
  *      VoiceMonkey child driver for queued speech dispatch.

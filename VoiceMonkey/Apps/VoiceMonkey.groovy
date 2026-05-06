@@ -21,7 +21,7 @@ import groovy.transform.Field
 @Field static final Integer DEFAULT_FIRST_MESSAGE_DELAY_SECONDS = 2
 @Field static final Integer DEFAULT_QUEUE_BUFFER_SECONDS = 3
 @Field static final Integer DEFAULT_MINIMUM_SPACING_SECONDS = 3
-@Field static final Integer DEFAULT_VOICEMONKEY_HTTP_TIMEOUT_SECONDS = 5
+@Field static final Integer DEFAULT_VOICEMONKEY_HTTP_TIMEOUT_SECONDS = 30
 
 //
 //    UI PREFERENCES
@@ -37,7 +37,7 @@ preferences {
 //
 
 def getVersion() {
-    return '1.1.33'
+    return '1.1.34'
 }
 
 def getDebugAutoDisableSeconds() {

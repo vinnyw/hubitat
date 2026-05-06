@@ -323,6 +323,10 @@ def getDefaultQueueBufferSeconds() {
     return normalizePositiveInteger(parent?.getDefaultQueueBufferSeconds(), 3)
 }
 
+private Integer getDefaultCompletionGuardSeconds() {
+    return 2
+}
+
 def getDefaultVoiceMonkeyHttpTimeoutSeconds() {
     return normalizePositiveInteger(parent?.getDefaultVoiceMonkeyHttpTimeoutSeconds(), 30)
 }
@@ -1192,7 +1196,7 @@ private Integer countSpeechCharacters(String text) {
 }
 
 private Integer countSpeechWords(String text) {
-    String normalized = (text ?: '').replaceAll(/[^A-Za-z0-9]+/, ' ').trim()
+    String normalized = (text ?: '').replaceAll(/[^\p{L}\p{Nd}]+/, ' ').trim()
     if (!normalized) return 0
     return normalized.split(/\s+/).size()
 }
@@ -1214,6 +1218,16 @@ private Integer estimateConservativeSpeechSeconds(String text, Map item) {
     return Math.max(1, rounded)
 }
 
+private Integer estimateCompletionGuardSeconds(Map item) {
+    Integer guardSeconds = getDefaultCompletionGuardSeconds()
+
+    if (normalizeOptionalString(item?.chime)) {
+        guardSeconds = guardSeconds + 1
+    }
+
+    return Math.max(1, guardSeconds)
+}
+
 private Integer estimateDurationSeconds(Map item) {
     String text = item?.text?.toString() ?: ''
     String selectedVoice = item?.voice?.toString()?.trim() ?: settings?.personalityVoice?.toString()?.trim()
@@ -1222,13 +1236,15 @@ private Integer estimateDurationSeconds(Map item) {
 
     Integer hubitatSeconds = estimateHubitatTtsSeconds(text, selectedVoice)
     Integer conservativeSeconds = estimateConservativeSpeechSeconds(text, item)
-    Integer duration = Math.max(hubitatSeconds, conservativeSeconds)
+    Integer completionGuardSeconds = estimateCompletionGuardSeconds(item)
+    Integer durationBase = Math.max(hubitatSeconds, conservativeSeconds)
+    Integer duration = durationBase + completionGuardSeconds
 
     if (duration < minimum) {
         duration = minimum
     }
 
-    logDebug("Estimated playback duration ${duration}s for item ${item?.id}; hubitat=${hubitatSeconds}s, conservative=${conservativeSeconds}s, interMessageBuffer=${interMessageBuffer}s")
+    logDebug("Estimated playback duration ${duration}s for item ${item?.id}; base=${durationBase}s, hubitat=${hubitatSeconds}s, conservative=${conservativeSeconds}s, completionGuard=${completionGuardSeconds}s, interMessageBuffer=${interMessageBuffer}s")
     return duration
 }
 
