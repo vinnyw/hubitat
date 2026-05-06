@@ -786,11 +786,11 @@ private void logDebug(String msg) {
 }
 
 private void logError(String msg) {
-    if (debugLoggingEnabled()) log.error "${app.label}: ${msg}"
+    log.error "${app.label}: ${msg}"
 }
 
 private void logWarn(String msg) {
-    if (debugLoggingEnabled()) log.warn "${app.label}: ${msg}"
+    log.warn "${app.label}: ${msg}"
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {

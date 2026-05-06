@@ -6,7 +6,7 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-04-13
+ *  Date        : 2026-05-06
  *
  *  Description :
  *      Virtual temperature child device managed by the Temperature child app.
@@ -28,6 +28,8 @@
  *          TemperatureMeasurement is declared so Rule Machine 5.1 can use this virtual output
  *          device as a standard Temperature device. The child app rejects this suite's own
  *          averaged output devices at runtime if they are accidentally selected as inputs.
+ *          This local patch also ensures warning/error logs are not hidden by the debug toggle
+ *          and clears driver schedules before reconfiguration.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -140,6 +142,7 @@ def installed() {
 }
 
 def updated() {
+    unschedule()
     parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
     configure()
 }
@@ -176,6 +179,7 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
     } catch (Exception ignored) {
         places = 0
     }
+    places = Math.max(0, Math.min(places, 2))
 
     BigDecimal newValue
     try {
@@ -339,11 +343,11 @@ private void logDebug(String msg) {
 }
 
 private void logError(String msg) {
-    if (debugLoggingEnabled()) log.error "${device.displayName}: ${msg}"
+    log.error "${device.displayName}: ${msg}"
 }
 
 private void logWarn(String msg) {
-    if (debugLoggingEnabled()) log.warn "${device.displayName}: ${msg}"
+    log.warn "${device.displayName}: ${msg}"
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
