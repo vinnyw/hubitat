@@ -6,13 +6,13 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-04-22
+ *  Date        : 2026-05-06
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
  *
  *      Attributes:
- *          humidity         (number) : humidity value
+ *          humidity         (number) : standard whole-number humidity value for broad app compatibility
  *          humidityDisplay  (string) : formatted humidity value
  *          trend            (string) : trend 
  *          trendDisplay     (string) : formatted trend
@@ -141,6 +141,7 @@ def installed() {
 }
 
 def updated() {
+    unschedule()
     parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
     configure()
 }
@@ -177,32 +178,34 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     } catch (Exception ignored) {
         places = 0
     }
+    places = Math.max(0, Math.min(places, 2))
 
-    BigDecimal newValue
+    BigDecimal exactValue
     try {
-        newValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
+        exactValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
     } catch (Exception e) {
         logError("Invalid humidity value '${val}': ${e.message}")
         return
     }
 
-    BigDecimal currentValue = null
-    def currentRaw = device.currentValue('humidity')
-    if (currentRaw != null && currentRaw.toString() != '') {
+    Integer standardValue = exactValue.setScale(0, RoundingMode.HALF_UP).intValue()
+
+    Integer currentStandardValue = null
+    def currentHumidityRaw = device.currentValue('humidity')
+    if (currentHumidityRaw != null && currentHumidityRaw.toString() != '') {
         try {
-            currentValue = new BigDecimal(currentRaw.toString()).setScale(places, RoundingMode.HALF_UP)
+            currentStandardValue = new BigDecimal(currentHumidityRaw.toString()).setScale(0, RoundingMode.HALF_UP).intValue()
         } catch (Exception ignored) {
-            currentValue = null
+            currentStandardValue = null
         }
     }
 
     String normalizedUnit = unit == null ? '%' : unit.toString()
-    String display = normalizedUnit == 'none' ? "${newValue}" : "${newValue}${normalizedUnit}"
+    String display = normalizedUnit == 'none' ? "${exactValue}" : "${exactValue}${normalizedUnit}"
     boolean changed = false
 
-    if (currentValue == null || currentValue.compareTo(newValue) != 0) {
-        sendEvent(name: 'humidity', value: newValue, unit: '%', isStateChange: true, type: 'digital')
-        sendEvent(name: 'lastActivity', value: now(), isStateChange: false, type: 'digital')
+    if (currentStandardValue == null || currentStandardValue != standardValue) {
+        sendEvent(name: 'humidity', value: standardValue, unit: '%rh', isStateChange: true, type: 'digital')
         changed = true
     }
 
@@ -214,12 +217,13 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     changed = updateTrendAttributes(trend, trendDisplay) || changed
 
     if (changed) {
+        sendEvent(name: 'lastActivity', value: now(), isStateChange: false, type: 'digital')
         if (descriptionTextLoggingEnabled()) {
             log.info "${device.displayName} humidity is ${display}"
         }
-        logDebug("Updated humidity=${newValue}, display=${display}, trend=${trend}, trendDisplay=${trendDisplay}")
+        logDebug("Updated humidity=${standardValue}, display=${display}, trend=${trend}, trendDisplay=${trendDisplay}")
     } else {
-        logDebug("No attribute changes required for humidity=${newValue}")
+        logDebug("No attribute changes required for humidity=${standardValue}")
     }
 }
 
@@ -327,11 +331,11 @@ private void logDebug(String msg) {
 }
 
 private void logError(String msg) {
-    if (debugLoggingEnabled()) log.error "${device.displayName}: ${msg}"
+    log.error "${device.displayName}: ${msg}"
 }
 
 private void logWarn(String msg) {
-    if (debugLoggingEnabled()) log.warn "${device.displayName}: ${msg}"
+    log.warn "${device.displayName}: ${msg}"
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
