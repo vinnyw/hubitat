@@ -198,8 +198,14 @@ def initialize() {
     scheduleDebugAutoDisableIfNeeded()
     createOrUpdateChildDevice(false)
     syncChildSettings()
-    initializeQueueState()
-    syncLocalQueueState(getSpeakerDevice(), 'idle', null)
+    initializeQueueStateIfNeeded()
+    syncLocalQueueState(getSpeakerDevice(), null, null)
+
+    if (state.processing == true || state.activeItem instanceof Map) {
+        runIn(1, 'queueRecoveryCheck', [overwrite: true])
+    } else if (getLocalQueueCount() > 0) {
+        scheduleKickQueue(1)
+    }
 }
 
 def installed() {
@@ -286,9 +292,25 @@ private void deleteManagedChildDevice() {
 }
 
 private void initializeQueueState() {
-    state.queue = (state.queue instanceof List) ? state.queue : []
+    state.queue = []
     state.processing = false
     state.activeItem = null
+    state.nextDispatchAllowedEpoch = 0L
+}
+
+private void initializeQueueStateIfNeeded() {
+    if (!(state.queue instanceof List)) {
+        state.queue = []
+    }
+
+    if (!(state.processing instanceof Boolean)) {
+        state.processing = false
+    }
+
+    if (state.activeItem != null && !(state.activeItem instanceof Map)) {
+        state.activeItem = null
+    }
+
     if (!(state.nextDispatchAllowedEpoch instanceof Number)) {
         state.nextDispatchAllowedEpoch = 0L
     }
@@ -700,7 +722,7 @@ def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice = n
         return
     }
 
-    initializeQueueState()
+    initializeQueueStateIfNeeded()
 
     String cleanVoice = normalizeOptionalString(voice)
     String cleanChime = normalizeOptionalString(chime)
@@ -726,7 +748,12 @@ def enqueueSpeakFromDevice(String deviceNetworkId, String text, String voice = n
     logDebug("Accepted message '${item.text}' from device, local queue size ${queue.size()}")
 
     scheduleDeferredQueueStateRefresh()
-    scheduleKickQueue(wasIdleBeforeEnqueue ? getDefaultFirstMessageDelaySeconds() : 1)
+
+    if (wasIdleBeforeEnqueue) {
+        scheduleKickQueue(getDefaultFirstMessageDelaySeconds())
+    } else if (state.processing != true && !(state.activeItem instanceof Map)) {
+        scheduleKickQueue(1)
+    }
 }
 
 private void scheduleDeferredQueueStateRefresh() {
@@ -779,13 +806,13 @@ private Integer getVoiceMonkeyAcceptanceTimeoutSeconds() {
 def kickQueue() {
     if (recoverStaleProcessingIfNeeded()) return
 
-    List queue = getQueuedItems()
-
-    if (state.processing == true) {
+    if (state.processing == true || state.activeItem instanceof Map) {
         syncLocalQueueState(getSpeakerDevice(), null, null, null)
-        logDebug('kickQueue ignored because processing is active')
+        logDebug('kickQueue ignored because an active item is already being processed')
         return
     }
+
+    List queue = getQueuedItems()
 
     Long nextAllowedEpoch = safeLong(state.nextDispatchAllowedEpoch, 0L)
     Long currentEpoch = now()
