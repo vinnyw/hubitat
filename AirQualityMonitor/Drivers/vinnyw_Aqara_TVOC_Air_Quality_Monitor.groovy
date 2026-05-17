@@ -54,17 +54,13 @@ metadata {
         capability 'AirQuality'            // Attributes: airQualityIndex - NUMBER, range:0..500
 
         attribute 'pm25', 'number'
-        attribute 'sensirionVOCindex', 'number'    // VINDSTYRKA used sensirionVOCindex instead of airQualityIndex
         attribute 'airQualityLevel', 'enum', ['Good', 'Moderate', 'Unhealthy for Sensitive Groups', 'Unhealthy', 'Very Unhealthy', 'Hazardous']    // https://www.airnow.gov/aqi/aqi-basics/ **** for Aqara only! ***
 
-        if (isAqaraTVOC()) {
-            capability 'Battery'
-            attribute 'batteryVoltage', 'number'
-        }
+        capability 'Battery'
+        attribute 'batteryVoltage', 'number'
 
         if (_DEBUG) { command 'testT', [[name: 'testT', type: 'STRING', description: 'testT', defaultValue : '']]  }
 
-        fingerprint profileId:'0104', endpointId:'01', inClusters:'0000,0003,0004,0402,0405,FC57,FC7C,042A,FC7E', outClusters:'0003,0019,0020,0202', model:'VINDSTYRKA', manufacturer:'IKEA of Sweden', deviceJoinName: 'VINDSTYRKA Air Quality Monitor E2112'
         fingerprint profileId:'0104', endpointId:'01', inClusters:'0000,0003,0500,0001', outClusters:'0019', model:'lumi.airmonitor.acn01', manufacturer:'LUMI', deviceJoinName: 'Aqara TVOC Air Quality Monitor'
     }
 
@@ -79,16 +75,10 @@ metadata {
     }
 }
 
-boolean isVINDSTYRKA() { return (device?.getDataValue('model') ?: 'n/a') in ['VINDSTYRKA'] }
-boolean isAqaraTVOC()  { return (device?.getDataValue('model') ?: 'n/a') in ['lumi.airmonitor.acn01'] }
 
 @Field static final Integer DEFAULT_PM25_THRESHOLD = 1
 @Field static final Integer DEFAULT_AIR_QUALITY_INDEX_THRESHOLD = 1
 
-@Field static final Map AirQualityIndexCheckIntervalOpts = [        // used by airQualityIndexCheckInterval
-    defaultValue: 60,
-    options     : [0: 'Disabled', 10: 'Every 10 seconds', 30: 'Every 30 seconds', 60: 'Every 1 minute', 300: 'Every 5 minutes', 900: 'Every 15 minutes', 3600: 'Every 1 hour']
-]
 @Field static final Map TemperatureScaleOpts = [            // bit 7
     defaultValue: 0,
     options     : [0: 'Celsius', 1: 'Fahrenheit']
@@ -261,22 +251,7 @@ void autoPollAirQuality() {
 //
 // called from updated() in the main code
 void customUpdated() {
-    if (isVINDSTYRKA()) {
-        final int intervalAirQuality = (settings.airQualityIndexCheckInterval as Integer) ?: 0
-        if (intervalAirQuality > 0) {
-            logInfo "customUpdated: scheduling Air Quality Index check every ${intervalAirQuality} seconds"
-            scheduleAirQualityIndexCheck(intervalAirQuality)
-        }
-        else {
-            unScheduleAirQualityIndexCheck()
-            logInfo 'customUpdated: Air Quality Index polling is disabled!'
-            // 09/02/2023
-            device.deleteCurrentState('airQualityIndex')
-        }
-    }
-    else {
-        logDebug 'customUpdated: skipping airQuality polling '
-    }
+    logDebug 'customUpdated: skipping airQuality polling '
 }
 
 /*
@@ -355,15 +330,8 @@ void handleAirQualityIndexEvent(Integer tVoc, Boolean isDigital=false) {
         return
     }
     eventMap.value = tVocCorrected as Integer
-    Integer lastAIQ
-    if (isVINDSTYRKA()) {
-        eventMap.name = 'sensirionVOCindex'
-        lastAIQ = device.currentValue('sensirionVOCindex') ?: 0
-    }
-    else {
-        eventMap.name = 'airQualityIndex'
-        lastAIQ = device.currentValue('airQualityIndex') ?: 0
-    }
+    eventMap.name = 'airQualityIndex'
+    Integer lastAIQ = device.currentValue('airQualityIndex') ?: 0
     eventMap.unit = ''
     eventMap.type = isDigital == true ? 'digital' : 'physical'
     eventMap.descriptionText = "${eventMap.name} is ${tVocCorrected} ${eventMap.unit}"
@@ -380,9 +348,7 @@ void handleAirQualityIndexEvent(Integer tVoc, Boolean isDigital=false) {
         unschedule('sendDelayedtVocEvent')
         state.lastRx['tVocTime'] = now()
         sendEvent(eventMap)
-        if (isAqaraTVOC()) {
-            sendAirQualityLevelEvent(airQualityIndexToLevel(safeToInt(eventMap.value)))
-        }
+        sendAirQualityLevelEvent(airQualityIndexToLevel(safeToInt(eventMap.value)))
     }
     else {
         eventMap.type = 'delayed'
@@ -396,18 +362,13 @@ private void sendDelayedtVocEvent(Map eventMap) {
     logInfo "${eventMap.descriptionText} (${eventMap.type})"
     state.lastRx['tVocTime'] = now()     // TODO - -(minReportingTimeHumidity * 2000)
     sendEvent(eventMap)
-    if (isAqaraTVOC()) {
-        sendAirQualityLevelEvent(airQualityIndexToLevel(safeToInt(eventMap.value)))
-    }
+    sendAirQualityLevelEvent(airQualityIndexToLevel(safeToInt(eventMap.value)))
 }
 
 List<String> customRefresh() {
     List<String> cmds = []
-    if (isAqaraTVOC()) {
-        // TODO - check what is available for VINDSTYRKA
-        cmds += zigbee.readAttribute(0x042a, 0x0000, [:], delay = 200)                    // pm2.5    attributes: (float) 0: Measured Value; 1: Min Measured Value; 2:Max Measured Value; 3:Tolerance
-        cmds += zigbee.readAttribute(0xfc7e, 0x0000, [mfgCode: 0x117c], delay = 200)      // tVOC   !! mfcode = "0x117c" !! attributes: (float) 0: Measured Value; 1: Min Measured Value; 2:Max Measured Value;
-    }
+    cmds += zigbee.readAttribute(0x042a, 0x0000, [:], delay = 200)                    // pm2.5    attributes: (float) 0: Measured Value; 1: Min Measured Value; 2:Max Measured Value; 3:Tolerance
+    cmds += zigbee.readAttribute(0xfc7e, 0x0000, [mfgCode: 0x117c], delay = 200)      // tVOC   !! mfcode = "0x117c" !! attributes: (float) 0: Measured Value; 1: Min Measured Value; 2:Max Measured Value;
     cmds += zigbee.readAttribute(0x0402, 0x0000, [:], delay = 200)
     cmds += zigbee.readAttribute(0x0405, 0x0000, [:], delay = 200)
     logDebug "customRefresh() : ${cmds}"
@@ -436,81 +397,40 @@ String airQualityIndexToLevel(final Integer index) {
     return level
 }
 
-/**
- * Schedule a  Air Quality Index check
- * @param intervalMins interval in seconds
- */
-private void scheduleAirQualityIndexCheck(final int intervalSecs) {
-    String cron = getCron(intervalSecs)
-    schedule(cron, 'autoPoll')
-}
-
-private void unScheduleAirQualityIndexCheck() {
-    unschedule('autoPoll')
-}
 
 List<String> customConfigureDevice() {
     List<String> cmds = []
-    if (isAqaraTVOC()) {
-        logDebug 'customConfigureDevice() AqaraTVOC'
-        // https://forum.phoscon.de/t/aqara-tvoc-zhaairquality-data/1160/21
-        final int tScale = (settings.temperatureScale as Integer) ?: TemperatureScaleOpts.defaultValue
-        final int tUnit =  (settings.tVocUnut as Integer) ?: TvocUnitOpts.defaultValue
-        logDebug "setting temperatureScale to ${TemperatureScaleOpts.options[tScale]} (${tScale})"
-        int cfg = tUnit
-        cfg |= (tScale << 4)
-        cmds += zigbee.writeAttribute(0xFCC0, 0x0114, DataType.UINT8, cfg, [mfgCode: 0x115F], delay = 200)
-        cmds += zigbee.readAttribute(0xFCC0, 0x0114, [mfgCode: 0x115F], delay = 200)
-    }
-    else if (isVINDSTYRKA()) {
-        logDebug 'customConfigureDevice() VINDSTYRKA (nothig to configure)'
-    }
-    else {
-        logWarn 'customConfigureDevice: unsupported device?'
-    }
+    logDebug 'customConfigureDevice() AqaraTVOC'
+    // https://forum.phoscon.de/t/aqara-tvoc-zhaairquality-data/1160/21
+    final int tScale = (settings.temperatureScale as Integer) ?: TemperatureScaleOpts.defaultValue
+    final int tUnit =  (settings.tVocUnut as Integer) ?: TvocUnitOpts.defaultValue
+    logDebug "setting temperatureScale to ${TemperatureScaleOpts.options[tScale]} (${tScale})"
+    int cfg = tUnit
+    cfg |= (tScale << 4)
+    cmds += zigbee.writeAttribute(0xFCC0, 0x0114, DataType.UINT8, cfg, [mfgCode: 0x115F], delay = 200)
+    cmds += zigbee.readAttribute(0xFCC0, 0x0114, [mfgCode: 0x115F], delay = 200)
     return cmds
 }
 
 List<String> customInitializeDevice() {
-    List<String> cmds = []
-    if (isAqaraTVOC()) {
-        logDebug 'customInitializeDevice() AqaraTVOC'
-        return zigbee.readAttribute(zigbee.POWER_CONFIGURATION_CLUSTER, 0x0020) +
-            zigbee.readAttribute(zigbee.TEMPERATURE_MEASUREMENT_CLUSTER, 0x0000) +
-            zigbee.readAttribute(zigbee.RELATIVE_HUMIDITY_MEASUREMENT_CLUSTER, 0x0000) +
-            zigbee.readAttribute(ANALOG_INPUT_BASIC_CLUSTER, ANALOG_INPUT_BASIC_PRESENT_VALUE_ATTRIBUTE) +
-            zigbee.configureReporting(zigbee.RELATIVE_HUMIDITY_MEASUREMENT_CLUSTER, 0x0000, DataType.UINT16, 30, 300, 1 * 100) +
-            zigbee.configureReporting(zigbee.TEMPERATURE_MEASUREMENT_CLUSTER, 0x0000, DataType.INT16, 30, 300, 0x1) +
-            zigbee.configureReporting(zigbee.POWER_CONFIGURATION_CLUSTER, 0x0020, DataType.UINT8, 30, 21600, 0x1) +
-            zigbee.configureReporting(ANALOG_INPUT_BASIC_CLUSTER, ANALOG_INPUT_BASIC_PRESENT_VALUE_ATTRIBUTE, DataType.FLOAT4, 10, 3600, 5)
-    }
-    else if (isVINDSTYRKA()) {
-        logDebug 'customInitializeDevice() VINDSTYRKA'
-        // Ikea VINDSTYRKA : bind clusters 402, 405, 42A (PM2.5)
-        cmds += zigbee.configureReporting(zigbee.TEMPERATURE_MEASUREMENT_CLUSTER, 0 /*TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ATTRIBUTE*/, DataType.INT16, 15, 300, 100 /* 100=0.1도*/)                 // 402 - temperature
-        cmds += zigbee.configureReporting(zigbee.RELATIVE_HUMIDITY_MEASUREMENT_CLUSTER, 0 /*RALATIVE_HUMIDITY_MEASUREMENT_MEASURED_VALUE_ATTRIBUTE*/, DataType.UINT16, 15, 300, 400/*10/100=0.4%*/)    // 405 - humidity
-        cmds += zigbee.configureReporting(0x042a, 0, 0x39, 30, 60, 1)    // 405 - pm2.5
-        //cmds += zigbee.configureReporting(0xfc7e, 0, 0x39, 10, 60, 50)     // provides a measurement in the range of 0-500 that correlates with the tVOC trend display on the unit itself.
-        cmds += ["zdo unbind 0x${device.deviceNetworkId} 0x${device.endpointId} 0x01 0xfc7e {${device.zigbeeId}} {}", 'delay 251', ]
-    }
-    else {
-        logWarn 'customInitializeDevice: unsupported device?'
-    }
-    return cmds
+    logDebug 'customInitializeDevice() AqaraTVOC'
+    return zigbee.readAttribute(zigbee.POWER_CONFIGURATION_CLUSTER, 0x0020) +
+        zigbee.readAttribute(zigbee.TEMPERATURE_MEASUREMENT_CLUSTER, 0x0000) +
+        zigbee.readAttribute(zigbee.RELATIVE_HUMIDITY_MEASUREMENT_CLUSTER, 0x0000) +
+        zigbee.readAttribute(ANALOG_INPUT_BASIC_CLUSTER, ANALOG_INPUT_BASIC_PRESENT_VALUE_ATTRIBUTE) +
+        zigbee.configureReporting(zigbee.RELATIVE_HUMIDITY_MEASUREMENT_CLUSTER, 0x0000, DataType.UINT16, 30, 300, 1 * 100) +
+        zigbee.configureReporting(zigbee.TEMPERATURE_MEASUREMENT_CLUSTER, 0x0000, DataType.INT16, 30, 300, 0x1) +
+        zigbee.configureReporting(zigbee.POWER_CONFIGURATION_CLUSTER, 0x0020, DataType.UINT8, 30, 21600, 0x1) +
+        zigbee.configureReporting(ANALOG_INPUT_BASIC_CLUSTER, ANALOG_INPUT_BASIC_PRESENT_VALUE_ATTRIBUTE, DataType.FLOAT4, 10, 3600, 5)
 }
 
 void customInitializeVars(boolean fullInit=false) {
     logDebug "customInitializeVars(${fullInit})"
-    if (fullInit || settings?.airQualityIndexCheckInterval == null) { device.updateSetting('airQualityIndexCheckInterval', [value: AirQualityIndexCheckIntervalOpts.defaultValue.toString(), type: 'enum']) }
     if (fullInit || settings?.TemperatureScaleOpts == null) { device.updateSetting('temperatureScale', [value: TemperatureScaleOpts.defaultValue.toString(), type: 'enum']) }
     if (fullInit || settings?.tVocUnut == null) { device.updateSetting('tVocUnut', [value: TvocUnitOpts.defaultValue.toString(), type: 'enum']) }
     if (fullInit || settings?.pm25Threshold == null) { device.updateSetting('pm25Threshold', [value:DEFAULT_PM25_THRESHOLD, type:'number']) }
     if (fullInit || settings?.airQualityIndexThreshold == null) { device.updateSetting('airQualityIndexThreshold', [value:DEFAULT_AIR_QUALITY_INDEX_THRESHOLD, type:'number']) }
 
-    if (isVINDSTYRKA()) {     // 09/02/2023 removed airQualityLevel, replaced airQualityIndex w/ sensirionVOCindex
-        device.deleteCurrentState('airQualityLevel')
-        device.deleteCurrentState('airQualityIndex')
-    }
 }
 
 // called from initializeVars() in the main code ...
@@ -806,8 +726,6 @@ metadata { // library marker kkossev.commonLib, line 67
 ] // library marker kkossev.commonLib, line 227
 
 boolean isVirtual() { device.controllerType == null || device.controllerType == '' } // library marker kkossev.commonLib, line 229
-/* groovylint-disable-next-line UnusedMethodParameter */ // library marker kkossev.commonLib, line 230
-//def isVINDSTYRKA() { (device?.getDataValue('model') ?: 'n/a') in ['VINDSTYRKA'] } // library marker kkossev.commonLib, line 231
 boolean isAqaraTVOC_OLD()  { (device?.getDataValue('model') ?: 'n/a') in ['lumi.airmonitor.acn01'] } // library marker kkossev.commonLib, line 232
 boolean isAqaraTRV_OLD()   { (device?.getDataValue('model') ?: 'n/a') in ['lumi.airrtc.agl001'] } // library marker kkossev.commonLib, line 233
 boolean isAqaraFP1()   { (device?.getDataValue('model') ?: 'n/a') in ['lumi.motion.ac01'] } // library marker kkossev.commonLib, line 234
@@ -3801,8 +3719,7 @@ void parseXiaomiClusterTags(final Map<Integer, Object> tags) { // library marker
                 break // library marker kkossev.xiaomiLib, line 198
             case 0x66: // library marker kkossev.xiaomiLib, line 199
                 if (isAqaraFP1()) { logDebug "xiaomi decode SENSITIVITY_LEVEL_TAG_ID tag: 0x${intToHexStr(tag, 1)}=${value}" } // library marker kkossev.xiaomiLib, line 200
-                else if (isAqaraTVOC()) { logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} airQualityIndex is ${value}" }        // Aqara TVOC level (in ppb) // library marker kkossev.xiaomiLib, line 201
-                else                    { logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} presure is ${value}" } // library marker kkossev.xiaomiLib, line 202
+                else { logDebug "xiaomi decode tag: 0x${intToHexStr(tag, 1)} airQualityIndex is ${value}" }        // Aqara TVOC level (in ppb) // library marker kkossev.xiaomiLib, line 201
                 break // library marker kkossev.xiaomiLib, line 203
             case 0x67: // library marker kkossev.xiaomiLib, line 204
                 if (isAqaraFP1()) { logDebug "xiaomi decode DIRECTION_MODE_TAG_ID tag: 0x${intToHexStr(tag, 1)}=${value}" } // library marker kkossev.xiaomiLib, line 205
