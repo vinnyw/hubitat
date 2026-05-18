@@ -7,11 +7,11 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/packa
 ### Candeo Scene Remote (C-ZB-SR5BR)
 https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/packageManifest.json
 
-### VoiceMonkey Integration
-https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/packageManifest.json
-
 ### Virtual Occupancy Sensor
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancy/packageManifest.json
 
 ### Virtual Presence Sensor
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualPresence/packageManifest.json
+
+### VoiceMonkey Integration
+https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/packageManifest.json
