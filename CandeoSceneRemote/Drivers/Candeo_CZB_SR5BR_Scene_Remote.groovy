@@ -101,7 +101,7 @@ metadata {
 //    DRIVER CONSTANTS
 //
 
-private @Field final String DRIVER_VERSION = '1.1.15'
+private @Field final String DRIVER_VERSION = '1.1.16'
 private @Field final String DRIVER_NAME = 'Candeo C-ZB-SR5BR'
 
 private @Field final String DEFAULT_BATTERYREPORT = '28800'
