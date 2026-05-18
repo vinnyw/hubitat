@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.15
+ *  Version     : 1.1.16
  *  Date        : 2026-05-04
  *
  *  Description :
@@ -137,7 +137,17 @@ private @Field final Map ROTATIONCOOLDOWN = [
     '350': '350ms',
     '400': '400ms',
     '450': '450ms',
-    '500': '500ms'
+    '500': '500ms',
+    '550': '550ms',
+    '600': '600ms',
+    '650': '650ms',
+    '700': '700ms',
+    '750': '750ms',
+    '800': '800ms',
+    '850': '850ms',
+    '900': '900ms',
+    '950': '950ms',
+    '1000': '1000ms'
 ]
 
 private @Field final Map ROTATIONWINDOW = [
