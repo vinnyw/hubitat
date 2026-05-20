@@ -3,7 +3,7 @@
   "packageName": "Average Humidity",
   "author": "Vinny Wadding",
   "minimumHEVersion": "2.3.0",
-  "version": "2.7.54",
+  "version": "2.7.56",
   "dateReleased": "2026-05-06",
   "releaseNotes": "Local patch: remove the custom humidityExact attribute, publish the standard humidity attribute as a whole-number RelativeHumidityMeasurement value for stronger Rule Machine 5.1 compatibility, align the humidity event unit with %rh, and make warning/error logging visible even when debug logging is disabled.",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageHumidity",
