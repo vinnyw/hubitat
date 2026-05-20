@@ -181,6 +181,7 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
     }
     places = Math.max(0, Math.min(places, 2))
 
+    // Canonical precision-normalized value used for both temperature and temperatureDisplay.
     BigDecimal newValue
     try {
         newValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
