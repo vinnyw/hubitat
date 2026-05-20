@@ -188,13 +188,13 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
         return
     }
 
-    Integer standardValue = exactValue.setScale(0, RoundingMode.HALF_UP).intValue()
+    BigDecimal standardValue = exactValue
 
-    Integer currentStandardValue = null
+    BigDecimal currentStandardValue = null
     def currentHumidityRaw = device.currentValue('humidity')
     if (currentHumidityRaw != null && currentHumidityRaw.toString() != '') {
         try {
-            currentStandardValue = new BigDecimal(currentHumidityRaw.toString()).setScale(0, RoundingMode.HALF_UP).intValue()
+            currentStandardValue = new BigDecimal(currentHumidityRaw.toString()).setScale(places, RoundingMode.HALF_UP)
         } catch (Exception ignored) {
             currentStandardValue = null
         }
