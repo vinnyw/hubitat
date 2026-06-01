@@ -1,0 +1,37 @@
+{
+    "id": "8ef8e8ef",
+    "packageName": "Virtual Battery",
+    "author": "Vinny Wadding",
+    "minimumHEVersion": "2.3.0",
+    "version": "1.0.4",
+    "dateReleased": "2026-06-01",
+    "releaseNotes": "• Initial release for time based vitual battery\n",
+    "documentationLink": "https://github.com/vinnyw/hubitat",
+    "communityLink": "",
+    "tags": "Presence & Location, Misc. Devices",
+    "apps": [
+        {
+            "id": "8ef8e8ef-e074-495c-8a47-17914aefe0de",
+            "name": "Virtual Battery Manager",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/VirtualBattery.groovy",
+            "required": true
+        },
+        {
+            "id": "8ef8e8ef-4909-4c1a-a829-d7e1d5d44070",
+            "name": "Virtual Battery",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/Battery-1.0.groovy",
+            "required": true
+        }
+    ],
+    "drivers": [
+        {
+            "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
+            "name": "Virtual Battery",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
+            "required": true
+        }
+    ]
+}
