@@ -4,6 +4,9 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/packageM
 ### Average Temperature
 https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/packageManifest.json
 
+### Virtual Battery
+https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/packageManifest.json
+
 ### Candeo Scene Remote (C-ZB-SR5BR)
 https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/packageManifest.json
 
