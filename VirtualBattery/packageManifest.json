@@ -28,7 +28,7 @@
     "drivers": [
         {
             "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
-            "name": "Virtual Battery",
+            "name": "Virtual Battery Driver",
             "namespace": "vinnyw",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
             "required": true
