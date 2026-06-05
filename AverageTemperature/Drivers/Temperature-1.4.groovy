@@ -201,7 +201,10 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
     }
 
     String normalizedUnit = normalizeDisplayUnit(unit)
-    String display = normalizedUnit == 'none' ? "${newValue}" : "${newValue}${normalizedUnit}"
+    String displayValue = (newValue.stripTrailingZeros().scale() <= 0)
+        ? newValue.toBigInteger().toString()
+        : newValue.toString()
+    String display = normalizedUnit == 'none' ? displayValue : "${displayValue}${normalizedUnit}"
     boolean changed = false
 
     if (currentValue == null || currentValue.compareTo(newValue) != 0) {
