@@ -20,10 +20,10 @@ preferences {
     page(name: 'mainPage')
 }
 
+
 //
 //    VERSION
 //
-
 
 def getVersion() {
     return parent?.getVersion() ?: 'unknown'
@@ -71,7 +71,7 @@ def mainPage() {
                   defaultValue: 0,
                   submitOnChange: true
 
-            input name: 'runtimeSecondsPart', type: 'number',
+            input name: 'runtimeSeconds', type: 'number',
                   title: 'Seconds',
                   width: 2,
                   range: '0..59',
@@ -95,7 +95,7 @@ def mainPage() {
                   defaultValue: 0,
                   submitOnChange: true
 
-            input name: 'runtimeDischargeSecondsPart', type: 'number',
+            input name: 'runtimeDischargeSeconds', type: 'number',
                   title: 'Seconds',
                   width: 2,
                   range: '0..59',
@@ -133,20 +133,20 @@ def mainPage() {
 private void applyDefaultSettings() {
     ensureNumberSetting('runtimeHours', 0)
     ensureNumberSetting('runtimeMinutes', 0)
-    ensureNumberSetting('runtimeSecondsPart', 0)
+    ensureNumberSetting('runtimeSeconds', 0)
 
     if (settings?.runtimeDischargeHours == null &&
         settings?.runtimeDischargeMinutes == null &&
-        settings?.runtimeDischargeSecondsPart == null) {
+        settings?.runtimeDischargeSeconds == null) {
         Integer seconds = DEFAULT_RUNTIME_DISCHARGE_SECONDS
         app?.updateSetting('runtimeDischargeHours', [type: 'number', value: (int)(seconds / 3600)])
         app?.updateSetting('runtimeDischargeMinutes', [type: 'number', value: (int)((seconds % 3600) / 60)])
-        app?.updateSetting('runtimeDischargeSecondsPart', [type: 'number', value: (int)(seconds % 60)])
+        app?.updateSetting('runtimeDischargeSeconds', [type: 'number', value: (int)(seconds % 60)])
     }
 
     ensureNumberSetting('runtimeDischargeHours', 1)
     ensureNumberSetting('runtimeDischargeMinutes', 0)
-    ensureNumberSetting('runtimeDischargeSecondsPart', 0)
+    ensureNumberSetting('runtimeDischargeSeconds', 0)
     ensureBooleanSetting('txtEnable', true)
     ensureBooleanSetting('debugEnable', false)
 }
@@ -194,11 +194,11 @@ private String htmlEncode(Object value) {
 private void normalizeDurationInputs() {
     clampNumberSetting('runtimeHours', 0, null, 0)
     clampNumberSetting('runtimeMinutes', 0, 59, 0)
-    clampNumberSetting('runtimeSecondsPart', 0, 59, 0)
+    clampNumberSetting('runtimeSeconds', 0, 59, 0)
 
     clampNumberSetting('runtimeDischargeHours', 0, null, 1)
     clampNumberSetting('runtimeDischargeMinutes', 0, 59, 0)
-    clampNumberSetting('runtimeDischargeSecondsPart', 0, 59, 0)
+    clampNumberSetting('runtimeDischargeSeconds', 0, 59, 0)
 }
 
 private Integer normalizeInteger(value, Integer defaultValue = 0) {
@@ -218,12 +218,12 @@ private void secondsToDurationSettings(Integer totalSeconds, String hoursName, S
 }
 
 private void updateRuntimeStateFromInputs() {
-    Integer configuredRuntime = durationInputsToSeconds('runtimeHours', 'runtimeMinutes', 'runtimeSecondsPart')
-    Integer configuredDischarge = durationInputsToSeconds('runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSecondsPart')
+    Integer configuredRuntime = durationInputsToSeconds('runtimeHours', 'runtimeMinutes', 'runtimeSeconds')
+    Integer configuredDischarge = durationInputsToSeconds('runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
 
     if (configuredDischarge <= 0) {
         configuredDischarge = DEFAULT_RUNTIME_DISCHARGE_SECONDS
-        secondsToDurationSettings(configuredDischarge, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSecondsPart')
+        secondsToDurationSettings(configuredDischarge, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
     }
 
     state.runtime = configuredRuntime
@@ -282,7 +282,7 @@ def childCaptureRuntimeDischarge(String dni = null) {
     Integer captured = Math.max(1, getCurrentRuntimeSeconds())
     state.runtimeDischarge = captured
     state.lastActivity = now()
-    secondsToDurationSettings(captured, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSecondsPart')
+    secondsToDurationSettings(captured, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
 
     publishRuntimeState()
 }
@@ -445,7 +445,7 @@ private Integer getCurrentRuntimeSeconds(Long epoch = now()) {
 }
 
 private Integer getRuntimeDischargeSeconds() {
-    Integer discharge = normalizeInteger(state.runtimeDischarge, durationInputsToSeconds('runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSecondsPart'))
+    Integer discharge = normalizeInteger(state.runtimeDischarge, durationInputsToSeconds('runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds'))
     return Math.max(1, discharge)
 }
 
@@ -467,7 +467,7 @@ private Long normalizeLong(value, Long defaultValue) {
 }
 
 private void syncRuntimeInputsFromState() {
-    secondsToDurationSettings(getStoredRuntimeSeconds(), 'runtimeHours', 'runtimeMinutes', 'runtimeSecondsPart')
+    secondsToDurationSettings(getStoredRuntimeSeconds(), 'runtimeHours', 'runtimeMinutes', 'runtimeSeconds')
 }
 
 
