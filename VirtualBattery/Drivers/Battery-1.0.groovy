@@ -41,16 +41,8 @@ metadata {
         attribute 'runtimeDischargeDisplay', 'string'
         attribute 'lastActivity', 'number'
 
-        command 'resetRuntime', [
-            [   name: 'Reset Runtime', 
-                type: 'STRING', 
-                description: '<small>Resets the accumulated runtime counter.</small><br><br>']
-            ]
-        command 'captureRuntimeDischarge', [
-            [   name: 'Capture Runtime Discharge', 
-                type: 'STRING', 
-                description: '<small>Adjust the period that the battery percentage is reported to suit your requirements.</small><br><br>']
-            ]
+        command 'resetRuntime'
+        command 'captureRuntimeDischarge'
     }
 
     preferences {
