@@ -41,8 +41,16 @@ metadata {
         attribute 'runtimeDischargeDisplay', 'string'
         attribute 'lastActivity', 'number'
 
-        command 'resetRuntime'
-        command 'captureRuntimeDischarge'
+        command 'resetRuntime', [
+            [   name: 'Reset Runtime', 
+                type: 'STRING', 
+                description: '<small>Resets the accumulated runtime counter.</small><br><br>']
+            ]
+        command 'captureRuntimeDischarge', [
+            [   name: 'Capture Runtime Discharge', 
+                type: 'STRING', 
+                description: '<small>Adjust the period that the battery percentage is reported to suit your requirements.</small><br><br>']
+            ]
     }
 
     preferences {
@@ -56,10 +64,10 @@ metadata {
     }
 }
 
+
 //
 //    VERSION
 //
-
 
 def getVersion() {
     return parent?.getVersion() ?: 'unknown'
@@ -131,7 +139,6 @@ def refresh() {
 def resetRuntime() {
     parent?.childResetRuntime(device.deviceNetworkId)
 }
-
 
 
 //

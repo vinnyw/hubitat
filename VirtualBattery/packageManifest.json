@@ -3,7 +3,7 @@
     "packageName": "Virtual Battery",
     "author": "Vinny Wadding",
     "minimumHEVersion": "2.3.0",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "dateReleased": "2026-06-01",
     "releaseNotes": "• Initial release for time based vitual battery\n",
     "documentationLink": "https://github.com/vinnyw/hubitat",
