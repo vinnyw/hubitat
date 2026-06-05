@@ -201,7 +201,8 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     }
 
     String normalizedUnit = unit == null ? '%' : unit.toString()
-    String display = normalizedUnit == 'none' ? "${exactValue}" : "${exactValue}${normalizedUnit}"
+    String displayValue = (exactValue.stripTrailingZeros().scale() <= 0) ? exactValue.toBigInteger().toString() : exactValue.toString()
+    String display = normalizedUnit == 'none' ? displayValue : "${displayValue}${normalizedUnit}"
     boolean changed = false
 
     if (currentStandardValue == null || currentStandardValue != standardValue) {
