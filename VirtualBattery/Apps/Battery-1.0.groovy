@@ -278,6 +278,7 @@ def updated() {
 
 def childCaptureRuntimeDischarge(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
+    if (getManagedChildDevice()?.currentValue('switch') != 'off') return
 
     Integer captured = Math.max(1, getCurrentRuntimeSeconds())
     state.runtimeDischarge = captured
@@ -285,6 +286,27 @@ def childCaptureRuntimeDischarge(String dni = null) {
     secondsToDurationSettings(captured, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
 
     publishRuntimeState()
+}
+
+def childAppendRuntimeDischarge(String dni = null) {
+    if (!deviceMatchesManagedChild(dni)) return
+    if (getManagedChildDevice()?.currentValue('switch') != 'off') return
+
+    Integer runtime = Math.max(0, getCurrentRuntimeSeconds())
+    Integer discharge = getRuntimeDischargeSeconds()
+
+    Integer updatedDischarge = discharge + runtime
+    state.runtimeDischarge = updatedDischarge
+    secondsToDurationSettings(updatedDischarge, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
+
+    state.runtime = 0
+    state.startEpoch = null
+    state.lastStartEpoch = null
+    state.lastStopEpoch = null
+    state.lastActivity = now()
+    syncRuntimeInputsFromState()
+
+    publishRuntimeState('off')
 }
 
 def childConfigureRequest(String dni = null) {

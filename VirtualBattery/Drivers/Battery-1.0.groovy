@@ -43,6 +43,7 @@ metadata {
 
         command 'resetRuntime'
         command 'captureRuntimeDischarge'
+        command 'appendRuntimeDischarge'
     }
 
     preferences {
@@ -114,6 +115,10 @@ def updated() {
 
 def captureRuntimeDischarge() {
     parent?.childCaptureRuntimeDischarge(device.deviceNetworkId)
+}
+
+def appendRuntimeDischarge() {
+    parent?.childAppendRuntimeDischarge(device.deviceNetworkId)
 }
 
 def off() {
