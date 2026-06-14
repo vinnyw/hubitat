@@ -35,7 +35,8 @@ metadata {
         name: 'Virtual Occupancy Sensor',
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
-VirtualOccupancySensor    ) {
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/VirtualOccupancySensor/VirtualOccupancySensor.groovy'
+    ) {
         capability 'Sensor'
         capability 'Actuator'
         capability 'Configuration'
