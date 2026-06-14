@@ -1,0 +1,34 @@
+{
+    "id": "9b0a8c5b-9191-491a-9aee-a8150cb2364e",
+    "packageName": "Hubitat Custom Drivers",
+    "author": "Vinny Wadding",
+    "minimumHEVersion": "2.3.0",
+    "dateReleased": "2026-03-11",
+    "documentationLink": "https://github.com/vinnyw/hubitat",
+    "communityLink": "",
+    "tags": "Presence & Location, Misc. Devices",
+    "drivers": [
+        {
+            "id": "ee9ec830-0444-429d-be7a-1d446c1ff67f",
+            "name": "Candeo Scene Remote (C-ZB-SR5BR)",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy",
+            "required": false,
+            "version": "1.1.16"
+        },
+        {
+            "id": "885f8281-8d43-4ea3-b973-9749d45504b3",
+            "name": "Virtual Occupancy Sensor",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/VirtualOccupancySensor/VirtualOccupancySensor.groovy",
+            "required": false,
+            "version": "3.7.4"
+        },
+        {
+            "id": "b78f4d86-da62-4cb2-9d5c-da7bbd7dc493",
+            "name": "Virtual Presence Sensor",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/VirtualPresenceSensor/VirtualPresenceSensor.groovy",
+            "required": false,
+            "version": "1.2.1"
+        }
+    ]
+}WHA
