@@ -53,8 +53,8 @@ metadata {
         name: 'Candeo Scene Remote (C-ZB-SR5BR)',
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
+        singleThreaded: true,
         importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy',
-        singleThreaded: true
     ) {
         capability 'PushableButton'
         capability 'DoubleTapableButton'
