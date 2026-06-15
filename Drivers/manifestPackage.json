@@ -26,9 +26,9 @@
             "id": "b78f4d86-da62-4cb2-9d5c-da7bbd7dc493",
             "name": "Virtual Presence Sensor",
             "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/VirtualPresenceSensor/VirtualPresenceSensor.groovy",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/VirtualPresenceSensor/VirtualPresenceSensor",
             "required": false,
             "version": "1.2.1"
         }
     ]
-}WHA
+}
