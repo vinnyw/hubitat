@@ -4,17 +4,14 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/packageM
 ### Average Temperature
 https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/packageManifest.json
 
-### Candeo Scene Remote (C-ZB-SR5BR)
-https://raw.githubusercontent.com/vinnyw/hubitat/master/CandeoSceneRemote/packageManifest.json
+### Custom Hubitat Drivers
+Virtual Presence Sensor
+Virtual Occupancy Sensor
+Candeo Scene Remote (C-ZB-SR5BR)
+https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/packageManifest.json
 
 ### Virtual Battery
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/packageManifest.json
-
-### Virtual Occupancy Sensor
-https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualOccupancy/packageManifest.json
-
-### Virtual Presence Sensor
-https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualPresence/packageManifest.json
 
 ### VoiceMonkey Integration
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/packageManifest.json

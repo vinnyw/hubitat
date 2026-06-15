@@ -50,7 +50,7 @@ import groovy.transform.Field
 
 metadata {
     definition(
-        name: 'Candeo Scene Remote (C-ZB-SR5BR)',
+        name: 'Candeo Scene Remote',
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
         singleThreaded: true,
