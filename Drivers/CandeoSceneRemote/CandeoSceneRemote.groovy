@@ -54,7 +54,7 @@ metadata {
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
         singleThreaded: true,
-        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy',
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy'
     ) {
         capability 'PushableButton'
         capability 'DoubleTapableButton'
@@ -66,14 +66,7 @@ metadata {
 
         attribute 'rotationClickCount', 'number'
 
-        fingerprint 
-            profileId: '0104', 
-            endpointId: '01', 
-            inClusters: '0000,0001,0003,0B05,1000', 
-            outClusters: '0003,0004,0005,0006,0008,0019,1000', 
-            manufacturer: 'Candeo', 
-            model: 'C-ZB-SR5BR', 
-            deviceJoinName: 'Candeo Scene Remote (C-ZB-SR5BR)'
+        fingerprint profileId: '0104', endpointId: '01', inClusters: '0000,0001,0003,0B05,1000', outClusters: '0003,0004,0005,0006,0008,0019,1000', manufacturer: 'Candeo', model: 'C-ZB-SR5BR', deviceJoinName: 'Candeo C-ZB-SR5BR Smart Scene Remote'
     }
 
     preferences {
