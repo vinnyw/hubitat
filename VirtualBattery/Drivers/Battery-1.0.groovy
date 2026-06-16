@@ -41,7 +41,7 @@ metadata {
         attribute 'runtimeDischargeDisplay', 'string'
         attribute 'lastActivity', 'number'
 
-        command 'resetRuntime'
+        command 'resetRuntimeDischarge'
         command 'captureRuntimeDischarge'
         command 'appendRuntimeDischarge'
     }
@@ -113,6 +113,10 @@ def updated() {
 //    DEVICE COMMAND HANDLERS
 //
 
+def refresh() {
+    parent?.childRefreshRequest(device.deviceNetworkId)
+}
+
 def captureRuntimeDischarge() {
     parent?.childCaptureRuntimeDischarge(device.deviceNetworkId)
 }
@@ -121,20 +125,20 @@ def appendRuntimeDischarge() {
     parent?.childAppendRuntimeDischarge(device.deviceNetworkId)
 }
 
+def resetRuntimeDischarge() {
+    parent?.childResetRuntimeDischarge(device.deviceNetworkId)
+}
+
+def resetRuntime() {
+    resetRuntimeDischarge()
+}
+
 def off() {
     parent?.childOff(device.deviceNetworkId)
 }
 
 def on() {
     parent?.childOn(device.deviceNetworkId)
-}
-
-def refresh() {
-    parent?.childRefreshRequest(device.deviceNetworkId)
-}
-
-def resetRuntime() {
-    parent?.childResetRuntime(device.deviceNetworkId)
 }
 
 

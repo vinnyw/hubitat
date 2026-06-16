@@ -350,7 +350,7 @@ def childRefreshRequest(String dni = null) {
     publishRuntimeState()
 }
 
-def childResetRuntime(String dni = null) {
+def childResetRuntimeDischarge(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
 
     Long epoch = now()
@@ -364,6 +364,11 @@ def childResetRuntime(String dni = null) {
     publishRuntimeState('off')
 }
 
+
+
+def childResetRuntime(String dni = null) {
+    childResetRuntimeDischarge(dni)
+}
 
 //
 //    DEVICE MANAGEMENT HELPERS
