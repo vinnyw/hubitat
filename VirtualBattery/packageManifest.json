@@ -3,7 +3,7 @@
     "packageName": "Virtual Battery",
     "author": "Vinny Wadding",
     "minimumHEVersion": "2.3.0",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "dateReleased": "2026-06-16",
     "releaseNotes": "\u2022 Rename Reset Runtime command to Reset Runtime Discharge for naming consistency\n",
     "documentationLink": "https://github.com/vinnyw/hubitat",

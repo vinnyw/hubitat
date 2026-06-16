@@ -58,48 +58,44 @@ def mainPage() {
             paragraph 'Current accumulated runtime for this virtual battery.'
             paragraph "<b>Runtime Display:</b> ${formatDuration(getRuntimeSeconds())}"
 
-            input name: 'runtimeHours', type: 'number',
+            input name: 'runtimeHours', type: 'text',
                   title: 'Hours',
                   width: 2,
-                  defaultValue: 0,
+                  defaultValue: '00',
                   submitOnChange: true
 
-            input name: 'runtimeMinutes', type: 'number',
+            input name: 'runtimeMinutes', type: 'text',
                   title: 'Minutes',
                   width: 2,
-                  range: '0..59',
-                  defaultValue: 0,
+                  defaultValue: '00',
                   submitOnChange: true
 
-            input name: 'runtimeSeconds', type: 'number',
+            input name: 'runtimeSeconds', type: 'text',
                   title: 'Seconds',
                   width: 2,
-                  range: '0..59',
-                  defaultValue: 0,
+                  defaultValue: '00',
                   submitOnChange: true
 
 
             paragraph 'Accumulated runtime required to discharge the virtual battery from 100% to 0%.'
             paragraph "<b>Runtime Discharge Display:</b> ${formatDuration(getRuntimeDischargeSeconds())}"
             
-            input name: 'runtimeDischargeHours', type: 'number',
+            input name: 'runtimeDischargeHours', type: 'text',
                   title: 'Hours',
                   width: 2,
-                  defaultValue: 1,
+                  defaultValue: '01',
                   submitOnChange: true
 
-            input name: 'runtimeDischargeMinutes', type: 'number',
+            input name: 'runtimeDischargeMinutes', type: 'text',
                   title: 'Minutes',
                   width: 2,
-                  range: '0..59',
-                  defaultValue: 0,
+                  defaultValue: '00',
                   submitOnChange: true
 
-            input name: 'runtimeDischargeSeconds', type: 'number',
+            input name: 'runtimeDischargeSeconds', type: 'text',
                   title: 'Seconds',
                   width: 2,
-                  range: '0..59',
-                  defaultValue: 0,
+                  defaultValue: '00',
                   submitOnChange: true
 
         }
@@ -131,33 +127,34 @@ def mainPage() {
 //
 
 private void applyDefaultSettings() {
-    ensureNumberSetting('runtimeHours', 0)
-    ensureNumberSetting('runtimeMinutes', 0)
-    ensureNumberSetting('runtimeSeconds', 0)
+    ensureDurationTextSetting('runtimeHours', 0)
+    ensureDurationTextSetting('runtimeMinutes', 0)
+    ensureDurationTextSetting('runtimeSeconds', 0)
 
     if (settings?.runtimeDischargeHours == null &&
         settings?.runtimeDischargeMinutes == null &&
         settings?.runtimeDischargeSeconds == null) {
         Integer seconds = DEFAULT_RUNTIME_DISCHARGE_SECONDS
-        app?.updateSetting('runtimeDischargeHours', [type: 'number', value: (int)(seconds / 3600)])
-        app?.updateSetting('runtimeDischargeMinutes', [type: 'number', value: (int)((seconds % 3600) / 60)])
-        app?.updateSetting('runtimeDischargeSeconds', [type: 'number', value: (int)(seconds % 60)])
+        app?.updateSetting('runtimeDischargeHours', [type: 'text', value: formatDurationInput((int)(seconds / 3600))])
+        app?.updateSetting('runtimeDischargeMinutes', [type: 'text', value: formatDurationInput((int)((seconds % 3600) / 60))])
+        app?.updateSetting('runtimeDischargeSeconds', [type: 'text', value: formatDurationInput((int)(seconds % 60))])
     }
 
-    ensureNumberSetting('runtimeDischargeHours', 1)
-    ensureNumberSetting('runtimeDischargeMinutes', 0)
-    ensureNumberSetting('runtimeDischargeSeconds', 0)
+    ensureDurationTextSetting('runtimeDischargeHours', 1)
+    ensureDurationTextSetting('runtimeDischargeMinutes', 0)
+    ensureDurationTextSetting('runtimeDischargeSeconds', 0)
     ensureBooleanSetting('txtEnable', true)
     ensureBooleanSetting('debugEnable', false)
 }
 
-private void clampNumberSetting(String name, Integer minValue, Integer maxValue, Integer defaultValue) {
+private void clampDurationTextSetting(String name, Integer minValue, Integer maxValue, Integer defaultValue) {
     Integer value = normalizeInteger(settings?."${name}", defaultValue)
     Integer clamped = Math.max(minValue, value)
     if (maxValue != null) clamped = Math.min(maxValue, clamped)
 
-    if (settings?."${name}" == null || value != clamped) {
-        app?.updateSetting(name, [type: 'number', value: clamped])
+    String formatted = formatDurationInput(clamped)
+    if (settings?."${name}" == null || settings?."${name}"?.toString() != formatted) {
+        app?.updateSetting(name, [type: 'text', value: formatted])
     }
 }
 
@@ -175,10 +172,14 @@ private void ensureBooleanSetting(String name, Boolean defaultValue) {
     }
 }
 
-private void ensureNumberSetting(String name, Integer defaultValue) {
+private void ensureDurationTextSetting(String name, Integer defaultValue) {
     if (settings?."${name}" == null) {
-        app?.updateSetting(name, [type: 'number', value: defaultValue])
+        app?.updateSetting(name, [type: 'text', value: formatDurationInput(defaultValue)])
     }
+}
+
+private String formatDurationInput(Integer value) {
+    return String.format('%02d', Math.max(0, normalizeInteger(value, 0)))
 }
 
 private String htmlEncode(Object value) {
@@ -192,13 +193,13 @@ private String htmlEncode(Object value) {
 }
 
 private void normalizeDurationInputs() {
-    clampNumberSetting('runtimeHours', 0, null, 0)
-    clampNumberSetting('runtimeMinutes', 0, 59, 0)
-    clampNumberSetting('runtimeSeconds', 0, 59, 0)
+    clampDurationTextSetting('runtimeHours', 0, null, 0)
+    clampDurationTextSetting('runtimeMinutes', 0, 59, 0)
+    clampDurationTextSetting('runtimeSeconds', 0, 59, 0)
 
-    clampNumberSetting('runtimeDischargeHours', 0, null, 1)
-    clampNumberSetting('runtimeDischargeMinutes', 0, 59, 0)
-    clampNumberSetting('runtimeDischargeSeconds', 0, 59, 0)
+    clampDurationTextSetting('runtimeDischargeHours', 0, null, 1)
+    clampDurationTextSetting('runtimeDischargeMinutes', 0, 59, 0)
+    clampDurationTextSetting('runtimeDischargeSeconds', 0, 59, 0)
 }
 
 private Integer normalizeInteger(value, Integer defaultValue = 0) {
@@ -212,9 +213,9 @@ private Integer normalizeInteger(value, Integer defaultValue = 0) {
 
 private void secondsToDurationSettings(Integer totalSeconds, String hoursName, String minutesName, String secondsName) {
     Integer safe = Math.max(0, normalizeInteger(totalSeconds, 0))
-    app?.updateSetting(hoursName, [type: 'number', value: (int)(safe / 3600)])
-    app?.updateSetting(minutesName, [type: 'number', value: (int)((safe % 3600) / 60)])
-    app?.updateSetting(secondsName, [type: 'number', value: (int)(safe % 60)])
+    app?.updateSetting(hoursName, [type: 'text', value: formatDurationInput((int)(safe / 3600))])
+    app?.updateSetting(minutesName, [type: 'text', value: formatDurationInput((int)((safe % 3600) / 60))])
+    app?.updateSetting(secondsName, [type: 'text', value: formatDurationInput((int)(safe % 60))])
 }
 
 private void updateRuntimeStateFromInputs() {
