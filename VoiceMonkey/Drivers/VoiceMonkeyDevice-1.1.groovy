@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.36
- *  Date        : 2026-05-18
+ *  Version     : 1.1.37
+ *  Date        : 2026-06-20
  *
  *  Description :
  *      VoiceMonkey child driver for queued speech dispatch.
@@ -45,6 +45,7 @@ metadata {
             [name: 'Text*', type: 'STRING', description: 'Text to speak']
         ]
         command 'clearQueue'
+        command 'forceQueue'
     }
 
     preferences {
@@ -149,6 +150,11 @@ private void removeObsoleteAttributes() {
 def clearQueue() {
     logInfo('Queue clear requested')
     parent?.clearQueueFromDevice(device.deviceNetworkId)
+}
+
+def forceQueue() {
+    logInfo('Force Queue requested')
+    parent?.forceQueueFromDevice(device.deviceNetworkId)
 }
 
 def speak(String text) {

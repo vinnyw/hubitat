@@ -37,7 +37,7 @@ preferences {
 //
 
 def getVersion() {
-    return '1.1.36'
+    return '1.1.37'
 }
 
 def getDebugAutoDisableSeconds() {

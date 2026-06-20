@@ -700,6 +700,38 @@ def clearQueueFromDevice(String deviceNetworkId) {
     logDebug('Queue clear requested from device')
 }
 
+def forceQueueFromDevice(String deviceNetworkId) {
+    if (deviceNetworkId != getChildDni()) return
+
+    initializeQueueStateIfNeeded()
+
+    Integer pendingCount = getLocalQueueCount()
+    Boolean hadActiveItem = (state.processing == true || state.activeItem instanceof Map)
+
+    log.warn "${app.label}: Force Queue requested from device"
+
+    state.nextDispatchAllowedEpoch = 0L
+    unschedule('kickQueue')
+
+    if (hadActiveItem) {
+        state.activeItem = null
+        state.processing = false
+
+        unschedule('completePlayback')
+        unschedule('queueRecoveryCheck')
+        unschedule('voiceMonkeyAcceptanceTimeout')
+
+        log.warn "${app.label}: Force Queue cleared active dispatch state before restarting pending queue"
+    }
+
+    if (pendingCount > 0) {
+        syncLocalQueueState(getSpeakerDevice(), 'waiting', null, null)
+        scheduleKickQueue(0)
+    } else {
+        syncLocalQueueState(getSpeakerDevice(), 'idle', null, null)
+    }
+}
+
 def deferredQueueStateRefresh() {
     def child = getSpeakerDevice()
     if (!child) return
