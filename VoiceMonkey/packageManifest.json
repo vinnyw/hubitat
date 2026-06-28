@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.1.38",
   "dateReleased": "2026-06-20",
-  "releaseNotes": "Added Force Queue driver command to clear stuck dispatch state and immediately restart pending queue processing.",
+  "releaseNotes": "Add mute/unmute functions",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/VoiceMonkey",
   "communityLink": "https://community.hubitat.com/",
   "category": "Convenience",
