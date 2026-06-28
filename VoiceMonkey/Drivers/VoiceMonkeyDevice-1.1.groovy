@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.37
- *  Date        : 2026-06-20
+ *  Version     : 1.1.39
+ *  Date        : 2026-06-28
  *
  *  Description :
  *      VoiceMonkey child driver for queued speech dispatch.
@@ -15,7 +15,7 @@
  *          queueStatus   (enum)    : status
  *          queueSize     (number)  : queued item count
  *          lastActivity  (string)  : formatted timestamp
- *          mute          (bool)    : app mute state
+ *          mute          (enum)    : app mute state (muted/unmuted)
  *
  *      Capabilities:
  *          Sensor
@@ -41,7 +41,7 @@ metadata {
         attribute 'queueStatus', 'enum', ['idle', 'enqueueing', 'waiting', 'dispatching', 'confirmed', 'failed']
         attribute 'queueSize', 'number'
         attribute 'lastActivity', 'string'
-        attribute 'mute', 'bool'
+        attribute 'mute', 'enum', ['muted', 'unmuted']
 
         command 'speak', [
             [name: 'Text*', type: 'STRING', description: 'Text to speak']
@@ -141,10 +141,6 @@ private void initializeQueueStateIfNeeded() {
     if (device.currentValue('lastActivity') == null) {
         sendEvent(name: 'lastActivity', value: formatEpochMillis(now()), isStateChange: false, type: 'digital')
     }
-
-    if (device.currentValue('mute') == null) {
-        sendEvent(name: 'mute', value: false, isStateChange: false, type: 'digital')
-    }
 }
 
 private void removeObsoleteAttributes() {
@@ -233,8 +229,8 @@ def touchActivityFromChild() {
 }
 
 def muteFromChild(Object muteValue) {
-    Boolean muted = normalizeBoolean(muteValue, false)
-    if (sendIfChanged('mute', muted) == true) {
+    String muteState = normalizeMuteState(muteValue, 'unmuted')
+    if (sendIfChanged('mute', muteState) == true) {
         touchActivity()
     }
 }
@@ -427,6 +423,25 @@ private String normalizeMessageText(Object value) {
         .trim()
 
     return sanitized ? sanitized : null
+}
+
+
+private String normalizeMuteState(Object value, String fallbackValue) {
+    if (value == null) return fallbackValue
+
+    String text = value.toString().trim().toLowerCase()
+    if (!text) return fallbackValue
+
+    switch (text) {
+        case 'mute':
+        case 'muted':
+            return 'muted'
+        case 'unmute':
+        case 'unmuted':
+            return 'unmuted'
+        default:
+            return fallbackValue
+    }
 }
 
 private String normalizeQueueStatus(Object value, String fallbackValue) {

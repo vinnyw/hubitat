@@ -1160,12 +1160,12 @@ private void syncMuteStateToDriver(child = null) {
     def target = child ?: getSpeakerDevice()
     if (!target) return
 
-    Boolean muted = muteEnabled()
+    String muteState = muteEnabled() ? 'muted' : 'unmuted'
 
     try {
-        target.muteFromChild(muted)
+        target.muteFromChild(muteState)
     } catch (Exception ex) {
-        sendChildEventIfChanged(target, 'mute', muted)
+        sendChildEventIfChanged(target, 'mute', muteState)
     }
 }
 
