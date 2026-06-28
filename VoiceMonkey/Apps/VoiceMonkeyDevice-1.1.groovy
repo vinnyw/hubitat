@@ -55,8 +55,10 @@ private String getParentVersionValue() {
 //
 
 def mainPage() {
-    migrateLegacyPersonalitySettings()
     sanitizeConfiguredSettingsIfNeeded()
+    ensureMuteSettingDefault()
+    syncMuteSettingToState()
+    syncMuteStateToDriver()
     synchronizeAppLabelFromExistingDevice(true)
     synchronizePersonalityLanguageFromVoiceSelection()
 
@@ -74,6 +76,11 @@ def mainPage() {
                 title: 'Device ID ',
                 submitOnChange: true,
                 required: true
+
+            input name: 'mute', type: 'bool',
+                  title: 'Mute',
+                  defaultValue: false,
+                  submitOnChange: true
         }
 
         section(hideable: true, hidden: false, title: 'Logging') {
@@ -119,6 +126,40 @@ private String getConfiguredVoiceMonkeyDeviceId() {
 
 private void sanitizeConfiguredSettingsIfNeeded() {
 }
+
+private void ensureMuteSettingDefault() {
+    if (settings?.mute == null) {
+        app.updateSetting('mute', [value: false, type: 'bool'])
+    }
+
+    if (!(state?.mute instanceof Boolean)) {
+        state.mute = false
+    }
+}
+
+private Boolean getMuteSettingValue() {
+    return normalizeBoolean(settings?.mute, false)
+}
+
+private void syncMuteSettingToState() {
+    state.mute = getMuteSettingValue()
+}
+
+private void setMuteState(Boolean desiredMute) {
+    Boolean muted = normalizeBoolean(desiredMute, false)
+
+    state.mute = muted
+    app.updateSetting('mute', [value: muted, type: 'bool'])
+    syncMuteStateToDriver()
+}
+
+private Boolean muteEnabled() {
+    if (!(state?.mute instanceof Boolean)) {
+        syncMuteSettingToState()
+    }
+
+    return normalizeBoolean(state?.mute, false)
+}
 //
 //    UI STATE & DISPLAY HELPERS
 //
@@ -137,28 +178,6 @@ private String htmlEncode(Object value) {
         .replace('>', '&gt;')
         .replace('"', '&quot;')
         .replace("'", '&#39;')
-}
-
-private void migrateLegacyPersonalitySetting(String legacyName, String newName, String settingType) {
-    String currentValue = normalizeOptionalString(settings?."${newName}")
-    if (currentValue) return
-
-    String legacyValue = normalizeOptionalString(settings?."${legacyName}")
-    if (!legacyValue) return
-
-    app.updateSetting(newName, [value: legacyValue, type: settingType])
-    state.personalitySectionExpanded = true
-    logDebug("Migrated legacy setting ${legacyName} to ${newName}")
-}
-
-private void migrateLegacyPersonalitySettings() {
-    migrateLegacyPersonalitySetting('defaultVoice', 'personalityVoice', 'enum')
-    migrateLegacyPersonalitySetting('defaultLanguage', 'personalityLanguage', 'enum')
-    migrateLegacyPersonalitySetting('defaultChime', 'personalityChime', 'enum')
-
-    if (hasConfiguredPersonality()) {
-        state.personalitySectionExpanded = true
-    }
 }
 
 private Boolean shouldHidePersonalitySection() {
@@ -193,11 +212,13 @@ private void synchronizePersonalityLanguageFromVoiceSelection() {
 //
 
 def initialize() {
-    migrateLegacyPersonalitySettings()
     sanitizeConfiguredSettingsIfNeeded()
+    ensureMuteSettingDefault()
+    syncMuteSettingToState()
     scheduleDebugAutoDisableIfNeeded()
     createOrUpdateChildDevice(false)
     syncChildSettings()
+    syncMuteStateToDriver()
     initializeQueueStateIfNeeded()
     syncLocalQueueState(getSpeakerDevice(), null, null)
 
@@ -682,6 +703,20 @@ private String resolveLanguageForVoice(String voiceName) {
 //    DRIVER CALLBACKS
 //
 
+def muteFromDevice(String deviceNetworkId) {
+    if (deviceNetworkId != getChildDni()) return
+
+    setMuteState(true)
+    logInfo('Mute enabled from child device command')
+}
+
+def unmuteFromDevice(String deviceNetworkId) {
+    if (deviceNetworkId != getChildDni()) return
+
+    setMuteState(false)
+    logInfo('Mute disabled from child device command')
+}
+
 def clearQueueFromDevice(String deviceNetworkId) {
     if (deviceNetworkId != getChildDni()) return
 
@@ -835,6 +870,27 @@ private Integer getVoiceMonkeyAcceptanceTimeoutSeconds() {
     return 30
 }
 
+private void logMutedQueueDrop(Map item) {
+    if (!descriptionTextLoggingEnabled()) return
+
+    String message = sanitizeAnnouncementText(item?.text) ?: ''
+    log.info "${app.label}: mute enabled; dropped queued message ${item?.id}: ${message}"
+}
+
+private void dropQueuedItemBecauseMuted(Map item, List remainingQueue) {
+    state.queue = remainingQueue
+    state.activeItem = null
+    state.processing = false
+    state.nextDispatchAllowedEpoch = 0L
+
+    logMutedQueueDrop(item)
+    syncLocalQueueState(getSpeakerDevice(), remainingQueue.size() > 0 ? 'waiting' : 'idle', item?.text?.toString(), item?.id)
+
+    if (remainingQueue.size() > 0) {
+        scheduleKickQueue(0)
+    }
+}
+
 def kickQueue() {
     if (recoverStaleProcessingIfNeeded()) return
 
@@ -867,6 +923,11 @@ def kickQueue() {
 
     queue.remove(0)
     state.queue = queue
+
+    if (muteEnabled()) {
+        dropQueuedItemBecauseMuted(nextItem, queue)
+        return
+    }
 
     Integer delaySeconds = estimateDurationSeconds(nextItem)
     Long requestEpoch = now()
@@ -1093,6 +1154,19 @@ private Boolean sendChildEventIfChanged(dev, String attributeName, value) {
     }
 
     return false
+}
+
+private void syncMuteStateToDriver(child = null) {
+    def target = child ?: getSpeakerDevice()
+    if (!target) return
+
+    Boolean muted = muteEnabled()
+
+    try {
+        target.muteFromChild(muted)
+    } catch (Exception ex) {
+        sendChildEventIfChanged(target, 'mute', muted)
+    }
 }
 
 private void syncLocalQueueState(child = null, String desiredStatus = null, String message = null, Object itemId = null) {

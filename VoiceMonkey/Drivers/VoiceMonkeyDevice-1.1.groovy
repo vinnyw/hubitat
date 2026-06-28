@@ -15,6 +15,7 @@
  *          queueStatus   (enum)    : status
  *          queueSize     (number)  : queued item count
  *          lastActivity  (string)  : formatted timestamp
+ *          mute          (bool)    : app mute state
  *
  *      Capabilities:
  *          Sensor
@@ -40,12 +41,15 @@ metadata {
         attribute 'queueStatus', 'enum', ['idle', 'enqueueing', 'waiting', 'dispatching', 'confirmed', 'failed']
         attribute 'queueSize', 'number'
         attribute 'lastActivity', 'string'
+        attribute 'mute', 'bool'
 
         command 'speak', [
             [name: 'Text*', type: 'STRING', description: 'Text to speak']
         ]
         command 'clearQueue'
         command 'forceQueue'
+        command 'mute'
+        command 'unmute'
     }
 
     preferences {
@@ -137,6 +141,10 @@ private void initializeQueueStateIfNeeded() {
     if (device.currentValue('lastActivity') == null) {
         sendEvent(name: 'lastActivity', value: formatEpochMillis(now()), isStateChange: false, type: 'digital')
     }
+
+    if (device.currentValue('mute') == null) {
+        sendEvent(name: 'mute', value: false, isStateChange: false, type: 'digital')
+    }
 }
 
 private void removeObsoleteAttributes() {
@@ -155,6 +163,16 @@ def clearQueue() {
 def forceQueue() {
     logInfo('Force Queue requested')
     parent?.forceQueueFromDevice(device.deviceNetworkId)
+}
+
+def mute() {
+    logInfo('Mute requested')
+    parent?.muteFromDevice(device.deviceNetworkId)
+}
+
+def unmute() {
+    logInfo('Unmute requested')
+    parent?.unmuteFromDevice(device.deviceNetworkId)
 }
 
 def speak(String text) {
@@ -212,6 +230,13 @@ def queueStatusFromChild(String queueStatusValue) {
 
 def touchActivityFromChild() {
     touchActivity()
+}
+
+def muteFromChild(Object muteValue) {
+    Boolean muted = normalizeBoolean(muteValue, false)
+    if (sendIfChanged('mute', muted) == true) {
+        touchActivity()
+    }
 }
 
 //
