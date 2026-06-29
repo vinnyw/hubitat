@@ -14,8 +14,8 @@
  *      Attributes:
  *          queueStatus   (enum)    : status
  *          queueSize     (number)  : queued item count
- *          lastActivity  (string)  : formatted timestamp
  *          mute          (enum)    : app mute state (muted/unmuted)
+ *          lastActivity  (string)  : formatted timestamp
  *
  *      Capabilities:
  *          Sensor
