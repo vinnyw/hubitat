@@ -9,7 +9,7 @@ definition(
     iconUrl: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    menu: "Integrations",
+    menu: 'Integrations',
     singleInstance: true,
     singleThreaded: true,
     installOnOpen: true

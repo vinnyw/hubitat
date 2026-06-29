@@ -425,7 +425,6 @@ private String normalizeMessageText(Object value) {
     return sanitized ? sanitized : null
 }
 
-
 private String normalizeMuteState(Object value, String fallbackValue) {
     if (value == null) return fallbackValue
 
