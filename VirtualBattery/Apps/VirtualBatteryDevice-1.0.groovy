@@ -5,7 +5,7 @@ definition(
     description: 'Virtual Battery child app',
     parent: 'vinnyw:Virtual Battery',
     category: 'Convenience',
-    importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/VirtualBattery-1.0.groovy',
+    importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/VirtualBatteryDevice-1.0.groovy',
     documentationLink: 'https://github.com/vinnyw/hubitat/blob/master/README.md',
     iconUrl: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
@@ -420,7 +420,7 @@ private Boolean ensureManagedChildDevice() {
 }
 
 private String getChildDriverType() {
-    return "Battery-${extractShortVersion(getVersion())}"
+    return "VirtualBatteryDevice-${extractShortVersion(getVersion())}"
 }
 
 private def getManagedChildDevice() {
