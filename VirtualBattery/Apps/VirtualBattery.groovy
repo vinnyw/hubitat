@@ -61,7 +61,7 @@ def mainPage() {
             app(
                 title: 'Add New Battery',
                 name: 'childApps',
-                appName: "Battery-${getShortVersion()}",
+                appName: "battery-${getShortVersion()}",
                 namespace: 'vinnyw',
                 multiple: true
             )
