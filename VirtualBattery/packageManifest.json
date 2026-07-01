@@ -3,23 +3,23 @@
     "packageName": "Virtual Battery",
     "author": "Vinny Wadding",
     "minimumHEVersion": "2.3.0",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "dateReleased": "2026-07-01",
-    "releaseNotes": "\u2022 Rename managed child-device driver type to Battery-1.0 to match app naming convention\n\u2022 Update driver filename and package manifest location accordingly",
+    "releaseNotes": "\u2022 Fix child device creation by matching driver definition name exactly to Battery-1.0\n\u2022 Align package manifest app/driver names with installed Hubitat definition names",
     "documentationLink": "https://github.com/vinnyw/hubitat",
     "communityLink": "",
     "tags": "Presence & Location, Misc. Devices",
     "apps": [
         {
             "id": "8ef8e8ef-e074-495c-8a47-17914aefe0de",
-            "name": "Virtual Battery Manager",
+            "name": "Virtual Battery",
             "namespace": "vinnyw",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/VirtualBattery.groovy",
             "required": true
         },
         {
             "id": "8ef8e8ef-4909-4c1a-a829-d7e1d5d44070",
-            "name": "Virtual Battery",
+            "name": "Battery-1.0",
             "namespace": "vinnyw",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/Battery-1.0.groovy",
             "required": true
@@ -28,7 +28,7 @@
     "drivers": [
         {
             "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
-            "name": "Battery Driver",
+            "name": "Battery-1.0",
             "namespace": "vinnyw",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
             "required": true

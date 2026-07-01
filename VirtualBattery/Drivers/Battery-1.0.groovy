@@ -25,7 +25,7 @@
 
 metadata {
     definition(
-        name: 'battery-1.0',
+        name: 'Battery-1.0',
         namespace: 'vinnyw',
         author: 'Vinny Wadding'
     ) {
