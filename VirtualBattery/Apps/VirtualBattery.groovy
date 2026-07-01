@@ -27,7 +27,7 @@ preferences {
 //
 
 def getVersion() {
-    return '1.0.12'
+    return '1.0.13'
 }
 
 def getShortVersion() {
@@ -61,7 +61,7 @@ def mainPage() {
             app(
                 title: 'Add New Battery',
                 name: 'childApps',
-                appName: "VirtualBatteryDevice-${getShortVersion()}",
+                appName: "Battery-${getShortVersion()}",
                 namespace: 'vinnyw',
                 multiple: true
             )

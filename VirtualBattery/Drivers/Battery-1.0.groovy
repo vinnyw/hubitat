@@ -25,7 +25,7 @@
 
 metadata {
     definition(
-        name: 'VirtualBatteryDevice-1.0',
+        name: 'battery-1.0',
         namespace: 'vinnyw',
         author: 'Vinny Wadding'
     ) {
@@ -57,7 +57,6 @@ metadata {
     }
 }
 
-
 //
 //    VERSION
 //
@@ -65,7 +64,6 @@ metadata {
 def getVersion() {
     return parent?.getVersion() ?: 'unknown'
 }
-
 
 //
 //    LIFECYCLE
@@ -108,7 +106,6 @@ def updated() {
     configure()
 }
 
-
 //
 //    DEVICE COMMAND HANDLERS
 //
@@ -141,7 +138,6 @@ def on() {
     parent?.childOn(device.deviceNetworkId)
 }
 
-
 //
 //    LOGGING CONFIGURATION & SYNC
 //
@@ -153,8 +149,8 @@ private void applyParentLogging(txtEnableValue, debugEnableValue, debugAutoDisab
     updateBooleanSettingIfChanged('txtEnable', descEnabled)
     updateBooleanSettingIfChanged('debugEnable', debugEnabled)
 
-    // Parent app is the source of truth for debug auto-disable timeout.
-    // The driver does not persist this value in state.
+// Parent app is the source of truth for debug auto-disable timeout.
+// The driver does not persist this value in state.
 }
 
 private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
@@ -163,7 +159,6 @@ private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
         device.updateSetting(name, [value: newValue, type: 'bool'])
     }
 }
-
 
 //
 //    LOGGING SCHEDULER
@@ -216,7 +211,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
     }
 }
 
-
 //
 //    LOGGING HELPERS
 //
@@ -241,7 +235,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (['false', '0', 'no', 'off'].contains(s)) return false
     return defaultValue
 }
-
 
 //
 //    APP PUBLISHING HELPERS
