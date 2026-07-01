@@ -25,7 +25,7 @@
 
 metadata {
     definition(
-        name: 'Battery-1.0',
+        name: 'VirtualBatteryDevice-1.0',
         namespace: 'vinnyw',
         author: 'Vinny Wadding'
     ) {

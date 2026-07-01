@@ -1,5 +1,5 @@
 definition(
-    name: 'Battery-1.0',
+    name: 'VirtualBatteryDevice-1.0',
     namespace: 'vinnyw',
     author: 'Vinny Wadding',
     description: 'Virtual Battery child app',
@@ -20,7 +20,6 @@ preferences {
     page(name: 'mainPage')
 }
 
-
 //
 //    VERSION
 //
@@ -29,11 +28,9 @@ def getVersion() {
     return parent?.getVersion() ?: 'unknown'
 }
 
-
 //
 //    UI / PREFERENCES
 //
-
 
 def mainPage() {
     applyDefaultSettings()
@@ -76,10 +73,9 @@ def mainPage() {
                   defaultValue: '00',
                   submitOnChange: true
 
-
             paragraph 'Accumulated runtime required to discharge the virtual battery from 100% to 0%.'
             paragraph "<b>Runtime Discharge Display:</b> ${formatDuration(getRuntimeDischargeSeconds())}"
-            
+
             input name: 'runtimeDischargeHours', type: 'text',
                   title: 'Hours',
                   width: 2,
@@ -97,7 +93,6 @@ def mainPage() {
                   width: 2,
                   defaultValue: '00',
                   submitOnChange: true
-
         }
 
         section(hideable: true, hidden: false, title: 'Logging') {
@@ -121,7 +116,6 @@ def mainPage() {
     }
 }
 
-
 //
 //    UI DEFAULTS & VALIDATION HELPERS
 //
@@ -138,7 +132,7 @@ private void applyDefaultSettings() {
         app?.updateSetting('runtimeDischargeHours', [type: 'text', value: formatDurationInput((int)(seconds / 3600))])
         app?.updateSetting('runtimeDischargeMinutes', [type: 'text', value: formatDurationInput((int)((seconds % 3600) / 60))])
         app?.updateSetting('runtimeDischargeSeconds', [type: 'text', value: formatDurationInput((int)(seconds % 60))])
-    }
+        }
 
     ensureDurationTextSetting('runtimeDischargeHours', 1)
     ensureDurationTextSetting('runtimeDischargeMinutes', 0)
@@ -232,7 +226,6 @@ private void updateRuntimeStateFromInputs() {
     state.lastActivity = state.lastActivity ?: now()
 }
 
-
 //
 //    LIFECYCLE
 //
@@ -271,7 +264,6 @@ def updated() {
     unschedule()
     initialize()
 }
-
 
 //
 //    CHILD DEVICE COMMAND HANDLERS
@@ -364,8 +356,6 @@ def childResetRuntimeDischarge(String dni = null) {
 
     publishRuntimeState('off')
 }
-
-
 
 def childResetRuntime(String dni = null) {
     childResetRuntimeDischarge(dni)
@@ -498,7 +488,6 @@ private void syncRuntimeInputsFromState() {
     secondsToDurationSettings(getStoredRuntimeSeconds(), 'runtimeHours', 'runtimeMinutes', 'runtimeSeconds')
 }
 
-
 //
 //    RUNTIME PUBLISHING HELPERS
 //
@@ -525,8 +514,6 @@ private void publishRuntimeState(String switchValue = null) {
 
     logDebug("Published runtime=${runtime}, runtimeDischarge=${runtimeDischarge}, battery=${batteryPct}, lastActivity=${activityEpoch}")
 }
-
-
 
 //
 //    LOGGING CONFIGURATION & SYNC
@@ -561,7 +548,6 @@ def updateLoggingFromDriver(txtEnableValue, debugEnableValue) {
 
     syncChildSettings()
 }
-
 
 //
 //    LOGGING HELPERS
@@ -615,7 +601,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
         logDebug("Debug logging will automatically turn off in ${getDebugAutoDisableMinutes()} minutes")
     }
 }
-
 
 //
 //    VERSION HELPERS

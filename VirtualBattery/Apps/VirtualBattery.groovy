@@ -27,13 +27,12 @@ preferences {
 //
 
 def getVersion() {
-    return '1.0.10'
+    return '1.0.11'
 }
 
 def getShortVersion() {
     return extractShortVersion(getVersion())
 }
-
 
 //
 //    VERSION HELPERS
@@ -50,7 +49,6 @@ private String getDisplayVersionValue(Object versionValue) {
     return version ? "v${version}" : 'unknown'
 }
 
-
 //
 //    UI / PREFERENCES
 //
@@ -63,7 +61,7 @@ def mainPage() {
             app(
                 title: 'Add New Battery',
                 name: 'childApps',
-                appName: "Battery-${getShortVersion()}",
+                appName: "VirtualBatteryDevice-${getShortVersion()}",
                 namespace: 'vinnyw',
                 multiple: true
             )
@@ -79,7 +77,6 @@ def mainPage() {
         }
     }
 }
-
 
 //
 //    UI DEFAULTS & VALIDATION HELPERS
@@ -108,7 +105,6 @@ private String htmlEncode(Object value) {
         .replace('"', '&quot;')
         .replace("'", '&#39;')
 }
-
 
 //
 //    LIFECYCLE

@@ -3,7 +3,7 @@
     "packageName": "Virtual Battery",
     "author": "Vinny Wadding",
     "minimumHEVersion": "2.3.0",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "dateReleased": "2026-06-16",
     "releaseNotes": "\u2022 Rename Reset Runtime command to Reset Runtime Discharge for naming consistency\n",
     "documentationLink": "https://github.com/vinnyw/hubitat",
@@ -21,7 +21,7 @@
             "id": "8ef8e8ef-4909-4c1a-a829-d7e1d5d44070",
             "name": "Virtual Battery",
             "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/Battery-1.0.groovy",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/VirtualBatteryDevice-1.0.groovy",
             "required": true
         }
     ],
@@ -30,7 +30,7 @@
             "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
             "name": "Virtual Battery Driver",
             "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/VirtualBatteryDevice-1.0.groovy",
             "required": true
         }
     ]
