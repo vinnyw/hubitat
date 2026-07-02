@@ -29,7 +29,7 @@ def getVersion() {
 }
 
 private String extractShortVersion(String version) {
-    if (!version) return null
+    if (!version) { return null }
 
     def matcher = version =~ /(\d+\.\d+)/
     return matcher.find() ? matcher.group(1) : null
@@ -70,7 +70,7 @@ def mainPage() {
         }
 
         section {
-            label title: 'Virtual Device Label ', submitOnChange: true, required: true
+            label title: 'Virtual Device Name ', submitOnChange: true, required: true
 
             input 'voiceMonkeyDeviceId', 'text',
                 title: 'Device ID ',
@@ -196,10 +196,10 @@ private Boolean shouldHidePersonalitySection() {
 
 private void synchronizePersonalityLanguageFromVoiceSelection() {
     String selectedVoice = normalizeOptionalString(settings?.personalityVoice)
-    if (!selectedVoice) return
+    if (!selectedVoice) { return }
 
     String mappedLanguage = resolveLanguageForVoice(selectedVoice)
-    if (!mappedLanguage) return
+    if (!mappedLanguage) { return }
 
     String currentLanguage = normalizeOptionalString(settings?.personalityLanguage)
     if (currentLanguage != mappedLanguage) {
