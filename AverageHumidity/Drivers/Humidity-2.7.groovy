@@ -14,7 +14,7 @@
  *      Attributes:
  *          humidity         (number) : standard whole-number humidity value for broad app compatibility
  *          humidityDisplay  (string) : formatted humidity value
- *          trend            (string) : trend 
+ *          trend            (string) : trend
  *          trendDisplay     (string) : formatted trend
  *          lastActivity     (number) : epoch time (Long)
  *
@@ -35,7 +35,6 @@
 
 import groovy.transform.Field
 import java.math.RoundingMode
-
 
 metadata {
     definition(
@@ -67,7 +66,6 @@ metadata {
     }
 }
 
-
 //
 //    VERSION
 //
@@ -76,13 +74,11 @@ def getVersion() {
     return parent?.getVersion() ?: 'unknown'
 }
 
-
 //
 //    UI / PREFERENCES
 //
 
 // Preferences are declared in metadata { preferences { ... } } above.
-
 
 //
 //    LIFECYCLE
@@ -145,7 +141,6 @@ def updated() {
     parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
     configure()
 }
-
 
 //
 //    COMMANDS
@@ -228,8 +223,6 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     }
 }
 
-
-
 private void ensureAverageHumidityOutputMarker() {
     try {
         if (getDataValue('averageHumidityVirtualDevice') != 'true') {
@@ -251,8 +244,8 @@ private void applyParentLogging(txtEnableValue, debugEnableValue, debugAutoDisab
     updateBooleanSettingIfChanged('txtEnable', descEnabled)
     updateBooleanSettingIfChanged('debugEnable', debugEnabled)
 
-    // Parent app is the source of truth for debug auto-disable timeout.
-    // The driver does not persist this value in state.
+// Parent app is the source of truth for debug auto-disable timeout.
+// The driver does not persist this value in state.
 }
 
 private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
@@ -261,7 +254,6 @@ private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
         device.updateSetting(name, [value: newValue, type: 'bool'])
     }
 }
-
 
 //
 //    LOGGING SCHEDULER
@@ -314,7 +306,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
     }
 }
 
-
 //
 //    LOGGING HELPERS
 //
@@ -347,7 +338,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (s == 'false') return false
     return defaultValue
 }
-
 
 //
 //    TREND HELPERS
