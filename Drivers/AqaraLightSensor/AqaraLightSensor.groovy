@@ -1,5 +1,5 @@
 /*
- * Aqara Light Sensor (GZCGQ11LM) Optimized Aqara-Compatible
+ * Aqara Light Sensor (GZCGQ11LM / MGL01) Optimized Aqara-Compatible
  *
  * Device-reported models:
  * - lumi.sen_ill.agl01
@@ -15,7 +15,8 @@
  * Design:
  * - No polling
  * - No recurring refresh schedule
- * - Preserves autodetection fingerprints
+ * - Preserves autodetection fingerprints and adds explicit Zigbee controllerType
+ * - Enables singleThreaded execution for deterministic top-level driver calls
  * - Preserves Disable Device Status LED preference
  * - Configure binds Basic, Power, Identify, and Illuminance clusters
  * - Configure triggers Refresh after reporting setup
@@ -43,7 +44,8 @@ metadata {
     definition(
         name: "Aqara Light Sensor",
         namespace: "vinnyw",
-        author: "Vinny Wadding"
+        author: "Vinny Wadding",
+        singleThreaded: true
     ) {
         capability "Sensor"
         capability "IlluminanceMeasurement"
@@ -58,17 +60,19 @@ metadata {
             outClusters: "0003",
             manufacturer: "LUMI",
             model: "lumi.sen_ill.agl01",
-            deviceJoinName: "Aqara Light Sensor"
+            deviceJoinName: "Aqara Light Sensor AGL01",
+            controllerType: "ZGB"
         )
 
         fingerprint(
             profileId: "0104",
             endpointId: "01",
-            inClusters: "0000,0400,0003,0001",
+            inClusters: "0000,0001,0003,0400",
             outClusters: "0003",
             manufacturer: "XIAOMI",
             model: "lumi.sen_ill.mgl01",
-            deviceJoinName: "Aqara Light Sensor"
+            deviceJoinName: "Aqara Light Sensor MGL01",
+            controllerType: "ZGB"
         )
     }
 
@@ -160,7 +164,8 @@ List<String> suppressLed() {
      * Sends standard Identify cluster command with identifyTime = 0.
      * This may stop identify-mode blinking, but may not disable Aqara firmware status blinks.
      */
-    return ["he cmd 0x${device.deviceNetworkId} 0x01 0x0003 0x00 { 00 00 }"]
+    String endpoint = device.endpointId ?: "01"
+    return ["he cmd 0x${device.deviceNetworkId} 0x${endpoint} 0x0003 0x00 { 00 00 }"]
 }
 
 void parse(String description) {

@@ -10,6 +10,9 @@ Virtual Occupancy Sensor
 Candeo Scene Remote (C-ZB-SR5BR)
 https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/packageManifest.json
 
+### DateHub (UK)
+https://raw.githubusercontent.com/vinnyw/hubitat/master/DateHub/packageManifest.json
+
 ### Virtual Battery
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/packageManifest.json
 
