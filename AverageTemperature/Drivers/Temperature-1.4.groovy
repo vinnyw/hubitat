@@ -14,7 +14,7 @@
  *      Attributes:
  *          temperature        (number) : temperature value
  *          temperatureDisplay (string) : formatted temperature value
- *          trend              (string) : trend 
+ *          trend              (string) : trend
  *          trendDisplay       (string) : formatted trend
  *          lastActivity       (number) : epoch time (Long)
  *
@@ -36,7 +36,6 @@
 
 import groovy.transform.Field
 import java.math.RoundingMode
-
 
 metadata {
     definition(
@@ -68,7 +67,6 @@ metadata {
     }
 }
 
-
 //
 //    VERSION
 //
@@ -77,13 +75,11 @@ def getVersion() {
     return parent?.getVersion() ?: 'unknown'
 }
 
-
 //
 //    UI / PREFERENCES
 //
 
 // Preferences are declared in metadata { preferences { ... } } above.
-
 
 //
 //    LIFECYCLE
@@ -146,7 +142,6 @@ def updated() {
     parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
     configure()
 }
-
 
 //
 //    COMMANDS
@@ -230,8 +225,6 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
     }
 }
 
-
-
 private String normalizeDisplayUnit(unit) {
     String resolved = unit == null ? eventTemperatureUnitSymbol() : unit.toString()
     return ['none', '°C', '°F'].contains(resolved) ? resolved : eventTemperatureUnitSymbol()
@@ -266,8 +259,8 @@ private void applyParentLogging(txtEnableValue, debugEnableValue, debugAutoDisab
     updateBooleanSettingIfChanged('txtEnable', descEnabled)
     updateBooleanSettingIfChanged('debugEnable', debugEnabled)
 
-    // Parent app is the source of truth for debug auto-disable timeout.
-    // The driver does not persist this value in state.
+// Parent app is the source of truth for debug auto-disable timeout.
+// The driver does not persist this value in state.
 }
 
 private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
@@ -276,7 +269,6 @@ private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
         device.updateSetting(name, [value: newValue, type: 'bool'])
     }
 }
-
 
 //
 //    LOGGING SCHEDULER
@@ -329,7 +321,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
     }
 }
 
-
 //
 //    LOGGING HELPERS
 //
@@ -362,7 +353,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (s == 'false') return false
     return defaultValue
 }
-
 
 //
 //    TREND HELPERS
