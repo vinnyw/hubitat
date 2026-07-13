@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.23
- *  Date        : 2026-07-12
+ *  Version     : 1.3.24
+ *  Date        : 2026-07-13
  *
  *  Description :
  *      Parent application for DateHub.
@@ -43,7 +43,7 @@ definition(
 //
 
 def getVersion() {
-    return '1.3.23'
+    return '1.3.24'
 }
 
 //
@@ -69,10 +69,9 @@ preferences {
     page(name: 'mainPage', install: true, uninstall: true) {
         syncChildLabelSettingAndDevice()
 
-        section('Hub Locale / Timezone') {
-            paragraph localeCompatibilityMessage()
-            paragraph "Hub timezone: ${hubTimeZoneId()}"
-            paragraph "Locale check: ${state.localeStatus ?: localeCompatibilityStatus()}"
+        section() {
+            paragraph 'DateHub uses UK-specific holiday and daylight-saving data. For the app to work correctly, set the hub location to the United Kingdom and use a UK-compatible timezone.'
+            paragraph localeCompatibilityTable()
         }
 
         if (!state?.setupComplete) {
@@ -356,6 +355,37 @@ private String localeCompatibilityMessage() {
     }
 
     return "WARNING: Hub timezone '${tzId}' is not UK-compatible. Supported UK-compatible timezones: ${ukCompatibleTimeZones().join(', ')}."
+}
+
+private String localeCompatibilityTable() {
+    checkCompatibleLocale(false)
+
+    String tzId = hubTimeZoneId()
+    Boolean compatible = isUkCompatibleTimeZone(tzId)
+    String status = compatible ? 'Compatible' : 'Incompatible'
+    String message = compatible
+        ? "Hub timezone '${tzId}' is UK-compatible."
+        : "Hub timezone '${tzId}' is not UK-compatible. Supported timezones: ${ukCompatibleTimeZones().join(', ')}."
+    String statusColour = compatible ? '#228B22' : '#C62828'
+
+    return """
+        <div style="display:flex;justify-content:center;width:100%;">
+            <table style="border-collapse:collapse;text-align:center;min-width:70%;max-width:100%;">
+                <tr>
+                    <th style="border:1px solid #bdbdbd;padding:8px 12px;">Check</th>
+                    <th style="border:1px solid #bdbdbd;padding:8px 12px;">Result</th>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Hub timezone</td>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;">${htmlEncode(tzId)}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Compatibility</td>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;color:${statusColour};font-weight:700;">${status}</td>
+                </tr>
+            </table>
+        </div>
+    """.stripIndent().trim()
 }
 
 private String localeCompatibilityStatus() {
@@ -1122,7 +1152,6 @@ private String formatHubDateTime(Date value) {
     return "${renderedDate} ${renderedTime}"
 }
 
-
 private String hubDatePattern() {
     try {
         def value = location?.dateFormat
@@ -1135,7 +1164,6 @@ private String hubDatePattern() {
 
     return 'yyyy-MM-dd'
 }
-
 
 private String hubClockDisplayPattern() {
     String value = ''
@@ -1183,7 +1211,6 @@ private String safeString(value) {
     return value == null ? '' : value.toString()
 }
 
-
 private Boolean debugLoggingEnabled() {
     return normalizeBoolean(settings?.debugEnable, false)
 }
@@ -1203,7 +1230,6 @@ private void logText(String message) {
 private void logWarn(String message) {
     log.warn "${app.label}: ${message}"
 }
-
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (value == null) return defaultValue
