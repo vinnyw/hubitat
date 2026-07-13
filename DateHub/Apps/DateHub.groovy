@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.24
+ *  Version     : 1.3.25
  *  Date        : 2026-07-13
  *
  *  Description :
@@ -39,37 +39,14 @@ definition(
 )
 
 //
-//    VERSION
+//    APP CONFIGURATION
 //
-
-def getVersion() {
-    return '1.3.24'
-}
-
-//
-//    VERSION HELPERS
-//
-
-private String getDisplayVersionValue(Object versionValue) {
-    String version = versionValue?.toString()?.trim()
-    return version ? "v${version}" : 'unknown'
-}
-
-private String htmlEncode(Object value) {
-    String s = value?.toString() ?: ''
-    return s
-        .replace('&', '&amp;')
-        .replace('<', '&lt;')
-        .replace('>', '&gt;')
-        .replace('"', '&quot;')
-        .replace("'", '&#39;')
-}
 
 preferences {
     page(name: 'mainPage', install: true, uninstall: true) {
         syncChildLabelSettingAndDevice()
 
-        section() {
+        section('Hub Locale / Timezone') {
             paragraph 'DateHub uses UK-specific holiday and daylight-saving data. For the app to work correctly, set the hub location to the United Kingdom and use a UK-compatible timezone.'
             paragraph localeCompatibilityTable()
         }
@@ -129,19 +106,32 @@ preferences {
     }
 }
 
-def installed() {
-    initialize()
+//
+//    VERSION AND DISPLAY HELPERS
+//
+
+private String getDisplayVersionValue(Object versionValue) {
+    String version = versionValue?.toString()?.trim()
+    return version ? "v${version}" : 'unknown'
 }
 
-def updated() {
-    applyDefaultLoggingSettings()
-    syncChildSettings()
-    initialize()
+def getVersion() {
+    return '1.3.25'
 }
 
-def uninstalled() {
-    unschedule()
+private String htmlEncode(Object value) {
+    String s = value?.toString() ?: ''
+    return s
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('"', '&quot;')
+        .replace("'", '&#39;')
 }
+
+//
+//    APPLICATION LIFECYCLE
+//
 
 def initialize() {
     applyDefaultLoggingSettings()
@@ -178,6 +168,10 @@ def initialize() {
     }
 }
 
+def installed() {
+    initialize()
+}
+
 def scheduledRefresh() {
     if (!checkCompatibleLocale()) {
         publishEmptyValues('Locale error')
@@ -187,18 +181,37 @@ def scheduledRefresh() {
     fetchAndPublish()
 }
 
-def deviceRefresh(String dni = null) {
+def uninstalled() {
+    unschedule()
+}
+
+def updated() {
+    applyDefaultLoggingSettings()
+    syncChildSettings()
+    initialize()
+}
+
+//
+//    CHILD DEVICE COMMANDS
+//
+
+def deviceClearCache(String dni = null) {
     if (!isExpectedChild(dni)) {
-        logWarn("Ignoring refresh request from unknown child device: ${dni}")
+        logWarn("Ignoring clear-cache request from unknown child device: ${dni}")
         return
     }
 
-    if (!checkCompatibleLocale()) {
-        publishEmptyValues('Locale error')
-        return
-    }
+    logDebug('deviceClearCache()')
 
-    fetchAndPublish()
+    state.remove('cachedHolidays')
+    state.selectedRegions = normalizedRegions()
+    state.lastSuccessfulFetchMs = null
+    state.lastUpdatedMs = now()
+    state.lastError = ''
+    state.cacheStatus = 'Cleared'
+
+    publishEmptyValues('Cleared')
+    logText('Holiday cache cleared')
 }
 
 def deviceConfigure(String dni = null) {
@@ -227,27 +240,22 @@ def deviceConfigure(String dni = null) {
     }
 }
 
-def deviceClearCache(String dni = null) {
+def deviceRefresh(String dni = null) {
     if (!isExpectedChild(dni)) {
-        logWarn("Ignoring clear-cache request from unknown child device: ${dni}")
+        logWarn("Ignoring refresh request from unknown child device: ${dni}")
         return
     }
 
-    logDebug('deviceClearCache()')
+    if (!checkCompatibleLocale()) {
+        publishEmptyValues('Locale error')
+        return
+    }
 
-    state.remove('cachedHolidays')
-    state.selectedRegions = normalizedRegions()
-    state.lastSuccessfulFetchMs = null
-    state.lastUpdatedMs = now()
-    state.lastError = ''
-    state.cacheStatus = 'Cleared'
-
-    publishEmptyValues('Cleared')
-    logText('Holiday cache cleared')
+    fetchAndPublish()
 }
 
 //
-//    LOGGING CONFIGURATION & SYNC
+//    LOGGING CONFIGURATION AND SYNCHRONISATION
 //
 
 private void applyDefaultLoggingSettings() {
@@ -267,6 +275,14 @@ def getChildDriverLoggingConfig() {
         debugAutoDisableSeconds: getDebugAutoDisableSeconds(),
         debugAutoDisableMinutes: getDebugAutoDisableMinutes()
     ]
+}
+
+Integer getDebugAutoDisableMinutes() {
+    return (int) (getDebugAutoDisableSeconds() / 60)
+}
+
+Integer getDebugAutoDisableSeconds() {
+    return 1800
 }
 
 def syncChildSettings() {
@@ -295,14 +311,6 @@ def updateLoggingFromDriver(txtEnableValue, debugEnableValue) {
 //    LOGGING SCHEDULER
 //
 
-Integer getDebugAutoDisableMinutes() {
-    return (int) (getDebugAutoDisableSeconds() / 60)
-}
-
-Integer getDebugAutoDisableSeconds() {
-    return 1800
-}
-
 def logsOff() {
     if (!debugLoggingEnabled()) return
 
@@ -324,6 +332,10 @@ private void scheduleDebugAutoDisableIfNeeded() {
         logDebug("Debug logging will automatically turn off in ${getDebugAutoDisableMinutes()} minutes")
     }
 }
+
+//
+//    LOCALE AND TIMEZONE VALIDATION
+//
 
 private Boolean checkCompatibleLocale(Boolean logWarning = true) {
     String tzId = hubTimeZoneId()
@@ -347,6 +359,14 @@ private Boolean checkCompatibleLocale(Boolean logWarning = true) {
     return compatible
 }
 
+private String hubTimeZoneId() {
+    return location?.timeZone?.ID ?: 'Unknown'
+}
+
+private Boolean isUkCompatibleTimeZone(String tzId) {
+    return ukCompatibleTimeZones().contains(tzId)
+}
+
 private String localeCompatibilityMessage() {
     checkCompatibleLocale(false)
     String tzId = hubTimeZoneId()
@@ -355,6 +375,10 @@ private String localeCompatibilityMessage() {
     }
 
     return "WARNING: Hub timezone '${tzId}' is not UK-compatible. Supported UK-compatible timezones: ${ukCompatibleTimeZones().join(', ')}."
+}
+
+private String localeCompatibilityStatus() {
+    return isUkCompatibleTimeZone(hubTimeZoneId()) ? 'Compatible' : 'Incompatible'
 }
 
 private String localeCompatibilityTable() {
@@ -383,29 +407,25 @@ private String localeCompatibilityTable() {
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Compatibility</td>
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;color:${statusColour};font-weight:700;">${status}</td>
                 </tr>
+                <tr>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Details</td>
+                    <td style="border:1px solid #bdbdbd;padding:8px 12px;color:${statusColour};font-weight:600;">${htmlEncode(message)}</td>
+                </tr>
             </table>
         </div>
     """.stripIndent().trim()
-}
-
-private String localeCompatibilityStatus() {
-    return isUkCompatibleTimeZone(hubTimeZoneId()) ? 'Compatible' : 'Incompatible'
-}
-
-private Boolean isUkCompatibleTimeZone(String tzId) {
-    return ukCompatibleTimeZones().contains(tzId)
 }
 
 private List<String> ukCompatibleTimeZones() {
     return ['Europe/London', 'Europe/Jersey', 'Europe/Guernsey', 'Europe/Isle_of_Man']
 }
 
-private String hubTimeZoneId() {
-    return location?.timeZone?.ID ?: 'Unknown'
-}
+//
+//    CHILD DEVICE MANAGEMENT
+//
 
-private Boolean isExpectedChild(String dni) {
-    return !dni || dni == childDni()
+private String childDni() {
+    return "datehub-${app.id}"
 }
 
 private Boolean createChildDeviceIfMissing() {
@@ -434,6 +454,19 @@ private Boolean createChildDeviceIfMissing() {
         logWarn("Unable to create DateHub child device ${dni}: ${e.message}")
         return false
     }
+}
+
+private def holidayDevice() {
+    return getChildDevice(childDni())
+}
+
+private Boolean isExpectedChild(String dni) {
+    return !dni || dni == childDni()
+}
+
+private String normalizeLabelValue(Object value, String fallbackValue) {
+    String normalized = value == null ? null : value.toString().trim()
+    return normalized ? normalized : fallbackValue
 }
 
 private void syncChildLabelSettingAndDevice() {
@@ -468,18 +501,9 @@ private void syncChildLabelSettingAndDevice() {
     state.lastSyncedChildLabel = configuredLabel
 }
 
-private String normalizeLabelValue(Object value, String fallbackValue) {
-    String normalized = value == null ? null : value.toString().trim()
-    return normalized ? normalized : fallbackValue
-}
-
-private String childDni() {
-    return "datehub-${app.id}"
-}
-
-private def holidayDevice() {
-    return getChildDevice(childDni())
-}
+//
+//    DATA RETRIEVAL AND PUBLISHING
+//
 
 private void fetchAndPublish() {
     logDebug('fetchAndPublish()')
@@ -536,30 +560,6 @@ private void fetchAndPublish() {
     } catch (Exception e) {
         recordError(e.message ?: e.toString())
     }
-}
-
-private void recordError(String message) {
-    String cleanMessage = message ?: 'Unknown error'
-
-    logWarn("DateHub Connector error: ${cleanMessage}")
-
-    state.lastError = cleanMessage
-    state.cacheStatus = 'Error'
-    state.lastUpdatedMs = now()
-
-    def child = holidayDevice()
-    if (child) {
-        child.updateFromParent([
-            lastError: cleanMessage
-        ])
-    }
-}
-
-private String toTitleCase(String value) {
-    if (!value) return value
-    value.toLowerCase().split(/\s+/).collect { w ->
-        w ? w[0].toUpperCase() + w.substring(1) : w
-    }.join(' ')
 }
 
 void publishCachedValues() {
@@ -632,127 +632,32 @@ private void publishEmptyValues(String status) {
     child.updateFromParent(values)
 }
 
-private Map moonPhaseValues() {
-    TimeZone hubZone = location?.timeZone ?: TimeZone.getTimeZone('UTC')
-    Date nowValue = new Date()
-    String todayIso = nowValue.format('yyyy-MM-dd', hubZone)
-    Integer phaseIndex = moonPhaseIndex(todayIso)
-    String nextPhaseIso = nextDifferentMoonPhaseIso(todayIso, phaseIndex, hubZone)
-    Integer nextPhaseIndex = nextPhaseIso ? moonPhaseIndex(nextPhaseIso) : ((phaseIndex + 1) % 8)
+private void recordError(String message) {
+    String cleanMessage = message ?: 'Unknown error'
 
-    Map values = [
-        moonPhase               : moonPhaseName(phaseIndex),
-        nextMoonPhaseName       : moonPhaseName(nextPhaseIndex),
-        nextMoonPhaseDate       : nextPhaseIso ? formatHubDate(nextPhaseIso) : null,
-        isNewMoon               : phaseIndex == 0,
-        isFullMoon              : phaseIndex == 4,
-        daysUntilNextNewMoon    : daysUntilNextPhase(todayIso, 0, hubZone),
-        daysUntilNextFullMoon   : daysUntilNextPhase(todayIso, 4, hubZone),
-        daysUntilNextMoonPhase  : nextPhaseIso ? daysUntil(nextPhaseIso) : null
-    ]
-    values.putAll(blueMoonValues(todayIso, hubZone))
-    return values
-}
+    logWarn("DateHub Connector error: ${cleanMessage}")
 
-private Integer moonPhaseIndex(String isoDate) {
-    List parts = isoDate.tokenize('-')*.toInteger()
-    Double julianDay = julianDayAtLocalNoon(parts[0] as Integer, parts[1] as Integer, parts[2] as Integer)
-    Double synodicMonth = 29.530588853D
-    Double knownNewMoonJulianDay = 2451550.1D
-    Double age = positiveModulo(julianDay - knownNewMoonJulianDay, synodicMonth)
-    return (Math.floor((age / synodicMonth) * 8.0D + 0.5D) as Integer) % 8
-}
+    state.lastError = cleanMessage
+    state.cacheStatus = 'Error'
+    state.lastUpdatedMs = now()
 
-private Integer daysUntilNextPhase(String todayIso, Integer targetPhaseIndex, TimeZone hubZone) {
-    String matchingIso = nextMoonPhaseIso(todayIso, targetPhaseIndex, true, hubZone)
-    return matchingIso ? daysUntil(matchingIso) : null
-}
-
-private String nextMoonPhaseIso(String todayIso, Integer targetPhaseIndex, Boolean includeToday, TimeZone hubZone) {
-    Date startDate = Date.parse('yyyy-MM-dd', todayIso)
-    Integer startOffset = includeToday ? 0 : 1
-
-    for (Integer offset = startOffset; offset <= 60; offset++) {
-        String candidateIso = addDaysIso(startDate, offset, hubZone)
-        if (moonPhaseIndex(candidateIso) == targetPhaseIndex) {
-            return candidateIso
-        }
+    def child = holidayDevice()
+    if (child) {
+        child.updateFromParent([
+            lastError: cleanMessage
+        ])
     }
-
-    return ''
 }
 
-private String nextDifferentMoonPhaseIso(String todayIso, Integer currentPhaseIndex, TimeZone hubZone) {
-    Date startDate = Date.parse('yyyy-MM-dd', todayIso)
-
-    for (Integer offset = 1; offset <= 15; offset++) {
-        String candidateIso = addDaysIso(startDate, offset, hubZone)
-        if (moonPhaseIndex(candidateIso) != currentPhaseIndex) {
-            return candidateIso
-        }
-    }
-
-    return ''
-}
+//
+//    MOON PHASE CALCULATIONS
+//
 
 private String addDaysIso(Date startDate, Integer offset, TimeZone hubZone) {
     Calendar calendar = Calendar.getInstance(hubZone)
     calendar.setTime(startDate)
     calendar.add(Calendar.DATE, offset ?: 0)
     return calendar.getTime().format('yyyy-MM-dd', hubZone)
-}
-
-private String moonPhaseName(Integer phaseIndex) {
-    List<String> phases = [
-        'New Moon',
-        'Waxing Crescent',
-        'First Quarter',
-        'Waxing Gibbous',
-        'Full Moon',
-        'Waning Gibbous',
-        'Last Quarter',
-        'Waning Crescent'
-    ]
-
-    return phases[phaseIndex ?: 0]
-}
-
-private Double julianDayAtLocalNoon(Integer year, Integer month, Integer day) {
-    Integer adjustedYear = year
-    Integer adjustedMonth = month
-
-    if (adjustedMonth <= 2) {
-        adjustedYear--
-        adjustedMonth += 12
-    }
-
-    Integer century = Math.floor(adjustedYear / 100.0D) as Integer
-    Integer correction = 2 - century + (Math.floor(century / 4.0D) as Integer)
-
-    return Math.floor(365.25D * (adjustedYear + 4716)) +
-           Math.floor(30.6001D * (adjustedMonth + 1)) +
-           day + correction - 1524.0D
-}
-
-private Double positiveModulo(Double value, Double divisor) {
-    Double result = value % divisor
-    return result < 0 ? result + divisor : result
-}
-
-private Map blueMoonValues(String todayIso, TimeZone hubZone) {
-    String nextBlueMoonIso = nextBlueMoonIso(todayIso, hubZone)
-
-    return [
-        isBlueMoon             : nextBlueMoonIso == todayIso,
-        daysUntilNextBlueMoon : nextBlueMoonIso ? daysUntil(nextBlueMoonIso) : null,
-        nextBlueMoon          : nextBlueMoonIso ? formatHubDate(nextBlueMoonIso) : ''
-    ]
-}
-
-private String nextBlueMoonIso(String todayIso, TimeZone hubZone) {
-    Integer currentYear = todayIso.substring(0, 4).toInteger()
-    List<String> blueMoonDates = blueMoonDates(currentYear - 1, currentYear + 10, hubZone)
-    return blueMoonDates.find { String isoDate -> isoDate >= todayIso } ?: ''
 }
 
 private List<String> blueMoonDates(Integer startYear, Integer endYear, TimeZone hubZone) {
@@ -772,6 +677,26 @@ private List<String> blueMoonDates(Integer startYear, Integer endYear, TimeZone 
     }
 
     return blueMoons.sort().unique()
+}
+
+private Map blueMoonValues(String todayIso, TimeZone hubZone) {
+    String nextBlueMoonIso = nextBlueMoonIso(todayIso, hubZone)
+
+    return [
+        isBlueMoon             : nextBlueMoonIso == todayIso,
+        daysUntilNextBlueMoon : nextBlueMoonIso ? daysUntil(nextBlueMoonIso) : null,
+        nextBlueMoon          : nextBlueMoonIso ? formatHubDate(nextBlueMoonIso) : ''
+    ]
+}
+
+private Date dateFromJulianDay(Double julianDay) {
+    Long millis = Math.round((julianDay - 2440587.5D) * 86400000.0D)
+    return new Date(millis)
+}
+
+private Integer daysUntilNextPhase(String todayIso, Integer targetPhaseIndex, TimeZone hubZone) {
+    String matchingIso = nextMoonPhaseIso(todayIso, targetPhaseIndex, true, hubZone)
+    return matchingIso ? daysUntil(matchingIso) : null
 }
 
 private List<String> fullMoonIsoDates(Integer startYear, Integer endYear, TimeZone hubZone) {
@@ -800,9 +725,113 @@ private List<String> fullMoonIsoDates(Integer startYear, Integer endYear, TimeZo
     return dates.sort().unique()
 }
 
-private Date dateFromJulianDay(Double julianDay) {
-    Long millis = Math.round((julianDay - 2440587.5D) * 86400000.0D)
-    return new Date(millis)
+private Double julianDayAtLocalNoon(Integer year, Integer month, Integer day) {
+    Integer adjustedYear = year
+    Integer adjustedMonth = month
+
+    if (adjustedMonth <= 2) {
+        adjustedYear--
+        adjustedMonth += 12
+    }
+
+    Integer century = Math.floor(adjustedYear / 100.0D) as Integer
+    Integer correction = 2 - century + (Math.floor(century / 4.0D) as Integer)
+
+    return Math.floor(365.25D * (adjustedYear + 4716)) +
+           Math.floor(30.6001D * (adjustedMonth + 1)) +
+           day + correction - 1524.0D
+}
+
+private Integer moonPhaseIndex(String isoDate) {
+    List parts = isoDate.tokenize('-')*.toInteger()
+    Double julianDay = julianDayAtLocalNoon(parts[0] as Integer, parts[1] as Integer, parts[2] as Integer)
+    Double synodicMonth = 29.530588853D
+    Double knownNewMoonJulianDay = 2451550.1D
+    Double age = positiveModulo(julianDay - knownNewMoonJulianDay, synodicMonth)
+    return (Math.floor((age / synodicMonth) * 8.0D + 0.5D) as Integer) % 8
+}
+
+private String moonPhaseName(Integer phaseIndex) {
+    List<String> phases = [
+        'New Moon',
+        'Waxing Crescent',
+        'First Quarter',
+        'Waxing Gibbous',
+        'Full Moon',
+        'Waning Gibbous',
+        'Last Quarter',
+        'Waning Crescent'
+    ]
+
+    return phases[phaseIndex ?: 0]
+}
+
+private Map moonPhaseValues() {
+    TimeZone hubZone = location?.timeZone ?: TimeZone.getTimeZone('UTC')
+    Date nowValue = new Date()
+    String todayIso = nowValue.format('yyyy-MM-dd', hubZone)
+    Integer phaseIndex = moonPhaseIndex(todayIso)
+    String nextPhaseIso = nextDifferentMoonPhaseIso(todayIso, phaseIndex, hubZone)
+    Integer nextPhaseIndex = nextPhaseIso ? moonPhaseIndex(nextPhaseIso) : ((phaseIndex + 1) % 8)
+
+    Map values = [
+        moonPhase               : moonPhaseName(phaseIndex),
+        nextMoonPhaseName       : moonPhaseName(nextPhaseIndex),
+        nextMoonPhaseDate       : nextPhaseIso ? formatHubDate(nextPhaseIso) : null,
+        isNewMoon               : phaseIndex == 0,
+        isFullMoon              : phaseIndex == 4,
+        daysUntilNextNewMoon    : daysUntilNextPhase(todayIso, 0, hubZone),
+        daysUntilNextFullMoon   : daysUntilNextPhase(todayIso, 4, hubZone),
+        daysUntilNextMoonPhase  : nextPhaseIso ? daysUntil(nextPhaseIso) : null
+    ]
+    values.putAll(blueMoonValues(todayIso, hubZone))
+    return values
+}
+
+private String nextBlueMoonIso(String todayIso, TimeZone hubZone) {
+    Integer currentYear = todayIso.substring(0, 4).toInteger()
+    List<String> blueMoonDates = blueMoonDates(currentYear - 1, currentYear + 10, hubZone)
+    return blueMoonDates.find { String isoDate -> isoDate >= todayIso } ?: ''
+}
+
+private String nextDifferentMoonPhaseIso(String todayIso, Integer currentPhaseIndex, TimeZone hubZone) {
+    Date startDate = Date.parse('yyyy-MM-dd', todayIso)
+
+    for (Integer offset = 1; offset <= 15; offset++) {
+        String candidateIso = addDaysIso(startDate, offset, hubZone)
+        if (moonPhaseIndex(candidateIso) != currentPhaseIndex) {
+            return candidateIso
+        }
+    }
+
+    return ''
+}
+
+private String nextMoonPhaseIso(String todayIso, Integer targetPhaseIndex, Boolean includeToday, TimeZone hubZone) {
+    Date startDate = Date.parse('yyyy-MM-dd', todayIso)
+    Integer startOffset = includeToday ? 0 : 1
+
+    for (Integer offset = startOffset; offset <= 60; offset++) {
+        String candidateIso = addDaysIso(startDate, offset, hubZone)
+        if (moonPhaseIndex(candidateIso) == targetPhaseIndex) {
+            return candidateIso
+        }
+    }
+
+    return ''
+}
+
+private Double positiveModulo(Double value, Double divisor) {
+    Double result = value % divisor
+    return result < 0 ? result + divisor : result
+}
+
+//
+//    LEAP YEAR CALCULATIONS
+//
+
+private Boolean isLeapYearNumber(Integer year) {
+    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)
 }
 
 private Map leapYearValues() {
@@ -840,9 +869,9 @@ private Integer nextLeapYearForDate(Integer currentYear, String todayIso) {
     return year
 }
 
-private Boolean isLeapYearNumber(Integer year) {
-    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)
-}
+//
+//    CALENDAR AND SEASON CALCULATIONS
+//
 
 private Map calendarValues() {
     TimeZone ukZone = daylightSavingTimeZone()
@@ -876,48 +905,27 @@ private Map calendarValues() {
     ]
 }
 
-private List<Map> seasonChangeEvents(Integer year, TimeZone zone) {
-    return [
-        seasonChangeEvent(year, 'Spring', 'Spring Equinox', 'marchEquinox', zone),
-        seasonChangeEvent(year, 'Summer', 'Summer Solstice', 'juneSolstice', zone),
-        seasonChangeEvent(year, 'Autumn', 'Autumn Equinox', 'septemberEquinox', zone),
-        seasonChangeEvent(year, 'Winter', 'Winter Solstice', 'decemberSolstice', zone)
-    ]
+private String easterIso(Integer year) {
+    Integer a = year % 19
+    Integer b = (year / 100) as Integer
+    Integer c = year % 100
+    Integer d = (b / 4) as Integer
+    Integer e = b % 4
+    Integer f = ((b + 8) / 25) as Integer
+    Integer g = ((b - f + 1) / 3) as Integer
+    Integer h = (19 * a + b - d - g + 15) % 30
+    Integer i = (c / 4) as Integer
+    Integer k = c % 4
+    Integer l = (32 + 2 * e + 2 * i - h - k) % 7
+    Integer m = ((a + 11 * h + 22 * l) / 451) as Integer
+    Integer month = ((h + l - 7 * m + 114) / 31) as Integer
+    Integer day = ((h + l - 7 * m + 114) % 31) + 1
+
+    return String.format('%04d-%02d-%02d', year, month, day)
 }
 
-private Map seasonChangeEvent(Integer year, String season, String name, String eventKey, TimeZone zone) {
-    Date instant = solarSeasonInstant(year, eventKey)
-    return [
-        season : season,
-        name   : name,
-        instant: instant,
-        date   : instant.format('yyyy-MM-dd', zone)
-    ]
-}
-
-private Date solarSeasonInstant(Integer year, String eventKey) {
-    Double y = (year - 2000) / 1000.0
-    Double jde
-
-    switch (eventKey) {
-        case 'marchEquinox':
-            jde = 2451623.80984 + 365242.37404 * y + 0.05169 * Math.pow(y, 2) - 0.00411 * Math.pow(y, 3) - 0.00057 * Math.pow(y, 4)
-            break
-        case 'juneSolstice':
-            jde = 2451716.56767 + 365241.62603 * y + 0.00325 * Math.pow(y, 2) + 0.00888 * Math.pow(y, 3) - 0.00030 * Math.pow(y, 4)
-            break
-        case 'septemberEquinox':
-            jde = 2451810.21715 + 365242.01767 * y - 0.11575 * Math.pow(y, 2) + 0.00337 * Math.pow(y, 3) + 0.00078 * Math.pow(y, 4)
-            break
-        case 'decemberSolstice':
-            jde = 2451900.05952 + 365242.74049 * y - 0.06223 * Math.pow(y, 2) - 0.00823 * Math.pow(y, 3) + 0.00032 * Math.pow(y, 4)
-            break
-        default:
-            throw new IllegalArgumentException("Unknown season event: ${eventKey}")
-    }
-
-    Long millis = Math.round((jde - 2440587.5D) * 86400000D)
-    return new Date(millis)
+private Boolean isIsoToday(String yyyyMmDd) {
+    return yyyyMmDd == new Date().format('yyyy-MM-dd', location.timeZone)
 }
 
 private String nextEasterIso(Integer currentYear, TimeZone zone, Date nowValue) {
@@ -952,27 +960,64 @@ private String nextHalloweenIso(Integer currentYear, TimeZone zone, Date nowValu
     return String.format('%04d-10-31', currentYear + 1)
 }
 
-private Boolean isIsoToday(String yyyyMmDd) {
-    return yyyyMmDd == new Date().format('yyyy-MM-dd', location.timeZone)
+private Map seasonChangeEvent(Integer year, String season, String name, String eventKey, TimeZone zone) {
+    Date instant = solarSeasonInstant(year, eventKey)
+    return [
+        season : season,
+        name   : name,
+        instant: instant,
+        date   : instant.format('yyyy-MM-dd', zone)
+    ]
 }
 
-private String easterIso(Integer year) {
-    Integer a = year % 19
-    Integer b = (year / 100) as Integer
-    Integer c = year % 100
-    Integer d = (b / 4) as Integer
-    Integer e = b % 4
-    Integer f = ((b + 8) / 25) as Integer
-    Integer g = ((b - f + 1) / 3) as Integer
-    Integer h = (19 * a + b - d - g + 15) % 30
-    Integer i = (c / 4) as Integer
-    Integer k = c % 4
-    Integer l = (32 + 2 * e + 2 * i - h - k) % 7
-    Integer m = ((a + 11 * h + 22 * l) / 451) as Integer
-    Integer month = ((h + l - 7 * m + 114) / 31) as Integer
-    Integer day = ((h + l - 7 * m + 114) % 31) + 1
+private List<Map> seasonChangeEvents(Integer year, TimeZone zone) {
+    return [
+        seasonChangeEvent(year, 'Spring', 'Spring Equinox', 'marchEquinox', zone),
+        seasonChangeEvent(year, 'Summer', 'Summer Solstice', 'juneSolstice', zone),
+        seasonChangeEvent(year, 'Autumn', 'Autumn Equinox', 'septemberEquinox', zone),
+        seasonChangeEvent(year, 'Winter', 'Winter Solstice', 'decemberSolstice', zone)
+    ]
+}
 
-    return String.format('%04d-%02d-%02d', year, month, day)
+private Date solarSeasonInstant(Integer year, String eventKey) {
+    Double y = (year - 2000) / 1000.0
+    Double jde
+
+    switch (eventKey) {
+        case 'marchEquinox':
+            jde = 2451623.80984 + 365242.37404 * y + 0.05169 * Math.pow(y, 2) - 0.00411 * Math.pow(y, 3) - 0.00057 * Math.pow(y, 4)
+            break
+        case 'juneSolstice':
+            jde = 2451716.56767 + 365241.62603 * y + 0.00325 * Math.pow(y, 2) + 0.00888 * Math.pow(y, 3) - 0.00030 * Math.pow(y, 4)
+            break
+        case 'septemberEquinox':
+            jde = 2451810.21715 + 365242.01767 * y - 0.11575 * Math.pow(y, 2) + 0.00337 * Math.pow(y, 3) + 0.00078 * Math.pow(y, 4)
+            break
+        case 'decemberSolstice':
+            jde = 2451900.05952 + 365242.74049 * y - 0.06223 * Math.pow(y, 2) - 0.00823 * Math.pow(y, 3) + 0.00032 * Math.pow(y, 4)
+            break
+        default:
+            throw new IllegalArgumentException("Unknown season event: ${eventKey}")
+    }
+
+    Long millis = Math.round((jde - 2440587.5D) * 86400000D)
+    return new Date(millis)
+}
+
+//
+//    DAYLIGHT SAVING CALCULATIONS
+//
+
+private Date clockChangeInstantUtc(Integer year, Integer calendarMonth) {
+    String changeDate = lastSundayOfMonth(year, calendarMonth)
+    List parts = changeDate.tokenize('-')*.toInteger()
+
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    cal.clear()
+    cal.set(parts[0], parts[1] - 1, parts[2], 1, 0, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+
+    return cal.time
 }
 
 private TimeZone daylightSavingTimeZone() {
@@ -1027,23 +1072,6 @@ private Map daylightSavingValues() {
     ]
 }
 
-/*
- * UK clock-change rule:
- * - Forward: last Sunday in March at 01:00 GMT
- * - Back:    last Sunday in October at 02:00 BST, equivalent to 01:00 UTC
- */
-private Date clockChangeInstantUtc(Integer year, Integer calendarMonth) {
-    String changeDate = lastSundayOfMonth(year, calendarMonth)
-    List parts = changeDate.tokenize('-')*.toInteger()
-
-    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
-    cal.clear()
-    cal.set(parts[0], parts[1] - 1, parts[2], 1, 0, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-
-    return cal.time
-}
-
 private String lastSundayOfMonth(Integer year, Integer calendarMonth) {
     Calendar cal = Calendar.getInstance(daylightSavingTimeZone())
     cal.clear()
@@ -1067,6 +1095,22 @@ private String offsetString(Integer offsetMillis) {
     return String.format('%s%02d:%02d', sign, hours, minutes)
 }
 
+//
+//    FORMATTING AND EVENT HELPERS
+//
+
+private String clockChangeTimeZoneAbbreviation(Integer hour) {
+    // UK clock-change times are displayed in the civil time in effect immediately before the change:
+    // forward at 01:00 GMT; back at 02:00 BST.
+    return (hour == 2) ? 'BST' : 'GMT'
+}
+
+private Integer daysUntil(String yyyyMmDd) {
+    Date target = Date.parse('yyyy-MM-dd', yyyyMmDd)
+    Date today = Date.parse('yyyy-MM-dd', new Date().format('yyyy-MM-dd', location.timeZone))
+    return ((target.time - today.time) / 86400000L).intValue()
+}
+
 private List flattenEvents(Map cache, List selectedRegions) {
     List allEvents = []
 
@@ -1086,16 +1130,10 @@ private List flattenEvents(Map cache, List selectedRegions) {
     return allEvents
 }
 
-private List normalizedRegions() {
-    if (!settings.regions) {
-        return ['england-and-wales']
-    }
-
-    if (settings.regions instanceof String) {
-        return [settings.regions]
-    }
-
-    return settings.regions as List
+private String formatHubClockTime(Integer hour, Integer minute) {
+    // Dedicated formatter to avoid Hubitat formatTime()/pattern issues.
+    String renderedTime = String.format('%02d:%02d', hour ?: 0, minute ?: 0)
+    return "${renderedTime} ${clockChangeTimeZoneAbbreviation(hour ?: 0)}"
 }
 
 private String formatHubDate(String yyyyMmDd) {
@@ -1124,12 +1162,6 @@ private String formatHubDate(String yyyyMmDd) {
     }
 }
 
-private String formatHubClockTime(Integer hour, Integer minute) {
-    // Dedicated formatter to avoid Hubitat formatTime()/pattern issues.
-    String renderedTime = String.format('%02d:%02d', hour ?: 0, minute ?: 0)
-    return "${renderedTime} ${clockChangeTimeZoneAbbreviation(hour ?: 0)}"
-}
-
 private String formatHubDateTime(Date value) {
     if (!value) {
         return ''
@@ -1150,19 +1182,6 @@ private String formatHubDateTime(Date value) {
     }
 
     return "${renderedDate} ${renderedTime}"
-}
-
-private String hubDatePattern() {
-    try {
-        def value = location?.dateFormat
-        if (value) {
-            return value.toString()
-        }
-    } catch (Throwable ignored) {
-    // Use deterministic fallback below.
-    }
-
-    return 'yyyy-MM-dd'
 }
 
 private String hubClockDisplayPattern() {
@@ -1188,16 +1207,40 @@ private String hubClockDisplayPattern() {
     return 'HH:mm:ss'
 }
 
-private String clockChangeTimeZoneAbbreviation(Integer hour) {
-    // UK clock-change times are displayed in the civil time in effect immediately before the change:
-    // forward at 01:00 GMT; back at 02:00 BST.
-    return (hour == 2) ? 'BST' : 'GMT'
+private String hubDatePattern() {
+    try {
+        def value = location?.dateFormat
+        if (value) {
+            return value.toString()
+        }
+    } catch (Throwable ignored) {
+    // Use deterministic fallback below.
+    }
+
+    return 'yyyy-MM-dd'
 }
 
-private Integer daysUntil(String yyyyMmDd) {
-    Date target = Date.parse('yyyy-MM-dd', yyyyMmDd)
-    Date today = Date.parse('yyyy-MM-dd', new Date().format('yyyy-MM-dd', location.timeZone))
-    return ((target.time - today.time) / 86400000L).intValue()
+private List normalizedRegions() {
+    if (!settings.regions) {
+        return ['england-and-wales']
+    }
+
+    if (settings.regions instanceof String) {
+        return [settings.regions]
+    }
+
+    return settings.regions as List
+}
+
+private String safeString(value) {
+    return value == null ? '' : value.toString()
+}
+
+private String toTitleCase(String value) {
+    if (!value) return value
+    value.toLowerCase().split(/\s+/).collect { w ->
+        w ? w[0].toUpperCase() + w.substring(1) : w
+    }.join(' ')
 }
 
 private String uniqueJoin(Collection values) {
@@ -1207,9 +1250,9 @@ private String uniqueJoin(Collection values) {
                  .join(', ')
 }
 
-private String safeString(value) {
-    return value == null ? '' : value.toString()
-}
+//
+//    LOGGING HELPERS
+//
 
 private Boolean debugLoggingEnabled() {
     return normalizeBoolean(settings?.debugEnable, false)

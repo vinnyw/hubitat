@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.23
- *  Date        : 2026-07-12
+ *  Version     : 1.3.25
+ *  Date        : 2026-07-13
  *
  *  Description :
  *      Child device driver for DateHub.
@@ -122,15 +122,18 @@ def getVersion() {
     return parent?.getVersion() ?: 'unknown'
 }
 
+//
+//    DEVICE LIFECYCLE AND COMMANDS
+//
 
-def installed() {
-    configure()
-}
+def clearCache() {
+    if (!parent) {
+        logWarn('clearCache requested but no parent app is available')
+        return
+    }
 
-def updated() {
-    unschedule('logsOff')
-    parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
-    configure()
+    logDebug('Clear cache requested; delegating to parent app')
+    parent.deviceClearCache(device.deviceNetworkId)
 }
 
 def configure() {
@@ -154,6 +157,10 @@ def configure() {
     parent.deviceConfigure(device.deviceNetworkId)
 }
 
+def installed() {
+    configure()
+}
+
 def refresh() {
     if (!parent) {
         logWarn('refresh requested but no parent app is available')
@@ -164,22 +171,15 @@ def refresh() {
     parent.deviceRefresh(device.deviceNetworkId)
 }
 
-def clearCache() {
-    if (!parent) {
-        logWarn('clearCache requested but no parent app is available')
-        return
-    }
-
-    logDebug('Clear cache requested; delegating to parent app')
-    parent.deviceClearCache(device.deviceNetworkId)
+def updated() {
+    unschedule('logsOff')
+    parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
+    configure()
 }
 
-def updateFromParent(Map values) {
-    logDebug("Received ${values?.size() ?: 0} value(s) from parent")
-    values.each { String name, value ->
-        sendEventIfChanged(name, value)
-    }
-}
+//
+//    PARENT EVENT UPDATES
+//
 
 private void sendEventIfChanged(String name, Object value) {
     Object current = device.currentValue(name)
@@ -192,9 +192,15 @@ private void sendEventIfChanged(String name, Object value) {
     }
 }
 
+def updateFromParent(Map values) {
+    logDebug("Received ${values?.size() ?: 0} value(s) from parent")
+    values.each { String name, value ->
+        sendEventIfChanged(name, value)
+    }
+}
 
 //
-//    LOGGING CONFIGURATION & SYNC
+//    LOGGING CONFIGURATION AND SYNCHRONISATION
 //
 
 private void applyParentLogging(txtEnableValue, debugEnableValue) {
@@ -212,7 +218,6 @@ private void updateBooleanSettingIfChanged(String name, Boolean newValue) {
     }
 }
 
-
 //
 //    LOGGING SCHEDULER
 //
@@ -223,6 +228,14 @@ private Integer debugAutoDisableMinutes() {
 
 private Integer debugAutoDisableSeconds() {
     return getParentDebugAutoDisableSeconds()
+}
+
+private Integer getParentDebugAutoDisableSeconds() {
+    try {
+        return normalizeDebugAutoDisableSeconds(parent?.getDebugAutoDisableSeconds())
+    } catch (Exception ignored) {
+        return 1800
+    }
 }
 
 def logsOff() {
@@ -236,14 +249,6 @@ def logsOff() {
     }
 
     log.warn "${device.displayName}: Debug logging disabled automatically after ${debugAutoDisableMinutes()} minutes"
-}
-
-private Integer getParentDebugAutoDisableSeconds() {
-    try {
-        return normalizeDebugAutoDisableSeconds(parent?.getDebugAutoDisableSeconds())
-    } catch (Exception ignored) {
-        return 1800
-    }
 }
 
 private Integer normalizeDebugAutoDisableSeconds(value) {
@@ -263,7 +268,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
         logDebug("Debug logging will automatically turn off in ${debugAutoDisableMinutes()} minutes")
     }
 }
-
 
 //
 //    LOGGING HELPERS
@@ -288,7 +292,6 @@ private void logText(String msg) {
 private void logWarn(String msg) {
     log.warn "${device.displayName}: ${msg}"
 }
-
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (value == null) return defaultValue
