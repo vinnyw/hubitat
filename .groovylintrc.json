@@ -1,0 +1,11 @@
+{
+  "extends": "recommended",
+  "rules": {
+    "formatting.Indentation": {
+      "spacesPerIndentLevel": 4,
+      "severity": "warning"
+    },
+    "formatting.NoTabCharacter": "error",
+    "UnnecessarySemicolon": "warning"
+  }
+}
