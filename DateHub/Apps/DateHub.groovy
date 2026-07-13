@@ -407,10 +407,6 @@ private String localeCompatibilityTable() {
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Compatibility</td>
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;color:${statusColour};font-weight:700;">${status}</td>
                 </tr>
-                <tr>
-                    <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Details</td>
-                    <td style="border:1px solid #bdbdbd;padding:8px 12px;color:${statusColour};font-weight:600;">${htmlEncode(message)}</td>
-                </tr>
             </table>
         </div>
     """.stripIndent().trim()
