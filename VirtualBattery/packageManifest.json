@@ -9,6 +9,15 @@
     "documentationLink": "https://github.com/vinnyw/hubitat",
     "communityLink": "",
     "tags": "Presence & Location, Misc. Devices",
+    "drivers": [
+        {
+            "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
+            "name": "Battery-1.0",
+            "namespace": "vinnyw",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
+            "required": true
+        }
+    ],
     "apps": [
         {
             "id": "8ef8e8ef-e074-495c-8a47-17914aefe0de",
@@ -19,18 +28,9 @@
         },
         {
             "id": "8ef8e8ef-4909-4c1a-a829-d7e1d5d44070",
-            "name": "Battery-1.0",
+            "name": "Battery",
             "namespace": "vinnyw",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Apps/Battery-1.0.groovy",
-            "required": true
-        }
-    ],
-    "drivers": [
-        {
-            "id": "8ef8e8ef-3379-450a-837b-6d5d9c614093",
-            "name": "Battery-1.0",
-            "namespace": "vinnyw",
-            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/Drivers/Battery-1.0.groovy",
             "required": true
         }
     ]
