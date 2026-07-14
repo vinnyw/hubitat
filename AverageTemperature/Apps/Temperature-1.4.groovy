@@ -15,7 +15,6 @@ definition(
 import groovy.transform.Field
 import java.math.RoundingMode
 
-
 //
 //    VERSION
 //
@@ -45,7 +44,6 @@ private String getDisplayVersionValue(Object versionValue) {
     return version ? "v${version}" : 'unknown'
 }
 
-
 //
 //    UI / PREFERENCES
 //
@@ -59,7 +57,6 @@ def mainPage() {
     prepareAdvancedUiSession()
 
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
-
         if (!state?.setupComplete) {
             section('Important') {
                 paragraph '⚠️ Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
@@ -83,7 +80,6 @@ def mainPage() {
             if (rejectedSensors) {
                 paragraph "<div style='color:#b85c00;'>Ignored non-source or invalid selected devices: ${htmlEncode(rejectedSensors)}</div>"
             }
-
         }
 
         section(
@@ -178,10 +174,8 @@ def mainPage() {
             String versionLabel = getDisplayVersionValue(getVersion())
             paragraph "<div style='font-size: 10px; color: #888; width: 100%; text-align: right;'>${htmlEncode(versionLabel)}</div>"
         }
-
     }
 }
-
 
 //
 //    UI DEFAULTS & VALIDATION HELPERS
@@ -240,7 +234,6 @@ private String currentAdvancedUiSignature() {
         configuredTrendDepth()
     ].collect { it?.toString() ?: '' }.join('|')
 }
-
 
 //
 //    DISPLAY HELPERS
@@ -357,7 +350,6 @@ private String defaultTemperatureDisplayUnit() {
 //
 
 def initialize() {
-
     if (!parent) {
         log.warn 'Parent app is not available. Cleaning up managed child device.'
         deleteManagedChildDevice()
@@ -416,7 +408,6 @@ def updated() {
     initialize()
 }
 
-
 //
 //    EVENT HANDLERS
 //
@@ -471,7 +462,6 @@ def refresh() {
     logDebug("Temperature values=${values}, average=${average}, rounded=${rounded}, trend=${trendData?.trend}, trendDisplay=${trendData?.trendDisplay}")
     child.setTemperature(rounded, places, selectedUnitDisplay(), trendData?.trend, trendData?.trendDisplay)
 }
-
 
 //
 //    CHILD DEVICE MANAGEMENT
@@ -583,7 +573,6 @@ private Boolean ensureManagedChildDevice() {
     return child != null
 }
 
-
 //
 //    LOGGING CONFIGURATION & SYNC
 //
@@ -617,7 +606,6 @@ def updateLoggingFromDriver(txtEnableValue, debugEnableValue) {
 
     syncChildSettings()
 }
-
 
 //
 //    SENSOR HELPERS
@@ -741,7 +729,6 @@ private List<BigDecimal> getValidTemperatureValues() {
     return values
 }
 
-
 //
 //    LOGGING SCHEDULER
 //
@@ -767,7 +754,6 @@ private void scheduleDebugAutoDisableIfNeeded() {
         log.debug "${app.label}: Debug logging will automatically turn off in ${getDebugAutoDisableMinutes()} minutes"
     }
 }
-
 
 //
 //    LOGGING HELPERS
@@ -801,7 +787,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
     if (s == 'false') return false
     return defaultValue
 }
-
 
 //
 //    TREND STATE
@@ -854,7 +839,6 @@ private Map updateTrendAndGetValues(BigDecimal roundedTemperature) {
     return calculateTrend(history, selectedTrendDisplay())
 }
 
-
 //
 //    TREND STORAGE
 //
@@ -882,7 +866,6 @@ private void saveHistoryEntries(List<Map> history) {
         [ts: (entry.ts as Long), value: entry.value.toString()]
     }
 }
-
 
 //
 //    TREND CALCULATION
