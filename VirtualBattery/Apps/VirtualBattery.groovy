@@ -27,7 +27,7 @@ preferences {
 //
 
 def getVersion() {
-    return '1.0.14'
+    return '1.0.15'
 }
 
 def getShortVersion() {

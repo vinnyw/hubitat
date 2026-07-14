@@ -52,7 +52,7 @@ def mainPage() {
         }
 
         section(hideable: true, hidden: false, title: 'Runtime') {
-            paragraph 'Current accumulated runtime for this virtual battery.'
+            paragraph 'Runtime represents the total accumulated time that this virtual battery has been ON. It is stored internally in seconds and is calculated by adding each completed ON session to the saved total; while the device remains ON, the elapsed time since the current session started is added dynamically. The resulting runtime is displayed as hours, minutes, and seconds and is used with Runtime Discharge to calculate the remaining virtual battery percentage.'
             paragraph "<b>Runtime Display:</b> ${formatDuration(getRuntimeSeconds())}"
 
             input name: 'runtimeHours', type: 'text',
@@ -73,7 +73,7 @@ def mainPage() {
                   defaultValue: '00',
                   submitOnChange: true
 
-            paragraph 'Accumulated runtime required to discharge the virtual battery from 100% to 0%.'
+            paragraph 'Runtime Discharge represents the total accumulated ON-time required for the virtual battery to fall from 100% to 0%. The entered hours, minutes, and seconds are converted to one duration in seconds and used as the full-discharge reference in the calculation: battery percentage = 100 - (Runtime ÷ Runtime Discharge × 100), rounded to the nearest whole percent and limited to 0–100%. Capture replaces this value with the current runtime, while Append adds the current runtime to it and then resets Runtime.'
             paragraph "<b>Runtime Discharge Display:</b> ${formatDuration(getRuntimeDischargeSeconds())}"
 
             input name: 'runtimeDischargeHours', type: 'text',
@@ -132,7 +132,7 @@ private void applyDefaultSettings() {
         app?.updateSetting('runtimeDischargeHours', [type: 'text', value: formatDurationInput((int)(seconds / 3600))])
         app?.updateSetting('runtimeDischargeMinutes', [type: 'text', value: formatDurationInput((int)((seconds % 3600) / 60))])
         app?.updateSetting('runtimeDischargeSeconds', [type: 'text', value: formatDurationInput((int)(seconds % 60))])
-        }
+    }
 
     ensureDurationTextSetting('runtimeDischargeHours', 1)
     ensureDurationTextSetting('runtimeDischargeMinutes', 0)
@@ -207,9 +207,16 @@ private Integer normalizeInteger(value, Integer defaultValue = 0) {
 
 private void secondsToDurationSettings(Integer totalSeconds, String hoursName, String minutesName, String secondsName) {
     Integer safe = Math.max(0, normalizeInteger(totalSeconds, 0))
-    app?.updateSetting(hoursName, [type: 'text', value: formatDurationInput((int)(safe / 3600))])
-    app?.updateSetting(minutesName, [type: 'text', value: formatDurationInput((int)((safe % 3600) / 60))])
-    app?.updateSetting(secondsName, [type: 'text', value: formatDurationInput((int)(safe % 60))])
+    updateDurationSettingIfChanged(hoursName, (int)(safe / 3600))
+    updateDurationSettingIfChanged(minutesName, (int)((safe % 3600) / 60))
+    updateDurationSettingIfChanged(secondsName, (int)(safe % 60))
+}
+
+private void updateDurationSettingIfChanged(String name, Integer value) {
+    String formatted = formatDurationInput(value)
+    if (settings?."${name}"?.toString() != formatted) {
+        app?.updateSetting(name, [type: 'text', value: formatted])
+    }
 }
 
 private void updateRuntimeStateFromInputs() {
