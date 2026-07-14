@@ -29,7 +29,7 @@
     },
     {
       "id": "c3496739-c739-433b-a340-3fe150df5e5b",
-      "name": "VoiceMonkeyDevice-1.1",
+      "name": "VoiceMonkeyDevice",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkeyDevice-1.1.groovy",
       "required": true
