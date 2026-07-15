@@ -115,13 +115,13 @@ preferences {
 //    VERSION AND DISPLAY HELPERS
 //
 
+def getVersion() {
+    return '1.3.26'
+}
+
 private String getDisplayVersionValue(Object versionValue) {
     String version = versionValue?.toString()?.trim()
     return version ? "v${version}" : 'unknown'
-}
-
-def getVersion() {
-    return '1.3.25'
 }
 
 private String htmlEncode(Object value) {
