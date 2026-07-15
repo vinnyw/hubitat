@@ -35,8 +35,13 @@ definition(
     iconUrl: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    singleInstance: true
+    singleInstance: true,
+    installOnOpen: true
 )
+
+@Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
+@Field static final String DEFAULT_HTTP_JSON = 'https://www.gov.uk/bank-holidays.json'
+@Field static final Integer DEFAULT_HTTP_TIMEOUT_SECONDS = 5
 
 //
 //    APP CONFIGURATION
@@ -282,7 +287,7 @@ Integer getDebugAutoDisableMinutes() {
 }
 
 Integer getDebugAutoDisableSeconds() {
-    return 1800
+    return DEBUG_AUTO_DISABLE_SECONDS
 }
 
 def syncChildSettings() {
@@ -328,7 +333,7 @@ private void scheduleDebugAutoDisableIfNeeded() {
     unschedule('logsOff')
 
     if (debugLoggingEnabled()) {
-        runIn(getDebugAutoDisableSeconds(), 'logsOff')
+        runIn(DEBUG_AUTO_DISABLE_SECONDS, 'logsOff')
         logDebug("Debug logging will automatically turn off in ${getDebugAutoDisableMinutes()} minutes")
     }
 }
@@ -511,9 +516,9 @@ private void fetchAndPublish() {
 
     try {
         httpGet([
-            uri: 'https://www.gov.uk/bank-holidays.json',
+            uri: DEFAULT_HTTP_JSON,
             contentType: 'application/json',
-            timeout: 15
+            timeout: DEFAULT_HTTP_TIMEOUT_SECONDS
         ]) { resp ->
             if (resp.status != 200) {
                 recordError("HTTP status ${resp.status}")
