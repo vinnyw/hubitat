@@ -24,8 +24,6 @@
  *  --------------------------------------------------------------------------------------------------------------
  */
 
-import groovy.transform.Field
-
 definition(
     name: 'DateHub Manager',
     namespace: 'vinnyw',
@@ -40,6 +38,8 @@ definition(
     singleInstance: true,
     installOnOpen: true
 )
+
+import groovy.transform.Field
 
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 @Field static final String DEFAULT_HTTP_JSON = 'https://www.gov.uk/bank-holidays.json'
