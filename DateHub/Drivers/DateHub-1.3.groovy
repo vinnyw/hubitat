@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.28
+ *  Version     : 1.3.29
  *  Date        : 2026-07-16
  *
  *  Description :
@@ -37,8 +37,6 @@ metadata {
         capability 'Refresh'
 
         command 'clearCache'
-
-        attribute 'driverVersion', 'string'
         attribute 'isPublicHoliday', 'enum', ['true', 'false']
         attribute 'publicHolidayName', 'string'
 
