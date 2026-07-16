@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.26
+ *  Version     : 1.3.28
  *  Date        : 2026-07-16
  *
  *  Description :
@@ -15,7 +15,7 @@
  *          - Exposes values calculated and published by the DateHub Manager parent app
  *          - Provides Refresh, Configure, and Clear Cache commands
  *          - Avoids independent scheduling, polling, or external HTTP calls
- *          - Uses guarded event updates to avoid redundant device events
+ *          - Acts only as a display layer for values pre-filtered by the parent app
  *
  *      Capabilities:
  *          Actuator
@@ -38,6 +38,7 @@ metadata {
 
         command 'clearCache'
 
+        attribute 'driverVersion', 'string'
         attribute 'isPublicHoliday', 'enum', ['true', 'false']
         attribute 'publicHolidayName', 'string'
 
@@ -142,9 +143,6 @@ def configure() {
         return
     }
 
-    // The parent app is the sole source of truth for the displayed driver version.
-    state.driverVersion = parent.getVersion()
-
     Map cfg = parent?.getChildDriverLoggingConfig()
     if (cfg instanceof Map) {
         applyParentLogging(cfg.txtEnable, cfg.debugEnable)
@@ -181,48 +179,12 @@ def updated() {
 //    PARENT EVENT UPDATES
 //
 
-private void sendEventIfChanged(String name, Object value) {
-    Map attributeCache = state.attributeValueCache instanceof Map ? state.attributeValueCache : [:]
-    String newCacheValue = normalizeAttributeValueForCache(value)
-
-    if (!attributeCache.containsKey(name)) {
-        attributeCache[name] = normalizeAttributeValueForCache(device.currentValue(name))
-    }
-
-    if (attributeCache[name] == newCacheValue) {
-        logDebug("Skipping unchanged attribute ${name}=${value}")
-        state.attributeValueCache = attributeCache
-        return
-    }
-
-    sendEvent(name: name, value: value)
-    attributeCache[name] = newCacheValue
-    state.attributeValueCache = attributeCache
-    logText("${name} is ${value}")
-}
-
-private String normalizeAttributeValueForCache(Object value) {
-    if (value == null) return '__DATEHUB_NULL__'
-
-    if (value instanceof Number) {
-        try {
-            return new BigDecimal(value.toString()).stripTrailingZeros().toPlainString()
-        } catch (Exception ignored) {
-            return value.toString()
-        }
-    }
-
-    if (value instanceof Boolean) {
-        return value.toString().toLowerCase()
-    }
-
-    return value.toString()
-}
-
 def updateFromParent(Map values) {
-    logDebug("Received ${values?.size() ?: 0} value(s) from parent")
+    logDebug("Received ${values?.size() ?: 0} changed value(s) from parent")
+
     values.each { String name, value ->
-        sendEventIfChanged(name, value)
+        sendEvent(name: name, value: value)
+        logText("${name} is ${value}")
     }
 }
 

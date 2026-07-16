@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.26
+ *  Version     : 1.3.28
  *  Date        : 2026-07-16
  *
  *  Description :
@@ -123,7 +123,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.26'
+    return '1.3.28'
 }
 
 private String htmlEncode(Object value) {
@@ -588,6 +588,8 @@ void publishCachedValues() {
     state.totalCachedEvents = allEvents.size()
 
     Map values = [
+        driverVersion                 : getVersion(),
+
         isPublicHoliday             : todaysEvents ? 'true' : 'false',
         publicHolidayName         : todaysEvents ? uniqueJoin(todaysEvents.collect { it.title }) : null,
 
@@ -602,7 +604,7 @@ void publishCachedValues() {
     values.putAll(calendarValues())
     values.putAll(leapYearValues())
     values.putAll(moonPhaseValues())
-    child.updateFromParent(values)
+    publishChangedValuesToChild(child, values)
 }
 
 private void publishEmptyValues(String status) {
@@ -618,6 +620,8 @@ private void publishEmptyValues(String status) {
     state.totalCachedEvents = 0
 
     Map values = [
+        driverVersion                 : getVersion(),
+
         isPublicHoliday                : 'false',
         publicHolidayName              : null,
 
@@ -632,7 +636,57 @@ private void publishEmptyValues(String status) {
     values.putAll(calendarValues())
     values.putAll(leapYearValues())
     values.putAll(moonPhaseValues())
-    child.updateFromParent(values)
+    publishChangedValuesToChild(child, values)
+}
+
+private void publishChangedValuesToChild(child, Map values) {
+    if (!child || !(values instanceof Map) || values.isEmpty()) {
+        return
+    }
+
+    Map attributeCache = state.publishedAttributeValueCache instanceof Map
+        ? state.publishedAttributeValueCache
+        : [:]
+    Map changedValues = [:]
+
+    values.each { String name, value ->
+        String newCacheValue = normalizePublishedAttributeValue(value)
+
+        if (!attributeCache.containsKey(name)) {
+            attributeCache[name] = normalizePublishedAttributeValue(child.currentValue(name))
+        }
+
+        if (attributeCache[name] != newCacheValue) {
+            changedValues[name] = value
+            attributeCache[name] = newCacheValue
+        } else {
+            logDebug("Skipping unchanged attribute ${name}=${value}")
+        }
+    }
+
+    state.publishedAttributeValueCache = attributeCache
+
+    if (!changedValues.isEmpty()) {
+        child.updateFromParent(changedValues)
+    }
+}
+
+private String normalizePublishedAttributeValue(Object value) {
+    if (value == null) return '__DATEHUB_NULL__'
+
+    if (value instanceof Number) {
+        try {
+            return new BigDecimal(value.toString()).stripTrailingZeros().toPlainString()
+        } catch (Exception ignored) {
+            return value.toString()
+        }
+    }
+
+    if (value instanceof Boolean) {
+        return value.toString().toLowerCase()
+    }
+
+    return value.toString()
 }
 
 private void recordError(String message) {
@@ -646,7 +700,7 @@ private void recordError(String message) {
 
     def child = holidayDevice()
     if (child) {
-        child.updateFromParent([
+        publishChangedValuesToChild(child, [
             lastError: cleanMessage
         ])
     }
