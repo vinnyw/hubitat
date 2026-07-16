@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.25
- *  Date        : 2026-07-13
+ *  Version     : 1.3.26
+ *  Date        : 2026-07-16
  *
  *  Description :
  *      Child device driver for DateHub.
@@ -182,14 +182,41 @@ def updated() {
 //
 
 private void sendEventIfChanged(String name, Object value) {
-    Object current = device.currentValue(name)
+    Map attributeCache = state.attributeValueCache instanceof Map ? state.attributeValueCache : [:]
+    String newCacheValue = normalizeAttributeValueForCache(value)
 
-    if (current != value) {
-        sendEvent(name: name, value: value)
-        logText("${name} is ${value}")
-    } else {
-        logDebug("Skipping unchanged attribute ${name}=${value}")
+    if (!attributeCache.containsKey(name)) {
+        attributeCache[name] = normalizeAttributeValueForCache(device.currentValue(name))
     }
+
+    if (attributeCache[name] == newCacheValue) {
+        logDebug("Skipping unchanged attribute ${name}=${value}")
+        state.attributeValueCache = attributeCache
+        return
+    }
+
+    sendEvent(name: name, value: value)
+    attributeCache[name] = newCacheValue
+    state.attributeValueCache = attributeCache
+    logText("${name} is ${value}")
+}
+
+private String normalizeAttributeValueForCache(Object value) {
+    if (value == null) return '__DATEHUB_NULL__'
+
+    if (value instanceof Number) {
+        try {
+            return new BigDecimal(value.toString()).stripTrailingZeros().toPlainString()
+        } catch (Exception ignored) {
+            return value.toString()
+        }
+    }
+
+    if (value instanceof Boolean) {
+        return value.toString().toLowerCase()
+    }
+
+    return value.toString()
 }
 
 def updateFromParent(Map values) {

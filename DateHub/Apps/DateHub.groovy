@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.25
- *  Date        : 2026-07-13
+ *  Version     : 1.3.26
+ *  Date        : 2026-07-16
  *
  *  Description :
  *      Parent application for DateHub.
@@ -123,7 +123,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.25'
+    return '1.3.26'
 }
 
 private String htmlEncode(Object value) {
