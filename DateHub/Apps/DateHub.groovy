@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.29
+ *  Version     : 1.3.28
  *  Date        : 2026-07-16
  *
  *  Description :
@@ -123,7 +123,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.29'
+    return '1.3.28'
 }
 
 private String htmlEncode(Object value) {
@@ -588,6 +588,8 @@ void publishCachedValues() {
     state.totalCachedEvents = allEvents.size()
 
     Map values = [
+        driverVersion                 : getVersion(),
+
         isPublicHoliday             : todaysEvents ? 'true' : 'false',
         publicHolidayName         : todaysEvents ? uniqueJoin(todaysEvents.collect { it.title }) : null,
 
@@ -618,6 +620,8 @@ private void publishEmptyValues(String status) {
     state.totalCachedEvents = 0
 
     Map values = [
+        driverVersion                 : getVersion(),
+
         isPublicHoliday                : 'false',
         publicHolidayName              : null,
 
