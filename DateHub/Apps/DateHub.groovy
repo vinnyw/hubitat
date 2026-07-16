@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.28
+ *  Version     : 1.3.31
  *  Date        : 2026-07-16
  *
  *  Description :
@@ -123,7 +123,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.28'
+    return '1.3.31'
 }
 
 private String htmlEncode(Object value) {
@@ -588,8 +588,6 @@ void publishCachedValues() {
     state.totalCachedEvents = allEvents.size()
 
     Map values = [
-        driverVersion                 : getVersion(),
-
         isPublicHoliday             : todaysEvents ? 'true' : 'false',
         publicHolidayName         : todaysEvents ? uniqueJoin(todaysEvents.collect { it.title }) : null,
 
@@ -620,8 +618,6 @@ private void publishEmptyValues(String status) {
     state.totalCachedEvents = 0
 
     Map values = [
-        driverVersion                 : getVersion(),
-
         isPublicHoliday                : 'false',
         publicHolidayName              : null,
 
@@ -647,16 +643,13 @@ private void publishChangedValuesToChild(child, Map values) {
     Map attributeCache = state.publishedAttributeValueCache instanceof Map
         ? state.publishedAttributeValueCache
         : [:]
+
     Map changedValues = [:]
 
     values.each { String name, value ->
         String newCacheValue = normalizePublishedAttributeValue(value)
 
-        if (!attributeCache.containsKey(name)) {
-            attributeCache[name] = normalizePublishedAttributeValue(child.currentValue(name))
-        }
-
-        if (attributeCache[name] != newCacheValue) {
+        if (!attributeCache.containsKey(name) || attributeCache[name] != newCacheValue) {
             changedValues[name] = value
             attributeCache[name] = newCacheValue
         } else {
