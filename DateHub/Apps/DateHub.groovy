@@ -53,7 +53,7 @@ preferences {
     page(name: 'mainPage', install: true, uninstall: true) {
         syncChildLabelSettingAndDevice()
 
-        section('Hub Locale / Timezone') {
+        section() {
             paragraph 'DateHub uses UK-specific holiday and daylight-saving data. For the app to work correctly, set the hub location to the United Kingdom and use a UK-compatible timezone.'
             paragraph localeCompatibilityTable()
         }
