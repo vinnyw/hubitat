@@ -54,8 +54,9 @@ preferences {
         syncChildLabelSettingAndDevice()
 
         section() {
-            paragraph 'DateHub uses UK-specific holiday and daylight-saving data. For the app to work correctly, set the hub location to the United Kingdom and use a UK-compatible timezone.'
+            paragraph 'DateHub uses UK-specific holiday and daylight-saving data. For the app to work correctly, set the hub location to the United Kingdom and use a UK-compatible timezone.<br><br>'
             paragraph localeCompatibilityTable()
+            paragraph '<br>'
         }
 
         if (!state?.setupComplete) {
@@ -402,10 +403,6 @@ private String localeCompatibilityTable() {
     return """
         <div style="display:flex;justify-content:center;width:100%;">
             <table style="border-collapse:collapse;text-align:center;min-width:70%;max-width:100%;">
-                <tr>
-                    <th style="border:1px solid #bdbdbd;padding:8px 12px;">Check</th>
-                    <th style="border:1px solid #bdbdbd;padding:8px 12px;">Result</th>
-                </tr>
                 <tr>
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;font-weight:600;">Hub timezone</td>
                     <td style="border:1px solid #bdbdbd;padding:8px 12px;">${htmlEncode(tzId)}</td>
