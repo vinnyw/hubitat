@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.2.1
- *  Date        : 2026-04-15
+ *  Version     : 1.2.2
+ *  Date        : 2026-07-28
  *
  *  Description :
  *      Virtual Presence Sensor
@@ -14,7 +14,7 @@
  *      Attributes:
  *          presence      (enum)    : present / not present
  *          switch        (string)  : on / off  (attribute only)
- *          lastActivity  (number)  : epoch time (Long)
+ *          lastActivity  (number)  : Unix epoch seconds (Long)
  *
  *      Capabilities:
  *          Sensor
@@ -27,7 +27,7 @@
 
 import groovy.transform.Field
 
-@Field static final String DRIVER_VERSION = '1.2.1'
+@Field static final String DRIVER_VERSION = '1.2.2'
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 metadata {
@@ -113,7 +113,7 @@ def configure() {
     if (!device.currentValue('lastActivity')) {
         sendEvent(
             name: 'lastActivity',
-            value: now().intdiv(1000L).intdiv(1000L),
+            value: now().intdiv(1000L),
             displayed: false,
             isStateChange: false,
             type: 'digital'        
@@ -285,7 +285,7 @@ private void changePresenceState(String pres, String sw) {
 
     sendEvent(
         name: 'lastActivity',
-        value: now().intdiv(1000L).intdiv(1000L),
+        value: now().intdiv(1000L),
         displayed: false,
         isStateChange: false,
         type: 'digital'

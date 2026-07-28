@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 3.7.4
- *  Date        : 2026-04-15
+ *  Version     : 3.7.5
+ *  Date        : 2026-07-28
  *
  *  Description :
  *      Virtual occupancy sensor
@@ -14,7 +14,7 @@
  *      Attributes:
  *          occupancy     (enum)    : occupied / unoccupied
  *          switch        (string)  : on / off  (attribute only)
- *          lastActivity  (number)  : epoch time (Long)
+ *          lastActivity  (number)  : Unix epoch seconds (Long)
  *
  *      Capabilities:
  *          Sensor
@@ -27,7 +27,7 @@
 
 import groovy.transform.Field
 
-@Field static final String DRIVER_VERSION = '3.7.4'
+@Field static final String DRIVER_VERSION = '3.7.5'
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 metadata {
@@ -112,7 +112,7 @@ def configure() {
     if (!device.currentValue('lastActivity')) {
         sendEvent(
             name: 'lastActivity',
-            value: now().intdiv(1000L).intdiv(1000L),
+            value: now().intdiv(1000L),
             displayed: false,
             isStateChange: false,
             type: 'digital'
@@ -284,7 +284,7 @@ private void changeOccupancyState(String occ, String sw) {
 
     sendEvent(
         name: 'lastActivity',
-        value: now().intdiv(1000L).intdiv(1000L),
+        value: now().intdiv(1000L),
         displayed: false,
         isStateChange: false,
         type: 'digital'

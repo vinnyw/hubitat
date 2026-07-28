@@ -424,7 +424,7 @@ private void processPowerConfigurationCluster(Map descriptionMap, List<Map<Strin
 
 private void processRingRotation(List<String> commandData) {
     Long cooldownUntil = (state.rotationCooldownUntil ?: 0L) as Long
-    Long nowMs = now().intdiv(1000L) as Long
+    Long nowMs = now() as Long
 
     if (cooldownUntil > nowMs) {
         logDebug("ring rotation ignored during cooldown for ${cooldownUntil - nowMs}ms")
