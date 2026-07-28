@@ -6,7 +6,7 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-05-06
+ *  Date        : 2026-07-28
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
@@ -16,7 +16,7 @@
  *          humidityDisplay  (string) : formatted humidity value
  *          trend            (string) : trend
  *          trendDisplay     (string) : formatted trend
- *          lastActivity     (number) : epoch time (Long)
+ *          lastActivity     (number) : Unix epoch seconds (Long)
  *
  *      Capabilities:
  *          Sensor
@@ -123,7 +123,7 @@ def configure() {
     if (device.currentValue('lastActivity') == null) {
         sendEvent(
             name: 'lastActivity',
-            value: now(),
+            value: now().intdiv(1000L),
             isStateChange: false,
             type: 'digital'
         )
@@ -213,7 +213,7 @@ def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null
     changed = updateTrendAttributes(trend, trendDisplay) || changed
 
     if (changed) {
-        sendEvent(name: 'lastActivity', value: now(), isStateChange: false, type: 'digital')
+        sendEvent(name: 'lastActivity', value: now().intdiv(1000L), isStateChange: false, type: 'digital')
         if (descriptionTextLoggingEnabled()) {
             log.info "${device.displayName} humidity is ${display}"
         }
