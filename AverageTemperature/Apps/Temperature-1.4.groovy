@@ -876,7 +876,7 @@ private Map calculateTrend(List<Map> history, String mode) {
         return [trend: 'steady', trendDisplay: 'steady']
     }
 
-    long nowTs = now()
+    long nowTs = now().intdiv(1000L)
     long windowMs = configuredTrendWindowMinutes().toLong() * 60L * 1000L
     long cutoff = nowTs - windowMs
 

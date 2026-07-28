@@ -124,7 +124,7 @@ def configure() {
     if (device.currentValue('lastActivity') == null) {
         sendEvent(
             name: 'lastActivity',
-            value: now(),
+            value: now().intdiv(1000L),
             isStateChange: false,
             type: 'digital'
         )
@@ -204,7 +204,7 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
 
     if (currentValue == null || currentValue.compareTo(newValue) != 0) {
         sendEvent(name: 'temperature', value: newValue, unit: eventTemperatureUnit(), isStateChange: true, type: 'digital')
-        sendEvent(name: 'lastActivity', value: now(), isStateChange: false, type: 'digital')
+        sendEvent(name: 'lastActivity', value: now().intdiv(1000L), isStateChange: false, type: 'digital')
         changed = true
     }
 
