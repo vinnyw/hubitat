@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.1.39
+ *  Version     : 1.1.1.39
  *  Date        : 2026-06-28
  *
  *  Description :
@@ -396,7 +396,9 @@ private void logInfo(String message) {
 //
 
 private String formatEpochMillis(Object epochMillis) {
-    return epochMillis == null ? '' : epochMillis.toString()
+    if (epochMillis == null) return ''
+    Long ms = (epochMillis as Long)
+    return ms.intdiv(1000L).toString()
 }
 
 private Boolean normalizeBoolean(value, Boolean defaultValue) {
