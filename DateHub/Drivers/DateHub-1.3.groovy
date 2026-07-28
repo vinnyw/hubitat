@@ -100,6 +100,7 @@ metadata {
         attribute 'nextBlueMoon', 'string'
 
         attribute 'lastError', 'string'
+        attribute 'lastActivity', 'number'
     }
 
     preferences {
@@ -126,6 +127,7 @@ def getVersion() {
 //
 
 def clearCache() {
+    recordDriverActivity()
     if (!parent) {
         logWarn('clearCache requested but no parent app is available')
         return
@@ -136,6 +138,8 @@ def clearCache() {
 }
 
 def configure() {
+    state.driverVersion = getVersion()
+    recordDriverActivity()
     if (!parent) {
         logWarn('configure requested but no parent app is available')
         return
@@ -158,6 +162,7 @@ def installed() {
 }
 
 def refresh() {
+    recordDriverActivity()
     if (!parent) {
         logWarn('refresh requested but no parent app is available')
         return
@@ -168,6 +173,8 @@ def refresh() {
 }
 
 def updated() {
+    state.driverVersion = getVersion()
+    recordDriverActivity()
     unschedule('logsOff')
     parent?.updateLoggingFromDriver(settings?.txtEnable, settings?.debugEnable)
     configure()
@@ -178,12 +185,22 @@ def updated() {
 //
 
 def updateFromParent(Map values) {
+    recordDriverActivity()
     logDebug("Received ${values?.size() ?: 0} changed value(s) from parent")
 
     values.each { String name, value ->
         sendEvent(name: name, value: value)
         logText("${name} is ${value}")
     }
+}
+
+
+//
+//    DRIVER DIAGNOSTICS
+//
+
+private void recordDriverActivity() {
+    sendEvent(name: 'lastActivity', value: now())
 }
 
 //
