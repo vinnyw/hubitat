@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.8
+ *  Version     : 1.3.10
  *  Date        : 2026-07-28
  *
  *  Description :
@@ -45,6 +45,7 @@ import groovy.transform.Field
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 @Field static final Integer HTTP_CONNECTION_TIMEOUT_SECONDS = 5
 @Field static final String MET_OFFICE_API_PATH = 'https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point'
+@Field static final String MET_OFFICE_API_TIMESTEP = 'hourly'   //  valid steps are 'hourly', 'three-hourly' or 'daily'
 @Field static final Boolean MET_OFFICE_API_INCLUDE_LOCATION_NAME = true
 @Field static final Boolean MET_OFFICE_API_INCLUDE_PARAMETER_METADATA = false
 
@@ -121,32 +122,19 @@ Map mainPage() {
 
         section(title: 'Settings', hideable: true, hidden: false) {
             input(
-                name: 'timesteps',
-                type: 'enum',
-                title: 'Forecast timestep',
-                required: true,
-                options: [
-                    'hourly': 'Hourly',
-                    'three-hourly': 'Three-hourly',
-                    'daily': 'Daily'
-                ],
-                defaultValue: 'hourly'
-            )
-
-            input(
                 name: 'pollInterval',
                 type: 'enum',
                 title: 'Polling interval',
                 required: true,
                 options: [
-                    '5': 'Every 5 minutes',
-                    '10': 'Every 10 minutes',
-                    '15': 'Every 15 minutes',
-                    '30': 'Every 30 minutes',
-                    '60': 'Every hour',
-                    '180': 'Every 3 hours'
+                    '15': '15 minutes',
+                    '30': '30 minutes',
+                    '60': '1 hour',
+                    '180': '3 hour',
+                    '360': '6 hour',
+                    '720': '12 hour'
                 ],
-                defaultValue: '60'
+                defaultValue: '30'
             )
         }
 
@@ -276,7 +264,7 @@ private String htmlEncode(Object value) {
 }
 
 String getVersion() {
-    return '1.3.8'
+    return '1.3.10'
 }
 
 void installed() {
@@ -493,15 +481,18 @@ private void syncChildLabelSettingAndDevice() {
 }
 
 private void schedulePolling() {
-    String interval = (pollInterval ?: '60').toString()
+    unschedule('scheduledPoll')
+
+    String interval = (pollInterval ?: '30').toString()
+    Set<String> supportedIntervals = ['15', '30', '60', '180', '360', '720'] as Set<String>
+
+    if (!supportedIntervals.contains(interval)) {
+        interval = '30'
+        app?.updateSetting('pollInterval', [type: 'enum', value: interval])
+        logWarn('Unsupported polling interval was reset to 30 minute.')
+    }
 
     switch (interval) {
-        case '5':
-            runEvery5Minutes('scheduledPoll')
-            break
-        case '10':
-            runEvery10Minutes('scheduledPoll')
-            break
         case '15':
             runEvery15Minutes('scheduledPoll')
             break
@@ -511,10 +502,31 @@ private void schedulePolling() {
         case '180':
             runEvery3Hours('scheduledPoll')
             break
+        case '360':
+            runEvery6Hours('scheduledPoll')
+            break
+        case '720':
+            runEvery12Hours('scheduledPoll')
+            break
         default:
             runEvery1Hour('scheduledPoll')
             break
     }
+
+    logDebug("Polling schedule set to ${pollIntervalLabel(interval)}.")
+}
+
+private String pollIntervalLabel(String interval) {
+    Map<String, String> labels = [
+        '15' : '15 minute',
+        '30' : '30 minute',
+        '60' : '1 hour',
+        '180': '3 hour',
+        '360': '6 hour',
+        '720': '12 hour'
+    ]
+
+    return labels[interval] ?: '30 minute'
 }
 
 void scheduledPoll() {
@@ -557,7 +569,7 @@ private void pollWeather() {
     }
 
     Map params = [
-        uri: "${MET_OFFICE_API_PATH}/${timesteps ?: 'hourly'}",
+        uri: "${MET_OFFICE_API_PATH}/${MET_OFFICE_API_TIMESTEP}",
         headers: [
             accept: 'application/json',
             apikey: apiToken
@@ -575,7 +587,7 @@ private void pollWeather() {
     state.requestInFlight = true
     state.requestStartedAt = now()
 
-    logDebug("Requesting ${timesteps ?: 'hourly'} forecast for ${HUB_SETTING_LATITUDE}, ${HUB_SETTING_LONGITUDE}.")
+    logDebug("Requesting ${MET_OFFICE_API_TIMESTEP} forecast for ${HUB_SETTING_LATITUDE}, ${HUB_SETTING_LONGITUDE}.")
 
     try {
         asynchttpGet('weatherResponseHandler', params)
