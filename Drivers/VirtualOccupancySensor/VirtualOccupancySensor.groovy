@@ -112,7 +112,7 @@ def configure() {
     if (!device.currentValue('lastActivity')) {
         sendEvent(
             name: 'lastActivity',
-            value: now(),
+            value: now().intdiv(1000L).intdiv(1000L),
             displayed: false,
             isStateChange: false,
             type: 'digital'
@@ -284,7 +284,7 @@ private void changeOccupancyState(String occ, String sw) {
 
     sendEvent(
         name: 'lastActivity',
-        value: now(),
+        value: now().intdiv(1000L).intdiv(1000L),
         displayed: false,
         isStateChange: false,
         type: 'digital'
