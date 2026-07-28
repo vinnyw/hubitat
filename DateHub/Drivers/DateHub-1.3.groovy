@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.31
- *  Date        : 2026-07-16
+ *  Version     : 1.3.32
+ *  Date        : 2026-07-28
  *
  *  Description :
  *      Child device driver for DateHub.
@@ -200,7 +200,8 @@ def updateFromParent(Map values) {
 //
 
 private void recordDriverActivity() {
-    sendEvent(name: 'lastActivity', value: now())
+    Long epochSeconds = now().intdiv(1000L)
+    sendEvent(name: 'lastActivity', value: epochSeconds)
 }
 
 //
