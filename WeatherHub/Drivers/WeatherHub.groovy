@@ -1,9 +1,60 @@
 /**
- * WeatherHub Child Device
- * Version: 1.3.8
+ *  --------------------------------------------------------------------------------------------------------------
+ *  WeatherHub Child Device
+ *  --------------------------------------------------------------------------------------------------------------
  *
- * Receives normalized forecast values from the WeatherHub parent app.
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : 1.3.8
+ *  Date        : 2026-07-28
+ *
+ *  Description :
+ *      Child device driver for WeatherHub.
+ *
+ *      Responsibilities:
+ *          - Stores and exposes forecast values published by the WeatherHub Manager parent app
+ *          - Delegates Refresh requests to the parent app
+ *          - Initialises missing attributes and synchronises parent-controlled logging
+ *          - Performs no independent forecast scheduling, polling, or external HTTP requests
+ *
+ *      Capabilities:
+ *          Sensor
+ *          Refresh
+ *          TemperatureMeasurement
+ *          RelativeHumidityMeasurement
+ *
+ *      Commands:
+ *          Refresh
+ *
+ *      Custom Attributes:
+ *          dewPoint
+ *          feelsLike
+ *          forecastTime
+ *          lastActivity
+ *          locationName
+ *          precipitationAmount
+ *          precipitationProbability
+ *          precipitationRate
+ *          pressure
+ *          snowAmount
+ *          uvIndex
+ *          uvLevel
+ *          visibility
+ *          weatherCode
+ *          weatherCondition
+ *          weatherSummary
+ *          windDirection
+ *          windDirectionCardinal
+ *          windGust
+ *          windSpeed
+ *
+ *      Standard Attributes:
+ *          temperature
+ *          humidity
+ *
+ *  --------------------------------------------------------------------------------------------------------------
  */
+
 metadata {
     definition(
         name: 'WeatherHub',

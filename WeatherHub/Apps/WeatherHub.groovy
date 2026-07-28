@@ -1,9 +1,31 @@
 /**
- * WeatherHub Manager
- * Version: 1.3.8
+ *  --------------------------------------------------------------------------------------------------------------
+ *  WeatherHub Manager
+ *  --------------------------------------------------------------------------------------------------------------
  *
- * Met Office Weather DataHub Site-Specific Forecast integration.
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : 1.3.8
+ *  Date        : 2026-07-28
+ *
+ *  Description :
+ *      Parent application for WeatherHub.
+ *
+ *      Responsibilities:
+ *          - Creates and manages one WeatherHub child device
+ *          - Retrieves Met Office Weather DataHub site-specific forecast data
+ *          - Selects and normalises the applicable forecast period
+ *          - Publishes forecast values to the WeatherHub child device
+ *          - Uses the hub latitude and longitude configured in Hub Details
+ *          - Schedules forecast polling at the configured interval
+ *          - Handles API credentials, request guarding, errors, and parent-controlled logging
+ *
+ *      Integration:
+ *          Forecast data is retrieved from the Met Office Weather DataHub Site-Specific Forecast API.
+ *
+ *  --------------------------------------------------------------------------------------------------------------
  */
+
 definition(
     name: 'WeatherHub Manager',
     namespace: 'vinnyw',
