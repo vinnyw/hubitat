@@ -230,7 +230,7 @@ private void updateRuntimeStateFromInputs() {
 
     state.runtime = configuredRuntime
     state.runtimeDischarge = configuredDischarge
-    state.lastActivity = state.lastActivity ?: now()
+    state.lastActivity = state.lastActivity ?: now().intdiv(1000L)
 }
 
 //
@@ -282,7 +282,7 @@ def childCaptureRuntimeDischarge(String dni = null) {
 
     Integer captured = Math.max(1, getCurrentRuntimeSeconds())
     state.runtimeDischarge = captured
-    state.lastActivity = now()
+    state.lastActivity = now().intdiv(1000L)
     secondsToDurationSettings(captured, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
 
     publishRuntimeState()
@@ -303,7 +303,7 @@ def childAppendRuntimeDischarge(String dni = null) {
     state.startEpoch = null
     state.lastStartEpoch = null
     state.lastStopEpoch = null
-    state.lastActivity = now()
+    state.lastActivity = now().intdiv(1000L)
     syncRuntimeInputsFromState()
 
     publishRuntimeState('off')
@@ -317,7 +317,7 @@ def childConfigureRequest(String dni = null) {
 def childOff(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
 
-    Long epoch = now()
+    Long epoch = now().intdiv(1000L)
     Integer elapsed = getActiveSessionSeconds(epoch)
 
     if (state.startEpoch) {
@@ -334,7 +334,7 @@ def childOff(String dni = null) {
 def childOn(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
 
-    Long epoch = now()
+    Long epoch = now().intdiv(1000L)
 
     if (!state.startEpoch) {
         state.startEpoch = epoch
@@ -353,7 +353,7 @@ def childRefreshRequest(String dni = null) {
 def childResetRuntimeDischarge(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
 
-    Long epoch = now()
+    Long epoch = now().intdiv(1000L)
     state.runtime = 0
     state.startEpoch = null
     state.lastStartEpoch = null
@@ -457,7 +457,7 @@ private String formatDuration(value) {
     return String.format('%02d:%02d:%02d', hours, minutes, seconds)
 }
 
-private Integer getActiveSessionSeconds(Long epoch = now()) {
+private Integer getActiveSessionSeconds(Long epoch = now().intdiv(1000L)) {
     if (!state.startEpoch) return 0
 
     Long started = normalizeLong(state.startEpoch, epoch)
@@ -465,7 +465,7 @@ private Integer getActiveSessionSeconds(Long epoch = now()) {
     return (int)(elapsedMs / 1000L)
 }
 
-private Integer getCurrentRuntimeSeconds(Long epoch = now()) {
+private Integer getCurrentRuntimeSeconds(Long epoch = now().intdiv(1000L)) {
     return Math.max(0, getStoredRuntimeSeconds() + getActiveSessionSeconds(epoch))
 }
 
@@ -506,7 +506,7 @@ private void publishRuntimeState(String switchValue = null) {
     Integer runtime = getCurrentRuntimeSeconds()
     Integer runtimeDischarge = getRuntimeDischargeSeconds()
     Integer batteryPct = calculateBatteryPercent(runtime, runtimeDischarge)
-    Long activityEpoch = normalizeLong(state.lastActivity, now())
+    Long activityEpoch = normalizeLong(state.lastActivity, now().intdiv(1000L))
 
     if (switchValue != null) {
         child.publishFromApp('switch', switchValue, null)
