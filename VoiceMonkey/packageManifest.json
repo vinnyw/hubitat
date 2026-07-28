@@ -13,7 +13,7 @@
   "drivers": [
     {
       "id": "c3496739-9d5a-41a1-b78a-127b55709c9d",
-      "name": "VoiceMonkeyDevice-1.1",
+      "name": "VoiceMonkeyDevice-1.1 Driver",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Drivers/VoiceMonkeyDevice-1.1.groovy",
       "required": true
@@ -29,7 +29,7 @@
     },
     {
       "id": "c3496739-c739-433b-a340-3fe150df5e5b",
-      "name": "VoiceMonkeyDevice",
+      "name": "VoiceMonkeyDevice-1.1 Device",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/Apps/VoiceMonkeyDevice-1.1.groovy",
       "required": true
