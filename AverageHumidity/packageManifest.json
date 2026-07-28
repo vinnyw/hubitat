@@ -13,7 +13,7 @@
   "drivers": [
     {
       "id": "4668f9ce-8ef9-4ac6-b143-f565dd2c4f75",
-      "name": "Humidity-2.7",
+      "name": "Humidity-2.7 Driver",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Drivers/Humidity-2.7.groovy",
       "required": true
@@ -22,14 +22,14 @@
   "apps": [
     {
       "id": "4668f9ce-a4ca-4c8c-a3cb-cf1b0fd7b881",
-      "name": "Average Humidity",
+      "name": "Average Humidity Manager",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/AverageHumidity.groovy",
       "required": true
     },
     {
       "id": "4668f9ce-f28f-46c4-b690-78bc3d1948b3",
-      "name": "Humidity-2.7",
+      "name": "Humidity-2.7 Device",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/Apps/Humidity-2.7.groovy",
       "required": true
