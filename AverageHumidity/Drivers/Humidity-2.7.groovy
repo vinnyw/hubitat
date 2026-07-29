@@ -10,6 +10,7 @@
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
+ *      Version 2.7.61 publishes the exact canonical decimal value supplied by the app.
  *
  *      Attributes:
  *          humidity         (number) : app-supplied canonical humidity value
@@ -163,14 +164,14 @@ def presentCalculatedValues(
     trendDisplayValue,
     activityTimestamp
 ) {
-    String canonicalHumidity = humidityValue?.toString()?.trim()
-    String display = humidityDisplayValue?.toString()
-    String eventUnit = humidityUnit?.toString()?.trim()
-    String normalizedTrend = trendValue == null ? '' : trendValue.toString()
-    String normalizedTrendDisplay = trendDisplayValue == null ? '' : trendDisplayValue.toString()
+    if (humidityValue == null) {
+        logWarn('presentCalculatedValues called with a null humidity value')
+        return
+    }
 
+    String canonicalHumidity = humidityValue.toString().trim()
     if (!canonicalHumidity) {
-        logError('presentCalculatedValues called without a humidity value')
+        logWarn('presentCalculatedValues called with an empty humidity value')
         return
     }
 
@@ -181,28 +182,31 @@ def presentCalculatedValues(
         return
     }
 
-    if (display == null) {
-        logError('presentCalculatedValues called without humidity display text')
-        return
-    }
+    String display = humidityDisplayValue == null
+        ? canonicalHumidity
+        : humidityDisplayValue.toString()
 
-    if (!eventUnit) {
-        logError('presentCalculatedValues called without a humidity event unit')
-        return
-    }
+    String eventUnit = humidityUnit == null
+        ? ''
+        : humidityUnit.toString()
 
-    Long activity
+    Long suppliedActivity
     try {
-        activity = activityTimestamp as Long
+        suppliedActivity = activityTimestamp as Long
     } catch (Exception e) {
         logError("Invalid app-supplied activity timestamp '${activityTimestamp}': ${e.message}")
         return
     }
 
-    boolean changed = false
-    String currentHumidity = device.currentValue('humidity')?.toString()
+    String normalizedTrend = trendValue == null ? '' : trendValue.toString()
+    String normalizedTrendDisplay = trendDisplayValue == null ? '' : trendDisplayValue.toString()
 
-    if (currentHumidity != canonicalHumidity) {
+    boolean changed = false
+    String currentRaw = device.currentValue('humidity')?.toString()
+
+    // Compare the raw stored representation with the app's canonical precision.
+    // Do not round the existing value here: 31.83 must not be treated as equal to 31.8.
+    if (currentRaw != canonicalHumidity) {
         sendEvent(
             name: 'humidity',
             value: canonicalHumidity,
@@ -214,23 +218,38 @@ def presentCalculatedValues(
     }
 
     if ((device.currentValue('humidityDisplay') ?: '').toString() != display) {
-        sendEvent(name: 'humidityDisplay', value: display, isStateChange: false, type: 'digital')
+        sendEvent(
+            name: 'humidityDisplay',
+            value: display,
+            isStateChange: true,
+            type: 'digital'
+        )
         changed = true
     }
 
     changed = updateSingleTrendAttribute('trend', normalizedTrend) || changed
     changed = updateSingleTrendAttribute('trendDisplay', normalizedTrendDisplay) || changed
 
-    if (changed) {
-        sendEvent(name: 'lastActivity', value: activity, isStateChange: false, type: 'digital')
+    if (changed || device.currentValue('lastActivity')?.toString() != suppliedActivity.toString()) {
+        sendEvent(
+            name: 'lastActivity',
+            value: suppliedActivity,
+            isStateChange: true,
+            type: 'digital'
+        )
+    }
 
+    if (changed) {
         if (descriptionTextLoggingEnabled()) {
             log.info "${device.displayName} humidity is ${display}"
         }
 
-        logDebug("Presented humidity=${canonicalHumidity}, display=${display}, trend=${normalizedTrend}, trendDisplay=${normalizedTrendDisplay}")
+        logDebug(
+            "Published app-supplied humidity=${canonicalHumidity}, " +
+            "display=${display}, trend=${normalizedTrend}, trendDisplay=${normalizedTrendDisplay}"
+        )
     } else {
-        logDebug("No attribute changes required for humidity=${canonicalHumidity}")
+        logDebug("No attribute changes required for app-supplied humidity=${canonicalHumidity}")
     }
 }
 
