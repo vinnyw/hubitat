@@ -460,7 +460,22 @@ def refresh() {
     Map trendData = updateTrendAndGetValues(rounded)
 
     logDebug("Temperature values=${values}, average=${average}, rounded=${rounded}, trend=${trendData?.trend}, trendDisplay=${trendData?.trendDisplay}")
-    child.setTemperature(rounded, places, selectedUnitDisplay(), trendData?.trend, trendData?.trendDisplay)
+    String canonicalTemperature = rounded.toPlainString()
+    String selectedDisplayUnit = selectedUnitDisplay()
+    String temperatureDisplay = selectedDisplayUnit == 'none'
+        ? canonicalTemperature
+        : "${canonicalTemperature}${selectedDisplayUnit}"
+    String temperatureEventUnit = defaultTemperatureDisplayUnit()
+    Long activityTimestamp = now().intdiv(1000L)
+
+    child.presentCalculatedValues(
+        canonicalTemperature,
+        temperatureDisplay,
+        temperatureEventUnit,
+        trendData?.trend,
+        trendData?.trendDisplay,
+        activityTimestamp
+    )
 }
 
 //

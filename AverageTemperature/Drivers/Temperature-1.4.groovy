@@ -6,7 +6,7 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-05-06
+ *  Date        : 2026-07-29
  *
  *  Description :
  *      Virtual temperature child device managed by the Temperature child app.
@@ -30,6 +30,7 @@
  *          averaged output devices at runtime if they are accidentally selected as inputs.
  *          This local patch also ensures warning/error logs are not hidden by the debug toggle
  *          and clears driver schedules before reconfiguration.
+ *          Version 1.4.17 publishes the exact canonical decimal value supplied by the app.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -131,6 +132,7 @@ def configure() {
     }
 
     logDebug("Configure completed with txtEnable=${settings?.txtEnable}, debugEnable=${settings?.debugEnable}, version=${currentVersion}")
+    parent?.childRefreshRequest()
 }
 
 def installed() {
@@ -162,67 +164,129 @@ def refresh() {
     parent?.childRefreshRequest()
 }
 
-def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = null) {
-    if (val == null) {
-        logWarn('setTemperature called with null value')
+def presentCalculatedValues(
+    temperatureValue,
+    temperatureDisplayValue,
+    temperatureUnit,
+    trendValue,
+    trendDisplayValue,
+    activityTimestamp
+) {
+    if (temperatureValue == null) {
+        logWarn('presentCalculatedValues called with a null temperature value')
         return
     }
 
-    Integer places = 0
-    try {
-        places = decimals as Integer
-    } catch (Exception ignored) {
-        places = 0
+    String canonicalTemperature = temperatureValue.toString().trim()
+    if (!canonicalTemperature) {
+        logWarn('presentCalculatedValues called with an empty temperature value')
+        return
     }
-    places = Math.max(0, Math.min(places, 2))
 
-    // Canonical precision-normalized value used for both temperature and temperatureDisplay.
-    BigDecimal newValue
     try {
-        newValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
+        new BigDecimal(canonicalTemperature)
     } catch (Exception e) {
-        logError("Invalid temperature value '${val}': ${e.message}")
+        logError("Invalid app-supplied temperature value '${temperatureValue}': ${e.message}")
         return
     }
 
-    BigDecimal currentValue = null
-    def currentRaw = device.currentValue('temperature')
-    if (currentRaw != null && currentRaw.toString() != '') {
-        try {
-            currentValue = new BigDecimal(currentRaw.toString()).setScale(places, RoundingMode.HALF_UP)
-        } catch (Exception ignored) {
-            currentValue = null
-        }
+    String display = temperatureDisplayValue == null
+        ? canonicalTemperature
+        : temperatureDisplayValue.toString()
+
+    String eventUnit = temperatureUnit == null
+        ? ''
+        : temperatureUnit.toString()
+
+    Long suppliedActivity
+    try {
+        suppliedActivity = activityTimestamp as Long
+    } catch (Exception e) {
+        logError("Invalid app-supplied activity timestamp '${activityTimestamp}': ${e.message}")
+        return
     }
 
-    String normalizedUnit = normalizeDisplayUnit(unit)
-    String displayValue = (newValue.stripTrailingZeros().scale() <= 0)
-        ? newValue.toBigInteger().toString()
-        : newValue.toString()
-    String display = normalizedUnit == 'none' ? displayValue : "${displayValue}${normalizedUnit}"
     boolean changed = false
+    String currentRaw = device.currentValue('temperature')?.toString()
 
-    if (currentValue == null || currentValue.compareTo(newValue) != 0) {
-        sendEvent(name: 'temperature', value: newValue, unit: eventTemperatureUnit(), isStateChange: true, type: 'digital')
-        sendEvent(name: 'lastActivity', value: now().intdiv(1000L), isStateChange: false, type: 'digital')
+    // Compare the raw stored representation with the app's canonical precision.
+    // Do not round the existing value here: 31.83 must not be treated as equal to 31.8.
+    if (currentRaw != canonicalTemperature) {
+        sendEvent(
+            name: 'temperature',
+            value: canonicalTemperature,
+            unit: eventUnit,
+            isStateChange: true,
+            type: 'digital'
+        )
         changed = true
     }
 
-    if ((device.currentValue('temperatureDisplay') ?: '') != display) {
-        sendEvent(name: 'temperatureDisplay', value: display, isStateChange: false, type: 'digital')
+    if ((device.currentValue('temperatureDisplay') ?: '').toString() != display) {
+        sendEvent(
+            name: 'temperatureDisplay',
+            value: display,
+            isStateChange: true,
+            type: 'digital'
+        )
         changed = true
     }
 
-    changed = updateTrendAttributes(trend, trendDisplay) || changed
+    changed = updateTrendAttributes(trendValue, trendDisplayValue) || changed
+
+    if (changed || device.currentValue('lastActivity')?.toString() != suppliedActivity.toString()) {
+        sendEvent(
+            name: 'lastActivity',
+            value: suppliedActivity,
+            isStateChange: true,
+            type: 'digital'
+        )
+    }
 
     if (changed) {
         if (descriptionTextLoggingEnabled()) {
             log.info "${device.displayName} temperature is ${display}"
         }
-        logDebug("Updated temperature=${newValue}, display=${display}, trend=${trend}, trendDisplay=${trendDisplay}")
+        logDebug(
+            "Published app-supplied temperature=${canonicalTemperature}, " +
+            "display=${display}, trend=${trendValue}, trendDisplay=${trendDisplayValue}"
+        )
     } else {
-        logDebug("No attribute changes required for temperature=${newValue}")
+        logDebug("No attribute changes required for app-supplied temperature=${canonicalTemperature}")
     }
+}
+
+def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = null) {
+    // Backward-compatible entry point. The app remains authoritative.
+    Integer places
+    try {
+        places = Math.max(0, Math.min(decimals as Integer, 2))
+    } catch (Exception ignored) {
+        places = 0
+    }
+
+    BigDecimal canonical
+    try {
+        canonical = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
+    } catch (Exception e) {
+        logError("Invalid legacy temperature value '${val}': ${e.message}")
+        return
+    }
+
+    String numericText = canonical.toPlainString()
+    String normalizedUnit = normalizeDisplayUnit(unit)
+    String display = normalizedUnit == 'none'
+        ? numericText
+        : "${numericText}${normalizedUnit}"
+
+    presentCalculatedValues(
+        numericText,
+        display,
+        eventTemperatureUnit(),
+        trend,
+        trendDisplay,
+        now().intdiv(1000L)
+    )
 }
 
 private String normalizeDisplayUnit(unit) {
