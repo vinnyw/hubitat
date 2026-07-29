@@ -391,35 +391,42 @@ def updated() {
 //
 
 def childRefreshRequest() {
-    if (!getManagedChildDevice()) {
-        ensureManagedChildDevice()
-    }
-    refresh()
+    calculateAndPublish()
+}
+
+def childConfigureRequest() {
+    syncChildPresentationConfiguration()
+    calculateAndPublish()
+}
+
+def childClearTrendRequest() {
+    clearTrendStateAndAttribute()
+    calculateAndPublish()
 }
 
 def humidityHandler(evt) {
     if (!evt) return
 
     logDebug("Humidity event from ${evt.device?.displayName}: ${evt.value}")
-    refresh()
+    calculateAndPublish()
 }
 
 def logsOff() {
     app?.updateSetting('debugEnable', [value: false, type: 'bool'])
-    syncChildSettings()
+    syncChildPresentationConfiguration()
     log.warn "${app.label}: Debug logging disabled automatically after ${getDebugAutoDisableMinutes()} minutes"
 }
 
 def refresh() {
+    calculateAndPublish()
+}
+
+private void calculateAndPublish() {
     List<BigDecimal> values = getValidHumidityValues()
     if (!values) {
         log.warn 'No valid humidity values found from selected sensors.'
         return
     }
-
-    Integer places = decimalPlaces()
-    BigDecimal average = calculateAverage(values)
-    BigDecimal rounded = average.setScale(places, RoundingMode.HALF_UP)
 
     def child = getManagedChildDevice()
     if (!child) {
@@ -435,10 +442,31 @@ def refresh() {
         }
     }
 
+    Integer places = decimalPlaces()
+    BigDecimal average = calculateAverage(values)
+    BigDecimal rounded = average.setScale(places, RoundingMode.HALF_UP)
     Map trendData = updateTrendAndGetValues(rounded)
 
-    logDebug("Humidity values=${values}, average=${average}, rounded=${rounded}, trend=${trendData?.trend}, trendDisplay=${trendData?.trendDisplay}")
-    child.setHumidity(rounded, places, selectedUnitDisplay(), trendData?.trend, trendData?.trendDisplay)
+    String canonicalHumidity = rounded.toPlainString()
+    String displayUnit = selectedUnitDisplay()
+    String humidityDisplay = displayUnit == 'none' ? canonicalHumidity : "${canonicalHumidity}${displayUnit}"
+    String eventUnit = '%rh'
+    Long activityTimestamp = now().intdiv(1000L)
+
+    logDebug("Humidity values=${values}, average=${average}, rounded=${canonicalHumidity}, trend=${trendData?.trend}, trendDisplay=${trendData?.trendDisplay}")
+
+    try {
+        child.presentCalculatedValues(
+            canonicalHumidity,
+            humidityDisplay,
+            eventUnit,
+            trendData?.trend,
+            trendData?.trendDisplay,
+            activityTimestamp
+        )
+    } catch (Exception e) {
+        logWarn("Unable to publish calculated humidity values: ${e.message}")
+    }
 }
 
 //
@@ -565,13 +593,21 @@ def getChildDriverLoggingConfig() {
 }
 
 def syncChildSettings() {
+    syncChildPresentationConfiguration()
+}
+
+private void syncChildPresentationConfiguration() {
     def child = getManagedChildDevice()
     if (!child) return
 
     try {
-        child.configure()
+        child.applyPresentationConfiguration(
+            descriptionTextLoggingEnabled(),
+            debugLoggingEnabled(),
+            getDebugAutoDisableSeconds()
+        )
     } catch (Exception e) {
-        logWarn("Unable to configure child device from app settings: ${e.message}")
+        logWarn("Unable to synchronise child presentation settings: ${e.message}")
     }
 }
 
@@ -582,7 +618,7 @@ def updateLoggingFromDriver(txtEnableValue, debugEnableValue) {
     app?.updateSetting('txtEnable', [value: descEnabled, type: 'bool'])
     app?.updateSetting('debugEnable', [value: debugEnabled, type: 'bool'])
 
-    syncChildSettings()
+    syncChildPresentationConfiguration()
 }
 
 //
@@ -772,8 +808,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
 
 private void clearTrendStateAndAttribute() {
     state.remove('humidityHistory')
-    def child = getManagedChildDevice()
-    child?.clearTrend()
 }
 
 private void trimHistoryToConfiguredSize() {

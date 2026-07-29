@@ -6,13 +6,13 @@
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
  *  Version     : Parent-managed (via child app -> parent app)
- *  Date        : 2026-07-28
+ *  Date        : 2026-07-29
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
  *
  *      Attributes:
- *          humidity         (number) : standard whole-number humidity value for broad app compatibility
+ *          humidity         (number) : app-supplied canonical humidity value
  *          humidityDisplay  (string) : formatted humidity value
  *          trend            (string) : trend
  *          trendDisplay     (string) : formatted trend
@@ -34,7 +34,6 @@
  */
 
 import groovy.transform.Field
-import java.math.RoundingMode
 
 metadata {
     definition(
@@ -89,10 +88,14 @@ def configure() {
 
     Map cfg = parent?.getChildDriverLoggingConfig()
     if (cfg instanceof Map) {
-        applyParentLogging(cfg.txtEnable, cfg.debugEnable, cfg.debugAutoDisableSeconds)
+        applyPresentationConfiguration(
+            cfg.txtEnable,
+            cfg.debugEnable,
+            cfg.debugAutoDisableSeconds
+        )
+    } else {
+        scheduleDebugAutoDisableIfNeeded()
     }
-
-    scheduleDebugAutoDisableIfNeeded()
 
     String previousVersion = state.driverVersion
     String currentVersion = getVersion()
@@ -108,6 +111,13 @@ def configure() {
         log.info "${device.displayName}: Driver upgraded from ${prevDisplay} to ${currDisplay}"
     }
 
+    initializeMissingPresentationAttributes()
+
+    logDebug("Configure completed with txtEnable=${settings?.txtEnable}, debugEnable=${settings?.debugEnable}, version=${currentVersion}; requesting authoritative replay")
+    parent?.childConfigureRequest()
+}
+
+private void initializeMissingPresentationAttributes() {
     if (device.currentValue('humidityDisplay') == null) {
         sendEvent(name: 'humidityDisplay', value: '', isStateChange: false, type: 'digital')
     }
@@ -119,17 +129,6 @@ def configure() {
     if (device.currentValue('trendDisplay') == null) {
         sendEvent(name: 'trendDisplay', value: '', isStateChange: false, type: 'digital')
     }
-
-    if (device.currentValue('lastActivity') == null) {
-        sendEvent(
-            name: 'lastActivity',
-            value: now().intdiv(1000L),
-            isStateChange: false,
-            type: 'digital'
-        )
-    }
-
-    logDebug("Configure completed with txtEnable=${settings?.txtEnable}, debugEnable=${settings?.debugEnable}, version=${currentVersion}")
 }
 
 def installed() {
@@ -147,13 +146,8 @@ def updated() {
 //
 
 def clearTrend() {
-    boolean changed = false
-    changed = updateSingleTrendAttribute('trend', '') || changed
-    changed = updateSingleTrendAttribute('trendDisplay', '') || changed
-
-    if (changed) {
-        logDebug('Trend cleared')
-    }
+    logDebug('Clear Trend requested; delegating authoritative state change to child app')
+    parent?.childClearTrendRequest()
 }
 
 def refresh() {
@@ -161,66 +155,96 @@ def refresh() {
     parent?.childRefreshRequest()
 }
 
-def setHumidity(val, decimals = 0, unit = '%', trend = null, trendDisplay = null) {
-    if (val == null) {
-        logWarn('setHumidity called with null value')
+def presentCalculatedValues(
+    humidityValue,
+    humidityDisplayValue,
+    humidityUnit,
+    trendValue,
+    trendDisplayValue,
+    activityTimestamp
+) {
+    String canonicalHumidity = humidityValue?.toString()?.trim()
+    String display = humidityDisplayValue?.toString()
+    String eventUnit = humidityUnit?.toString()?.trim()
+    String normalizedTrend = trendValue == null ? '' : trendValue.toString()
+    String normalizedTrendDisplay = trendDisplayValue == null ? '' : trendDisplayValue.toString()
+
+    if (!canonicalHumidity) {
+        logError('presentCalculatedValues called without a humidity value')
         return
     }
 
-    Integer places = 0
     try {
-        places = decimals as Integer
-    } catch (Exception ignored) {
-        places = 0
-    }
-    places = Math.max(0, Math.min(places, 2))
-
-    BigDecimal exactValue
-    try {
-        exactValue = new BigDecimal(val.toString()).setScale(places, RoundingMode.HALF_UP)
+        new BigDecimal(canonicalHumidity)
     } catch (Exception e) {
-        logError("Invalid humidity value '${val}': ${e.message}")
+        logError("Invalid app-supplied humidity value '${humidityValue}': ${e.message}")
         return
     }
 
-    BigDecimal standardValue = exactValue
-
-    BigDecimal currentStandardValue = null
-    def currentHumidityRaw = device.currentValue('humidity')
-    if (currentHumidityRaw != null && currentHumidityRaw.toString() != '') {
-        try {
-            currentStandardValue = new BigDecimal(currentHumidityRaw.toString()).setScale(places, RoundingMode.HALF_UP)
-        } catch (Exception ignored) {
-            currentStandardValue = null
-        }
+    if (display == null) {
+        logError('presentCalculatedValues called without humidity display text')
+        return
     }
 
-    String normalizedUnit = unit == null ? '%' : unit.toString()
-    String displayValue = (exactValue.stripTrailingZeros().scale() <= 0) ? exactValue.toBigInteger().toString() : exactValue.toString()
-    String display = normalizedUnit == 'none' ? displayValue : "${displayValue}${normalizedUnit}"
-    boolean changed = false
+    if (!eventUnit) {
+        logError('presentCalculatedValues called without a humidity event unit')
+        return
+    }
 
-    if (currentStandardValue == null || currentStandardValue != standardValue) {
-        sendEvent(name: 'humidity', value: standardValue, unit: '%rh', isStateChange: true, type: 'digital')
+    Long activity
+    try {
+        activity = activityTimestamp as Long
+    } catch (Exception e) {
+        logError("Invalid app-supplied activity timestamp '${activityTimestamp}': ${e.message}")
+        return
+    }
+
+    boolean changed = false
+    String currentHumidity = device.currentValue('humidity')?.toString()
+
+    if (currentHumidity != canonicalHumidity) {
+        sendEvent(
+            name: 'humidity',
+            value: canonicalHumidity,
+            unit: eventUnit,
+            isStateChange: true,
+            type: 'digital'
+        )
         changed = true
     }
 
-    if ((device.currentValue('humidityDisplay') ?: '') != display) {
+    if ((device.currentValue('humidityDisplay') ?: '').toString() != display) {
         sendEvent(name: 'humidityDisplay', value: display, isStateChange: false, type: 'digital')
         changed = true
     }
 
-    changed = updateTrendAttributes(trend, trendDisplay) || changed
+    changed = updateSingleTrendAttribute('trend', normalizedTrend) || changed
+    changed = updateSingleTrendAttribute('trendDisplay', normalizedTrendDisplay) || changed
 
     if (changed) {
-        sendEvent(name: 'lastActivity', value: now().intdiv(1000L), isStateChange: false, type: 'digital')
+        sendEvent(name: 'lastActivity', value: activity, isStateChange: false, type: 'digital')
+
         if (descriptionTextLoggingEnabled()) {
             log.info "${device.displayName} humidity is ${display}"
         }
-        logDebug("Updated humidity=${standardValue}, display=${display}, trend=${trend}, trendDisplay=${trendDisplay}")
+
+        logDebug("Presented humidity=${canonicalHumidity}, display=${display}, trend=${normalizedTrend}, trendDisplay=${normalizedTrendDisplay}")
     } else {
-        logDebug("No attribute changes required for humidity=${standardValue}")
+        logDebug("No attribute changes required for humidity=${canonicalHumidity}")
     }
+}
+
+def applyPresentationConfiguration(
+    txtEnableValue,
+    debugEnableValue,
+    debugAutoDisableSecondsValue
+) {
+    applyParentLogging(
+        txtEnableValue,
+        debugEnableValue,
+        debugAutoDisableSecondsValue
+    )
+    scheduleDebugAutoDisableIfNeeded()
 }
 
 private void ensureAverageHumidityOutputMarker() {

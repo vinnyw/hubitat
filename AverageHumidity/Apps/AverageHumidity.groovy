@@ -23,7 +23,7 @@ import groovy.transform.Field
 //
 
 def getVersion() {
-    return '2.7.59'
+    return '2.7.60'
 }
 
 //
