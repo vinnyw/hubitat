@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.33
+ *  Version     : 1.3.34
  *  Date        : 2026-08-06
  *
  *  Description :
@@ -124,7 +124,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.33'
+    return '1.3.34'
 }
 
 private String htmlEncode(Object value) {
@@ -154,6 +154,7 @@ def initialize() {
 
     syncChildLabelSettingAndDevice()
     syncChildSettings()
+    resetPublicationCacheIfChildIsEmpty()
     state.setupComplete = true
 
     if (!checkCompatibleLocale()) {
@@ -467,6 +468,7 @@ private Boolean createChildDeviceIfMissing() {
             return false
         }
 
+        state.remove('publishedAttributeValueCache')
         logDebug("Created DateHub child device ${child.displayName} using driver ${driverType}")
         return true
     } catch (Exception e) {
@@ -478,6 +480,18 @@ private Boolean createChildDeviceIfMissing() {
 
 private def holidayDevice() {
     return getChildDevice(childDni())
+}
+
+private void resetPublicationCacheIfChildIsEmpty() {
+    def child = holidayDevice()
+    if (!child) {
+        return
+    }
+
+    if (child.currentValue('isPublicHoliday') == null) {
+        state.remove('publishedAttributeValueCache')
+        logDebug('Cleared retained publication cache because the DateHub child has no published data')
+    }
 }
 
 private Boolean isExpectedChild(String dni) {

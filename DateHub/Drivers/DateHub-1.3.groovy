@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.33
+ *  Version     : 1.3.34
  *  Date        : 2026-08-06
  *
  *  Description :
