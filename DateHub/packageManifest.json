@@ -13,7 +13,7 @@
   "drivers": [
     {
       "id": "22daf9ff-37d6-4fa8-8bcc-f088ff26ef3f",
-      "name": "DateHub-1.3",
+      "name": "DateHub-1.3 Driver",
       "namespace": "vinnyw",
       "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/DateHub/Drivers/DateHub-1.3.groovy",
       "required": true
