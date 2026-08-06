@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.3.12",
   "dateReleased": "2026-08-06",
-  "releaseNotes": "Create the child device using a driver type derived from the app short version. WeatherHub 1.3.12 now resolves to the WeatherHub-1.3 child driver, matching the VirtualBattery pattern.",
+  "releaseNotes": "Create the child device using a driver type derived from the app short version. WeatherHub 1.3.12 now resolves to the WeatherHub-1.3 child driver.",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/WeatherHub",
   "communityLink": "",
   "category": "Convenience",
