@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.10
- *  Date        : 2026-07-28
+ *  Version     : 1.3.12
+ *  Date        : 2026-08-06
  *
  *  Description :
  *      Child device driver for WeatherHub.
@@ -57,10 +57,10 @@
 
 metadata {
     definition(
-        name: 'WeatherHub',
+        name: 'WeatherHub-1.3',
         namespace: 'vinnyw',
         author: 'Vinny Wadding',
-        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/Drivers/WeatherHub.groovy',
+        importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/Drivers/WeatherHub-1.3.groovy',
         iconUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/resources/weatherhub.png',
         iconX2Url: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/resources/weatherhub.png'
     ) {
@@ -310,7 +310,7 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
 
 private void initializeAttributes() {
     initializeIfMissing('windDirectionCardinal', 'Unknown')
-    initializeIfMissing('uvLevel', 'unknown')
+    initializeIfMissing('uvLevel', 'Unknown')
 }
 
 private void initializeIfMissing(String name, def value) {
@@ -352,10 +352,10 @@ private String uvIndexToLevel(def uvValue) {
     }
 
     if (uv <= 2G) return 'Low'
-    if (uv <= 5G) return 'Medium'
+    if (uv <= 5G) return 'Moderate'
     if (uv <= 7G) return 'High'
-    if (uv <= 10G) return 'Very high'
-    return 'Extremely high'
+    if (uv <= 10G) return 'Very High'
+    return 'Extreme'
 }
 
 private BigDecimal safeDecimal(def value) {

@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.10
- *  Date        : 2026-07-28
+ *  Version     : 1.3.12
+ *  Date        : 2026-08-06
  *
  *  Description :
  *      Parent application for WeatherHub.
@@ -264,7 +264,7 @@ private String htmlEncode(Object value) {
 }
 
 String getVersion() {
-    return '1.3.10'
+    return '1.3.12'
 }
 
 void installed() {
@@ -400,35 +400,59 @@ private String hubLocationSummary() {
 }
 
 private String childDeviceNetworkId() {
-    return "${app.id}-weather"
+    return "${app.id}-weatherhub"
 }
 
 private Boolean createChildDeviceIfMissing() {
     String dni = childDeviceNetworkId()
+    String driverType = getChildDriverType()
+    String desiredLabel = normalizeLabelValue(settings?.childLabel, driverType)
 
-    if (getChildDevice(dni)) {
-        return true
+    def child = getChildDevice(dni)
+
+    if (!child) {
+        try {
+            addChildDevice(
+                'vinnyw',
+                driverType,
+                dni,
+                [
+                    name: driverType,
+                    label: desiredLabel,
+                    isComponent: false
+                ]
+            )
+        } catch (Exception e) {
+            state.setupComplete = false
+            logWarn("Unable to create WeatherHub child device. Verify driver ${driverType} (namespace 'vinnyw') is installed. ${e.message}")
+            return false
+        }
+
+        child = getChildDevice(dni)
     }
 
-    String desiredLabel = normalizeLabelValue(settings?.childLabel, 'WeatherHub')
-
-    try {
-        addChildDevice(
-            'vinnyw',
-            'WeatherHub',
-            dni,
-            [
-                name: 'WeatherHub Weather',
-                label: desiredLabel,
-                isComponent: false
-            ]
-        )
-        return true
-    } catch (Exception e) {
+    if (!child) {
         state.setupComplete = false
-        logWarn("Unable to create WeatherHub child device ${dni}: ${e.message}")
+        logWarn("WeatherHub child device was not found after creation for ${dni}")
         return false
     }
+
+    if (desiredLabel && child.label != desiredLabel) {
+        child.setLabel(desiredLabel)
+    }
+
+    logText("WeatherHub child device ready: ${child.displayName}")
+    return true
+}
+
+private String getChildDriverType() {
+    return "WeatherHub-${extractShortVersion(getVersion())}"
+}
+
+private String extractShortVersion(String version) {
+    String raw = version?.toString()?.trim() ?: 'unknown'
+    def matcher = raw =~ /(\d+\.\d+)/
+    return matcher.find() ? matcher.group(1) : raw
 }
 
 private def weatherDevice() {
