@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.31
- *  Date        : 2026-07-16
+ *  Version     : 1.3.33
+ *  Date        : 2026-08-06
  *
  *  Description :
  *      Parent application for DateHub.
@@ -124,7 +124,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.31'
+    return '1.3.33'
 }
 
 private String htmlEncode(Object value) {
@@ -424,8 +424,17 @@ private List<String> ukCompatibleTimeZones() {
 //    CHILD DEVICE MANAGEMENT
 //
 
+private String getShortVersion() {
+    List<String> parts = getVersion()?.toString()?.tokenize('.') ?: []
+    return parts.size() >= 2 ? "${parts[0]}.${parts[1]}" : getVersion()?.toString()
+}
+
+private String getChildDriverType() {
+    return "DateHub-${getShortVersion()}"
+}
+
 private String childDni() {
-    return "datehub-${app.id}"
+    return "${app.id}-datehub"
 }
 
 private Boolean createChildDeviceIfMissing() {
@@ -436,22 +445,33 @@ private Boolean createChildDeviceIfMissing() {
     }
 
     String desiredLabel = normalizeLabelValue(settings?.childLabel, 'DateHub')
+    String driverType = getChildDriverType()
 
     try {
-        addChildDevice(
+        def child = addChildDevice(
             'vinnyw',
-            'DateHub-1.3',
+            driverType,
             dni,
             [
-                name: 'DateHub-1.3',
+                name: driverType,
                 label: desiredLabel,
                 isComponent: false
             ]
         )
+
+        child = child ?: getChildDevice(dni)
+
+        if (!child) {
+            state.setupComplete = false
+            logWarn("Hubitat did not return the DateHub child device after creation for ${dni}. Verify driver ${driverType} (namespace 'vinnyw') is installed.")
+            return false
+        }
+
+        logDebug("Created DateHub child device ${child.displayName} using driver ${driverType}")
         return true
     } catch (Exception e) {
         state.setupComplete = false
-        logWarn("Unable to create DateHub child device ${dni}: ${e.message}")
+        logWarn("Unable to create DateHub child device ${dni} using driver ${driverType}: ${e.message}")
         return false
     }
 }
