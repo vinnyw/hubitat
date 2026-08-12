@@ -472,16 +472,14 @@ private String getStableChildDni() {
 //    RUNTIME STATE HELPERS
 //
 
-private BigDecimal calculateBatteryPercent(Integer runtime, Integer runtimeDischarge) {
+private Integer calculateBatteryPercent(Integer runtime, Integer runtimeDischarge) {
     Integer discharge = Math.max(1, runtimeDischarge ?: DEFAULT_RUNTIME_DISCHARGE_SECONDS)
 
     BigDecimal remaining = 100G - ((runtime as BigDecimal) * 100G / (discharge as BigDecimal))
     BigDecimal bounded = remaining.max(0G).min(100G)
 
-    // Battery capability is NUMBER (0-100), so retain two decimal places.
-    // This allows normal runtime ticks to produce visible battery changes instead
-    // of hiding them behind whole-percent rounding.
-    return bounded.setScale(2, BigDecimal.ROUND_HALF_UP)
+    // Publish Battery as an integer percentage.
+    return bounded.setScale(0, BigDecimal.ROUND_HALF_UP) as Integer
 }
 
 private String formatDuration(value) {
@@ -540,7 +538,7 @@ private void publishRuntimeState(String switchValue = null) {
 
     Integer runtime = getCurrentRuntimeSeconds()
     Integer runtimeDischarge = getRuntimeDischargeSeconds()
-    BigDecimal batteryPct = calculateBatteryPercent(runtime, runtimeDischarge)
+    Integer batteryPct = calculateBatteryPercent(runtime, runtimeDischarge)
     Long activityEpoch = normalizeLong(state.lastActivity, now().intdiv(1000L))
 
     if (switchValue != null) {
