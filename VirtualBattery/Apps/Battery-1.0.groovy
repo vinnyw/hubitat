@@ -479,7 +479,8 @@ private Integer calculateBatteryPercent(Integer runtime, Integer runtimeDischarg
     BigDecimal bounded = remaining.max(0G).min(100G)
 
     // Publish Battery as an integer percentage.
-    return bounded.setScale(0, BigDecimal.ROUND_HALF_UP) as Integer
+    // Floor the remaining percentage so any non-zero discharge is reflected immediately.
+    return bounded.setScale(0, BigDecimal.ROUND_FLOOR) as Integer
 }
 
 private String formatDuration(value) {
