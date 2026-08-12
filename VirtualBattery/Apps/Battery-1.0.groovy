@@ -228,7 +228,12 @@ private void updateRuntimeStateFromInputs() {
         secondsToDurationSettings(configuredDischarge, 'runtimeDischargeHours', 'runtimeDischargeMinutes', 'runtimeDischargeSeconds')
     }
 
-    state.runtime = configuredRuntime
+    // Do not overwrite the saved runtime baseline while an ON session is active.
+    // The current session is represented by state.startEpoch and is added dynamically.
+    if (!state.startEpoch) {
+        state.runtime = configuredRuntime
+    }
+
     state.runtimeDischarge = configuredDischarge
     state.lastActivity = state.lastActivity ?: now().intdiv(1000L)
 }
@@ -256,6 +261,10 @@ def initialize() {
     syncChildSettings()
     scheduleDebugAutoDisableIfNeeded()
     publishRuntimeState()
+
+    if (state.startEpoch) {
+        scheduleRuntimeTick()
+    }
 }
 
 def installed() {
@@ -317,6 +326,8 @@ def childConfigureRequest(String dni = null) {
 def childOff(String dni = null) {
     if (!deviceMatchesManagedChild(dni)) return
 
+    unschedule('runtimeTick')
+
     Long epoch = now().intdiv(1000L)
     Integer elapsed = getActiveSessionSeconds(epoch)
 
@@ -343,6 +354,25 @@ def childOn(String dni = null) {
     }
 
     publishRuntimeState('on')
+    scheduleRuntimeTick()
+}
+
+private void scheduleRuntimeTick() {
+    unschedule('runtimeTick')
+
+    if (state.startEpoch) {
+        runIn(60, 'runtimeTick')
+    }
+}
+
+def runtimeTick() {
+    if (!state.startEpoch) {
+        unschedule('runtimeTick')
+        return
+    }
+
+    publishRuntimeState()
+    scheduleRuntimeTick()
 }
 
 def childRefreshRequest(String dni = null) {
@@ -461,8 +491,8 @@ private Integer getActiveSessionSeconds(Long epoch = now().intdiv(1000L)) {
     if (!state.startEpoch) return 0
 
     Long started = normalizeLong(state.startEpoch, epoch)
-    Long elapsedMs = Math.max(0L, epoch - started)
-    return (int)(elapsedMs / 1000L)
+    Long elapsedSeconds = Math.max(0L, epoch - started)
+    return elapsedSeconds > Integer.MAX_VALUE ? Integer.MAX_VALUE : elapsedSeconds as Integer
 }
 
 private Integer getCurrentRuntimeSeconds(Long epoch = now().intdiv(1000L)) {
