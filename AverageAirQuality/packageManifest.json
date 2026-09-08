@@ -1,0 +1,38 @@
+{
+  "id": "f022ccf5",
+  "packageName": "Average Air Quality",
+  "author": "Vinny Wadding",
+  "minimumHEVersion": "2.3.0",
+  "version": "1.0.4",
+  "dateReleased": "2026-09-9o",
+  "releaseNotes": "",
+  "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageAirQuality",
+  "communityLink": "https://community.hubitat.com/",
+  "category": "Convenience",
+  "tags": "Convenience, Sensors, Automation",
+  "drivers": [
+    {
+      "id": "f022ccf5-0900-4897-8ac7-1880a0eb5684",
+      "name": "AirQuality-1.0 Driver",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageAirQuality/Drivers/AirQuality-1.0.groovy",
+      "required": true
+    }
+  ],
+  "apps": [
+    {
+      "id": "f022ccf5-d274-4b05-ac91-bcd3d8d1125f",
+      "name": "Average Air Quality Manager",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageAirQuality/Apps/AverageAirQuality.groovy",
+      "required": true
+    },
+    {
+      "id": "f022ccf5-3578-4a05-883f-263be528ea9f",
+      "name": "AirQuality-1.0 Device",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageAirQuality/Apps/AirQuality-1.0.groovy",
+      "required": true
+    }
+  ]
+}
