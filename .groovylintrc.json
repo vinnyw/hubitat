@@ -1,11 +1,14 @@
 {
-  "extends": "recommended",
-  "rules": {
-    "formatting.Indentation": {
-      "spacesPerIndentLevel": 4,
-      "severity": "warning"
-    },
-    "formatting.NoTabCharacter": "error",
-    "UnnecessarySemicolon": "warning"
-  }
+    "extends": "recommended",
+    "rules": {
+        "LineLength": {
+            "enabled": false
+        },
+        "UnnecessarySemicolon": "warning",
+        "formatting.Indentation": {
+            "spacesPerIndentLevel": 4,
+            "severity": "warning"
+        },
+        "formatting.NoTabCharacter": "error"
+    }
 }

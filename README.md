@@ -1,4 +1,7 @@
 ### Average Humidity
+https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageAirQuality/packageManifest.json
+
+### Average Humidity
 https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageHumidity/packageManifest.json
 
 ### Average Temperature
