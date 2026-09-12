@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.13
- *  Date        : 2026-09-12
+ *  Version     : 1.3.12
+ *  Date        : 2026-08-06
  *
  *  Description :
  *      Child device driver for WeatherHub.
@@ -31,8 +31,6 @@
  *          feelsLike
  *          forecastTime
  *          lastActivity
- *          lastApiError
- *          lastError
  *          locationName
  *          precipitationAmount
  *          precipitationProbability
@@ -76,8 +74,6 @@ metadata {
 
         attribute 'forecastTime', 'string'
         attribute 'lastActivity', 'number'
-        attribute 'lastApiError', 'string'
-        attribute 'lastError', 'string'
         attribute 'locationName', 'string'
 
         attribute 'precipitationAmount', 'number'
@@ -144,9 +140,6 @@ def configure() {
 
     scheduleDebugAutoDisableIfNeeded()
     initializeAttributes()
-    publishChanged('lastApiError', 'None')
-    publishChanged('lastError', 'None')
-    parent?.childConfigure()
     synchronizeDriverVersion()
 
     logDebug("Configure completed with txtEnable=${settings?.txtEnable}, debugEnable=${settings?.debugEnable}, version=${getVersion()}")
@@ -176,8 +169,6 @@ void updateWeather(Map values) {
 
     publishChanged('lastActivity', values.lastActivity)
     publishChanged('forecastTime', values.forecastTime)
-    publishChanged('lastApiError', values.lastApiError)
-    publishChanged('lastError', values.lastError)
     publishChanged('locationName', values.locationName)
     publishChanged('weatherCode', values.weatherCode)
     publishChanged('weatherCondition', values.weatherCondition)
@@ -212,15 +203,6 @@ void updateWeather(Map values) {
     publishChanged('snowAmount', values.snowAmount, 'mm')
     publishChanged('precipitationProbability', values.precipitationProbability, '%')
     logText('Weather forecast attributes updated')
-}
-
-void updateErrors(Map values) {
-    if (!values) {
-        return
-    }
-
-    publishChanged('lastApiError', values.lastApiError)
-    publishChanged('lastError', values.lastError)
 }
 
 //
@@ -329,8 +311,6 @@ private Boolean normalizeBoolean(value, Boolean defaultValue) {
 private void initializeAttributes() {
     initializeIfMissing('windDirectionCardinal', 'Unknown')
     initializeIfMissing('uvLevel', 'Unknown')
-    initializeIfMissing('lastApiError', 'None')
-    initializeIfMissing('lastError', 'None')
 }
 
 private void initializeIfMissing(String name, def value) {

@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.13
- *  Date        : 2026-09-12
+ *  Version     : 1.3.14
+ *  Date        : 2026-08-06
  *
  *  Description :
  *      Parent application for WeatherHub.
@@ -48,7 +48,6 @@ import groovy.transform.Field
 @Field static final String MET_OFFICE_API_TIMESTEP = 'hourly'   //  valid steps are 'hourly', 'three-hourly' or 'daily'
 @Field static final Boolean MET_OFFICE_API_INCLUDE_LOCATION_NAME = true
 @Field static final Boolean MET_OFFICE_API_INCLUDE_PARAMETER_METADATA = false
-@Field static final String NO_ERROR_DISPLAY = 'None'
 
 preferences {
     page(name: 'mainPage')
@@ -265,7 +264,7 @@ private String htmlEncode(Object value) {
 }
 
 String getVersion() {
-    return '1.3.13'
+    return '1.3.14'
 }
 
 void installed() {
@@ -564,10 +563,6 @@ void scheduledPoll() {
     pollWeather()
 }
 
-void childConfigure() {
-    clearErrorState()
-}
-
 void childRefresh() {
     if (!credentialsConfigured()) {
         publishError('Configuration incomplete: API token is required')
@@ -622,7 +617,7 @@ private void pollWeather() {
         asynchttpGet('weatherResponseHandler', params)
     } catch (Exception exception) {
         clearRequestGuard()
-        publishError("Request failed: ${safeMessage(exception)}", true)
+        publishError("Request failed: ${safeMessage(exception)}")
     }
 }
 
@@ -641,7 +636,7 @@ void weatherResponseHandler(response, data) {
         if (!detail) {
             detail = httpStatus != null ? "HTTP ${httpStatus}" : 'No HTTP response'
         }
-        publishError("API error: ${detail}", true)
+        publishError("API error: ${detail}")
         return
     }
 
@@ -651,7 +646,7 @@ void weatherResponseHandler(response, data) {
         Map feature = selectLatestFeature(features)
 
         if (!feature) {
-            publishError('No forecast feature returned', true)
+            publishError('No forecast feature returned')
             return
         }
 
@@ -659,28 +654,24 @@ void weatherResponseHandler(response, data) {
         List periods = properties.timeSeries instanceof List ? (List) properties.timeSeries : []
 
         if (!periods) {
-            publishError('No forecast periods returned', true)
+            publishError('No forecast periods returned')
             return
         }
 
         String incomingModelRunDate = properties.modelRunDate?.toString()
         if (isOlderModelRun(incomingModelRunDate, state.lastModelRunDate?.toString())) {
-            publishError("Older model run ignored: ${incomingModelRunDate}", true)
+            publishError("Older model run ignored: ${incomingModelRunDate}")
             return
         }
 
         Map period = selectCurrentPeriod(periods)
         if (!period) {
-            publishError('No usable forecast period returned', true)
+            publishError('No usable forecast period returned')
             return
         }
 
         Map output = normalizeForecast(period, properties)
         output.lastActivity = (long)(new Date().getTime() / 1000L)
-        state.lastApiError = ''
-        state.lastError = ''
-        output.lastApiError = NO_ERROR_DISPLAY
-        output.lastError = NO_ERROR_DISPLAY
 
         if (!createChildDeviceIfMissing()) {
             publishError('Unable to create WeatherHub child device')
@@ -701,7 +692,7 @@ void weatherResponseHandler(response, data) {
 
         logDebug("Published model run ${incomingModelRunDate ?: 'unknown'} for forecast ${output.forecastTime ?: 'unknown'}.")
     } catch (Exception exception) {
-        publishError("Response parsing failed: ${safeMessage(exception)}", true)
+        publishError("Response parsing failed: ${safeMessage(exception)}")
     }
 }
 
@@ -944,36 +935,8 @@ private String weatherCodeDescription(def codeValue) {
         'not available'
 }
 
-private void publishError(String message, Boolean apiError = false) {
-    String cleanMessage = message?.toString()?.trim() ?: 'Unknown error'
-
-    log.error "WeatherHub: ${cleanMessage}"
-
-    state.lastError = cleanMessage
-    if (apiError) {
-        state.lastApiError = cleanMessage
-    }
-
-    def child = weatherDevice()
-    if (child) {
-        child.updateErrors([
-            lastApiError: state.lastApiError ?: NO_ERROR_DISPLAY,
-            lastError   : state.lastError ?: NO_ERROR_DISPLAY
-        ])
-    }
-}
-
-private void clearErrorState() {
-    state.lastApiError = ''
-    state.lastError = ''
-
-    def child = weatherDevice()
-    if (child) {
-        child.updateErrors([
-            lastApiError: NO_ERROR_DISPLAY,
-            lastError   : NO_ERROR_DISPLAY
-        ])
-    }
+private void publishError(String message) {
+    log.error "WeatherHub: ${message}"
 }
 
 /**
