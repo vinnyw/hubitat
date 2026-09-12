@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.34
+ *  Version     : 1.3.35
  *  Date        : 2026-08-06
  *
  *  Description :
@@ -124,7 +124,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.34'
+    return '1.3.35'
 }
 
 private String htmlEncode(Object value) {
