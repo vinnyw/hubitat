@@ -274,7 +274,7 @@ private Integer decimalPlaces() {
 
 private String formatWithUnit(BigDecimal value) {
     String u = selectedUnitDisplay()
-    return u == 'none' ? "${value}" : "${value}${u}"
+    return u == 'none' ? "${value}" : "${value} ${u}"
 }
 
 private Integer recommendedTrendDepth() {
@@ -464,7 +464,7 @@ def refresh() {
     String selectedDisplayUnit = selectedUnitDisplay()
     String temperatureDisplay = selectedDisplayUnit == 'none'
         ? canonicalTemperature
-        : "${canonicalTemperature}${selectedDisplayUnit}"
+        : "${canonicalTemperature} ${selectedDisplayUnit}"
     String temperatureEventUnit = defaultTemperatureDisplayUnit()
     Long activityTimestamp = now().intdiv(1000L)
 

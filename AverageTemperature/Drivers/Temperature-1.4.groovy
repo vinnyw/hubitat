@@ -30,7 +30,7 @@
  *          averaged output devices at runtime if they are accidentally selected as inputs.
  *          This local patch also ensures warning/error logs are not hidden by the debug toggle
  *          and clears driver schedules before reconfiguration.
- *          Version 1.4.17 publishes the exact canonical decimal value supplied by the app.
+ *          Version 1.4.18 formats temperatureDisplay with SI-style spacing before the unit.
  *
  *  --------------------------------------------------------------------------------------------------------------
  */
@@ -277,7 +277,7 @@ def setTemperature(val, decimals = 0, unit = null, trend = null, trendDisplay = 
     String normalizedUnit = normalizeDisplayUnit(unit)
     String display = normalizedUnit == 'none'
         ? numericText
-        : "${numericText}${normalizedUnit}"
+        : "${numericText} ${normalizedUnit}"
 
     presentCalculatedValues(
         numericText,
