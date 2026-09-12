@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.35
- *  Date        : 2026-08-06
+ *  Version     : 1.3.36
+ *  Date        : 2026-09-12
  *
  *  Description :
  *      Parent application for DateHub.
@@ -43,6 +43,7 @@ import groovy.transform.Field
 
 @Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 @Field static final String DEFAULT_HTTP_JSON = 'https://www.gov.uk/bank-holidays.json'
+@Field static final String NO_ERROR_DISPLAY = 'None'
 @Field static final Integer DEFAULT_HTTP_TIMEOUT_SECONDS = 5
 
 //
@@ -124,7 +125,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.35'
+    return '1.3.36'
 }
 
 private String htmlEncode(Object value) {
@@ -218,6 +219,7 @@ def deviceClearCache(String dni = null) {
     state.lastUpdatedMs = now()
     state.lastError = ''
     state.cacheStatus = 'Cleared'
+    invalidatePublishedAttribute('lastError')
 
     publishEmptyValues('Cleared')
     logText('Holiday cache cleared')
@@ -230,6 +232,7 @@ def deviceConfigure(String dni = null) {
     }
 
     state.lastError = ''
+    invalidatePublishedAttribute('lastError')
 
     if (!createChildDeviceIfMissing()) {
         state.setupComplete = false
@@ -496,6 +499,22 @@ private void resetPublicationCacheIfChildIsEmpty() {
     }
 }
 
+private void invalidatePublishedAttribute(String attributeName) {
+    if (!attributeName) {
+        return
+    }
+
+    Map attributeCache = state.publishedAttributeValueCache instanceof Map
+        ? state.publishedAttributeValueCache
+        : [:]
+
+    if (attributeCache.containsKey(attributeName)) {
+        attributeCache.remove(attributeName)
+        state.publishedAttributeValueCache = attributeCache
+        logDebug("Invalidated retained publication cache for ${attributeName}")
+    }
+}
+
 private Boolean isExpectedChild(String dni) {
     return !dni || dni == childDni()
 }
@@ -628,7 +647,7 @@ void publishCachedValues() {
         nextPublicHolidayDate          : nextEvent?.date ? formatHubDate(nextEvent.date) : '',
         daysUntilNextPublicHoliday     : nextEvent?.date ? daysUntil(nextEvent.date) : null,
 
-        lastError                : state.lastError ?: ''
+        lastError                : state.lastError ?: NO_ERROR_DISPLAY
     ]
 
     values.putAll(daylightSavingValues())
@@ -658,7 +677,7 @@ private void publishEmptyValues(String status) {
         nextPublicHolidayDate          : null,
         daysUntilNextPublicHoliday     : null,
 
-        lastError                : state.lastError ?: null
+        lastError                : state.lastError ?: NO_ERROR_DISPLAY
     ]
 
     values.putAll(daylightSavingValues())

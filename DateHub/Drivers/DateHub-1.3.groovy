@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.34
- *  Date        : 2026-08-06
+ *  Version     : 1.3.36
+ *  Date        : 2026-09-12
  *
  *  Description :
  *      Child device driver for DateHub.
@@ -128,7 +128,7 @@ def getVersion() {
 
 def clearCache() {
     recordDriverActivity()
-    sendEvent(name: 'lastError', value: '')
+    sendEvent(name: 'lastError', value: 'None')
     if (!parent) {
         logWarn('clearCache requested but no parent app is available')
         return
@@ -141,7 +141,7 @@ def clearCache() {
 def configure() {
     state.driverVersion = getVersion()
     recordDriverActivity()
-    sendEvent(name: 'lastError', value: '')
+    sendEvent(name: 'lastError', value: 'None')
     if (!parent) {
         logWarn('configure requested but no parent app is available')
         return
