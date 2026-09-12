@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.3.36",
   "dateReleased": "2026-09-12",
-  "releaseNotes": "Correct Last Error reset handling. Configure and Clear Cache now publish an explicit 'None' value for a cleared error and invalidate only the retained lastError publication cache entry so stale Hubitat Current State values are deterministically replaced.",
+  "releaseNotes": "",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/DateHub",
   "communityLink": "",
   "category": "Convenience",
