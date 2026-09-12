@@ -274,7 +274,7 @@ private Integer decimalPlaces() {
 
 private String formatWithUnit(BigDecimal value) {
     String u = selectedUnitDisplay()
-    return u == 'none' ? "${value}" : "${value}${u}"
+    return u == 'none' ? "${value}" : "${value} ${u}"
 }
 
 private Integer recommendedTrendDepth() {
@@ -449,7 +449,7 @@ private void calculateAndPublish() {
 
     String canonicalHumidity = rounded.toPlainString()
     String displayUnit = selectedUnitDisplay()
-    String humidityDisplay = displayUnit == 'none' ? canonicalHumidity : "${canonicalHumidity}${displayUnit}"
+    String humidityDisplay = displayUnit == 'none' ? canonicalHumidity : "${canonicalHumidity} ${displayUnit}"
     String eventUnit = '%rh'
     Long activityTimestamp = now().intdiv(1000L)
 
