@@ -229,6 +229,8 @@ def deviceConfigure(String dni = null) {
         return
     }
 
+    state.lastError = ''
+
     if (!createChildDeviceIfMissing()) {
         state.setupComplete = false
         return

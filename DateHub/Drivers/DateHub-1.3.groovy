@@ -128,6 +128,7 @@ def getVersion() {
 
 def clearCache() {
     recordDriverActivity()
+    sendEvent(name: 'lastError', value: '')
     if (!parent) {
         logWarn('clearCache requested but no parent app is available')
         return
@@ -140,6 +141,7 @@ def clearCache() {
 def configure() {
     state.driverVersion = getVersion()
     recordDriverActivity()
+    sendEvent(name: 'lastError', value: '')
     if (!parent) {
         logWarn('configure requested but no parent app is available')
         return
