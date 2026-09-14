@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.39
+ *  Version     : 1.3.40
  *  Date        : 2026-09-14
  *
  *  Description :
@@ -191,8 +191,13 @@ def updateFromParent(Map values) {
     logDebug("Received ${values?.size() ?: 0} changed value(s) from parent")
 
     values.each { String name, value ->
-        sendEvent(name: name, value: value)
-        logText("${name} is ${value}")
+        if (name == 'publicHolidayName' && (value == null || value.toString() == '')) {
+            device.deleteCurrentState(name)
+            logText("${name} cleared")
+        } else {
+            sendEvent(name: name, value: value)
+            logText("${name} is ${value}")
+        }
     }
 }
 
