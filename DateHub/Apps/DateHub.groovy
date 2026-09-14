@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.37
+ *  Version     : 1.3.38
  *  Date        : 2026-09-14
  *
  *  Description :
@@ -125,7 +125,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.37'
+    return '1.3.38'
 }
 
 private String htmlEncode(Object value) {
@@ -156,6 +156,7 @@ def initialize() {
     syncChildLabelSettingAndDevice()
     syncChildSettings()
     resetPublicationCacheIfChildIsEmpty()
+    migratePublicHolidayNamePublicationState()
     state.setupComplete = true
 
     if (!checkCompatibleLocale()) {
@@ -499,6 +500,18 @@ private void resetPublicationCacheIfChildIsEmpty() {
     }
 }
 
+private void migratePublicHolidayNamePublicationState() {
+    String migrationVersion = '1.3.38'
+
+    if (state.publicHolidayNamePublicationMigration == migrationVersion) {
+        return
+    }
+
+    invalidatePublishedAttribute('publicHolidayName')
+    state.publicHolidayNamePublicationMigration = migrationVersion
+    logDebug("Invalidated publicHolidayName publication cache for v${migrationVersion} migration")
+}
+
 private void invalidatePublishedAttribute(String attributeName) {
     if (!attributeName) {
         return
@@ -696,24 +709,42 @@ private void publishChangedValuesToChild(child, Map values) {
         ? state.publishedAttributeValueCache
         : [:]
 
+    Map nextAttributeCache = new LinkedHashMap(attributeCache)
     Map changedValues = [:]
 
     values.each { String name, value ->
         String newCacheValue = normalizePublishedAttributeValue(value)
+        Object currentValue = child.currentValue(name)
+        String currentCacheValue
 
-        if (!attributeCache.containsKey(name) || attributeCache[name] != newCacheValue) {
+        // Hubitat may represent a never-set/blank string attribute as null.
+        // Treat null as equivalent to the intended blank holiday name, but
+        // never treat retained non-blank text as blank.
+        if (name == 'publicHolidayName' && newCacheValue == '' && currentValue == null) {
+            currentCacheValue = ''
+        } else {
+            currentCacheValue = normalizePublishedAttributeValue(currentValue)
+        }
+
+        Boolean cacheMatches = attributeCache.containsKey(name) && attributeCache[name] == newCacheValue
+        Boolean deviceMatches = currentCacheValue == newCacheValue
+
+        if (!cacheMatches || !deviceMatches) {
             changedValues[name] = value
-            attributeCache[name] = newCacheValue
+            nextAttributeCache[name] = newCacheValue
         } else {
             logDebug("Skipping unchanged attribute ${name}=${value}")
         }
     }
 
-    state.publishedAttributeValueCache = attributeCache
-
-    if (!changedValues.isEmpty()) {
-        child.updateFromParent(changedValues)
+    if (changedValues.isEmpty()) {
+        return
     }
+
+    // Only commit the publication cache after the child update returns
+    // successfully, preventing cache/device divergence after a failed update.
+    child.updateFromParent(changedValues)
+    state.publishedAttributeValueCache = nextAttributeCache
 }
 
 private String normalizePublishedAttributeValue(Object value) {
