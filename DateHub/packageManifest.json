@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.3.38",
   "dateReleased": "2026-09-14",
-  "releaseNotes": "Fixes stale Public Holiday Name values when Is Public Holiday is false. Publication now verifies the child device's current attribute value as well as the retained cache, performs a one-time cache invalidation migration, and commits the cache only after a successful child update.",
+  "releaseNotes": "",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/DateHub",
   "communityLink": "",
   "category": "Convenience",
