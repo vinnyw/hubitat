@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.38
+ *  Version     : 1.3.39
  *  Date        : 2026-09-14
  *
  *  Description :
@@ -125,7 +125,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.38'
+    return '1.3.39'
 }
 
 private String htmlEncode(Object value) {
@@ -156,7 +156,6 @@ def initialize() {
     syncChildLabelSettingAndDevice()
     syncChildSettings()
     resetPublicationCacheIfChildIsEmpty()
-    migratePublicHolidayNamePublicationState()
     state.setupComplete = true
 
     if (!checkCompatibleLocale()) {
@@ -220,7 +219,7 @@ def deviceClearCache(String dni = null) {
     state.lastUpdatedMs = now()
     state.lastError = ''
     state.cacheStatus = 'Cleared'
-    invalidatePublishedAttribute('lastError')
+    markAttributeForRepublish('lastError')
 
     publishEmptyValues('Cleared')
     logText('Holiday cache cleared')
@@ -233,7 +232,7 @@ def deviceConfigure(String dni = null) {
     }
 
     state.lastError = ''
-    invalidatePublishedAttribute('lastError')
+    markAttributeForRepublish('lastError')
 
     if (!createChildDeviceIfMissing()) {
         state.setupComplete = false
@@ -500,19 +499,8 @@ private void resetPublicationCacheIfChildIsEmpty() {
     }
 }
 
-private void migratePublicHolidayNamePublicationState() {
-    String migrationVersion = '1.3.38'
 
-    if (state.publicHolidayNamePublicationMigration == migrationVersion) {
-        return
-    }
-
-    invalidatePublishedAttribute('publicHolidayName')
-    state.publicHolidayNamePublicationMigration = migrationVersion
-    logDebug("Invalidated publicHolidayName publication cache for v${migrationVersion} migration")
-}
-
-private void invalidatePublishedAttribute(String attributeName) {
+private void markAttributeForRepublish(String attributeName) {
     if (!attributeName) {
         return
     }
@@ -524,7 +512,7 @@ private void invalidatePublishedAttribute(String attributeName) {
     if (attributeCache.containsKey(attributeName)) {
         attributeCache.remove(attributeName)
         state.publishedAttributeValueCache = attributeCache
-        logDebug("Invalidated retained publication cache for ${attributeName}")
+        logDebug("Marked ${attributeName} for republish")
     }
 }
 
