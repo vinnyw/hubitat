@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.3.37",
   "dateReleased": "2026-09-14",
-  "releaseNotes": "Public Holiday Name now publishes as an empty string when today is not a public holiday, preventing stale/non-holiday text from being displayed. Retains changed-value publication optimization.",
+  "releaseNotes": "",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/DateHub",
   "communityLink": "",
   "category": "Convenience",
