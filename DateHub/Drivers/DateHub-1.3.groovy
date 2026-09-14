@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.36
- *  Date        : 2026-09-12
+ *  Version     : 1.3.37
+ *  Date        : 2026-09-14
  *
  *  Description :
  *      Child device driver for DateHub.

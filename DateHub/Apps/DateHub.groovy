@@ -5,8 +5,8 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.36
- *  Date        : 2026-09-12
+ *  Version     : 1.3.37
+ *  Date        : 2026-09-14
  *
  *  Description :
  *      Parent application for DateHub.
@@ -125,7 +125,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.36'
+    return '1.3.37'
 }
 
 private String htmlEncode(Object value) {
@@ -641,7 +641,7 @@ void publishCachedValues() {
 
     Map values = [
         isPublicHoliday             : todaysEvents ? 'true' : 'false',
-        publicHolidayName         : todaysEvents ? uniqueJoin(todaysEvents.collect { it.title }) : null,
+        publicHolidayName         : todaysEvents ? uniqueJoin(todaysEvents.collect { it.title }) : '',
 
         nextPublicHolidayName          : toTitleCase(nextEvent?.title ?: ''),
         nextPublicHolidayDate          : nextEvent?.date ? formatHubDate(nextEvent.date) : '',
@@ -671,7 +671,7 @@ private void publishEmptyValues(String status) {
 
     Map values = [
         isPublicHoliday                : 'false',
-        publicHolidayName              : null,
+        publicHolidayName              : '',
 
         nextPublicHolidayName          : null,
         nextPublicHolidayDate          : null,
