@@ -9,6 +9,13 @@
     "tags": "Presence & Location, Misc. Devices",
     "drivers": [
         {
+            "id": "ed8b2516-818f-4b84-baab-f1cd6281f9a9",
+            "name": "Aqara Light Sensor (GZCGQ11LM)",
+            "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy",
+            "required": false,
+            "version": "1.0.0"
+        },
+        {
             "id": "ee9ec830-0444-429d-be7a-1d446c1ff67f",
             "name": "Candeo Scene Remote (C-ZB-SR5BR)",
             "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/CandeoSceneRemote/CandeoSceneRemote.groovy",

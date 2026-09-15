@@ -1,32 +1,38 @@
-/*
- * Aqara Light Sensor (GZCGQ11LM / MGL01) Optimized Aqara-Compatible
+/**
+ *  --------------------------------------------------------------------------------------------------------------
+ *  Aqara Light Sensor
+ *  --------------------------------------------------------------------------------------------------------------
  *
- * Device-reported models:
- * - lumi.sen_ill.agl01
- * - lumi.sen_ill.mgl01
+ *  Author      : Vinny Wadding
+ *  Namespace   : vinnyw
+ *  Version     : 1.0.0
+ *  Date        : 2026-09-15
  *
- * Capabilities:
- * - Sensor
- * - IlluminanceMeasurement
- * - Battery
- * - Refresh
- * - Configuration
+ *  Description :
+ *      Device driver for the Aqara Light Sensor (GZCGQ11LM).
  *
- * Design:
- * - No polling
- * - No recurring refresh schedule
- * - Preserves autodetection fingerprints and adds explicit Zigbee controllerType
- * - Enables singleThreaded execution for deterministic top-level driver calls
- * - Preserves Disable Device Status LED preference
- * - Configure binds Basic, Power, Identify, and Illuminance clusters
- * - Configure triggers Refresh after reporting setup
- * - Illuminance uses only normalized Hubitat read-attribute values or validated report tuples
- * - Battery uses standard voltage plus Xiaomi/Aqara FF01/FF02 proprietary payloads
- * - Does not use unsupported Power Configuration battery percentage attr 0x0021
- * - Excludes 0x0402 Temperature by request
+ *      Device-reported models:
+ *          lumi.sen_ill.agl01
+ *          lumi.sen_ill.mgl01
+ *
+ *      Attributes:
+ *          illuminance   (number)  : lux
+ *          battery       (number)  : percent
+ *
+ *      Capabilities:
+ *          Sensor
+ *          IlluminanceMeasurement
+ *          Battery
+ *          Refresh
+ *          Configuration
+ *
+ *  --------------------------------------------------------------------------------------------------------------
  */
 
 import groovy.transform.Field
+
+@Field static final String DRIVER_VERSION = '1.0.0'
+@Field static final Integer DEBUG_AUTO_DISABLE_SECONDS = 1800
 
 @Field final Integer CLUSTER_BASIC        = 0x0000
 @Field final Integer CLUSTER_POWER        = 0x0001
@@ -42,57 +48,56 @@ import groovy.transform.Field
 
 metadata {
     definition(
-        name: "Aqara Light Sensor",
-        namespace: "vinnyw",
-        author: "Vinny Wadding",
+        name: 'Aqara Light Sensor',
+        namespace: 'vinnyw',
+        author: 'Vinny Wadding',
         singleThreaded: true
     ) {
-        capability "Sensor"
-        capability "IlluminanceMeasurement"
-        capability "Battery"
-        capability "Refresh"
-        capability "Configuration"
+        capability 'Sensor'
+        capability 'IlluminanceMeasurement'
+        capability 'Battery'
+        capability 'Refresh'
+        capability 'Configuration'
 
         fingerprint(
-            profileId: "0104",
-            endpointId: "01",
-            inClusters: "0000,0400,0003,0001",
-            outClusters: "0003",
-            manufacturer: "LUMI",
-            model: "lumi.sen_ill.agl01",
-            deviceJoinName: "Aqara Light Sensor AGL01",
-            controllerType: "ZGB"
+            profileId: '0104',
+            endpointId: '01',
+            inClusters: '0000,0400,0003,0001',
+            outClusters: '0003',
+            manufacturer: 'LUMI',
+            model: 'lumi.sen_ill.agl01',
+            deviceJoinName: 'Aqara Light Sensor AGL01',
+            controllerType: 'ZGB'
         )
 
         fingerprint(
-            profileId: "0104",
-            endpointId: "01",
-            inClusters: "0000,0001,0003,0400",
-            outClusters: "0003",
-            manufacturer: "XIAOMI",
-            model: "lumi.sen_ill.mgl01",
-            deviceJoinName: "Aqara Light Sensor MGL01",
-            controllerType: "ZGB"
+            profileId: '0104',
+            endpointId: '01',
+            inClusters: '0000,0001,0003,0400',
+            outClusters: '0003',
+            manufacturer: 'XIAOMI',
+            model: 'lumi.sen_ill.mgl01',
+            deviceJoinName: 'Aqara Light Sensor MGL01',
+            controllerType: 'ZGB'
         )
     }
 
     preferences {
-        input name: "txtEnable",
-              type: "bool",
-              title: "Enable descriptionText logging",
+        input name: 'txtEnable',
+              type: 'bool',
+              title: 'Enable descriptionText logging',
               defaultValue: true
 
-        input name: "debugEnable",
-              type: "bool",
-              title: "Enable debug logging",
-              defaultValue: false
-
-        input name: "disableLED",
-              type: "bool",
-              title: "Disable Device Status LED",
+        input name: 'debugEnable',
+              type: 'bool',
+              title: 'Enable debug logging',
               defaultValue: false
     }
 }
+
+//
+//        LIFECYCLE
+//
 
 void installed() {
     log.info "${device.displayName} installed"
@@ -109,10 +114,14 @@ void updated() {
     }
 }
 
+//
+//        COMMANDS
+//
+
 List<String> configure() {
     log.info "${device.displayName} configure requested"
 
-    String endpoint = device.endpointId ?: "01"
+    String endpoint = device.endpointId ?: '01'
     List<String> cmds = []
 
     /* Aqara-compatible bindings */
@@ -133,10 +142,6 @@ List<String> configure() {
     cmds += zigbee.configureReporting(CLUSTER_ILLUMINANCE, ATTR_MEASURED_VALUE, 0x21, 10, 3600, 300)
     cmds += zigbee.configureReporting(CLUSTER_POWER, ATTR_BATTERY_VOLTAGE, 0x20, 3600, 3600, 1)
 
-    if (disableLED) {
-        cmds += suppressLed()
-    }
-
     log.info "${device.displayName} configure will trigger refresh after reporting setup"
     cmds += refresh()
 
@@ -156,91 +161,97 @@ List<String> refresh() {
     return cmds
 }
 
-List<String> suppressLed() {
-    log.info "${device.displayName} LED suppression requested"
+//
+//        ZIGBEE PARSING
+//
 
-    /*
-     * Conservative only:
-     * Sends standard Identify cluster command with identifyTime = 0.
-     * This may stop identify-mode blinking, but may not disable Aqara firmware status blinks.
-     */
-    String endpoint = device.endpointId ?: "01"
-    return ["he cmd 0x${device.deviceNetworkId} 0x${endpoint} 0x0003 0x00 { 00 00 }"]
-}
-
-void parse(String description) {
-    if (debugEnable) {
-        log.debug "parse: ${description}"
-    }
-
-    if (!description) {
-        return
-    }
-
-    /*
-     * The working Aqara driver handles Xiaomi FF01/FF02 before the generic parser.
-     * Keep that behavior, but do not manually decode standard illuminance read-attr
-     * messages; Hubitat normalizes those values correctly.
-     */
-    if (description.startsWith("read attr -")) {
-        Map readMap = parseReadAttrDescription(description)
-        if (readMap && handleXiaomiReadAttribute(readMap)) {
-            return
-        }
-    }
-
-    Map descMap = zigbee.parseDescriptionAsMap(description)
-
-    if (!descMap) {
-        if (debugEnable) {
-            log.debug "ignored empty parse result"
-        }
-        return
-    }
-
-    Integer clusterInt = parseClusterId(descMap)
-
-    if (clusterInt == null) {
-        if (debugEnable) {
-            log.debug "ignored message without cluster: ${descMap}"
-        }
-        return
-    }
-
-    /*
-     * Ignore known non-sensor responses:
-     * - Identify cluster messages
-     * - Configure reporting responses, command 0x07
-     * - Bind responses, cluster 0x8021
-     */
-    if (clusterInt == CLUSTER_IDENTIFY || descMap.command == "07" || clusterInt == 0x8021) {
-        if (debugEnable) {
-            log.debug "ignored non-sensor Zigbee response: ${descMap}"
-        }
-        return
-    }
-
+Boolean handleAttributeReportPayload(Integer clusterInt, List data) {
+    Integer i = 0
     Boolean handled = false
 
-    if (descMap?.attrId != null && descMap?.value != null) {
-        handled = handleParsedAttribute(clusterInt, descMap.attrId, descMap.value, descMap.encoding)
+    while (i + 2 < data.size()) {
+        Integer attrId = hexPairToInt(data[i]) + (hexPairToInt(data[i + 1]) << 8)
+        Integer dataType = hexPairToInt(data[i + 2])
+        i += 3
+
+        Integer valueLength = zigbeeTypeLength(dataType)
+
+        if (valueLength <= 0 || i + valueLength > data.size()) {
+            if (debugEnable) {
+                log.debug "stopped parsing attribute report cluster ${intToHex4(clusterInt)} attr ${intToHex4(attrId)} type ${intToHex2(dataType)} data ${data}"
+            }
+            return handled
+        }
+
+        Integer rawValue = littleEndianValue(data, i, valueLength)
+        i += valueLength
+
+        handled = handleAttributeValue(clusterInt, attrId, rawValue) || handled
     }
 
-    if (descMap?.additionalAttrs instanceof List) {
-        descMap.additionalAttrs.each { Map attrMap ->
-            if (attrMap?.attrId != null && attrMap?.value != null) {
-                handled = handleParsedAttribute(clusterInt, attrMap.attrId, attrMap.value, attrMap.encoding) || handled
-            }
+    return handled
+}
+
+Boolean handleAttributeValue(Integer clusterInt, Integer attrId, Integer rawValue) {
+    if (clusterInt == CLUSTER_ILLUMINANCE && attrId == ATTR_MEASURED_VALUE) {
+        /*
+         * Only validated attribute report/read-response tuples reach this path.
+         */
+        handleIlluminance(rawValue)
+        return true
+    }
+
+    if (clusterInt == CLUSTER_POWER && attrId == ATTR_BATTERY_VOLTAGE) {
+        handleBatteryVoltage(rawValue)
+        return true
+    }
+
+    return false
+}
+
+Boolean handleCatchallPayload(Integer clusterInt, Map descMap) {
+    List data = descMap.data as List
+
+    if (!data || data.size() < 3) {
+        return false
+    }
+
+    /*
+     * Xiaomi/Aqara proprietary battery payloads may be delivered as Basic-cluster
+     * catchall data. Decode only recognized FF01/FF02/FF42 markers.
+     */
+    if (clusterInt == CLUSTER_BASIC) {
+        String hex = data.collect { normalizeHexByte(it) }.join('').toUpperCase()
+
+        if (hex.contains('FF01') || hex.contains('FF02')) {
+            return handleXiaomiStructFromPayload(hex)
+        }
+
+        if (hex.contains('FF42')) {
+            return handleXiaomiModelPayload(hex)
+        }
+
+        return false
+    }
+
+    /*
+     * Do not decode Illuminance catchall command 0x07 frames. Those are configure
+     * reporting responses, not sensor readings. Only decode standard attribute
+     * report command 0x0A or read-attribute response command 0x01 with success status.
+     */
+    if (clusterInt == CLUSTER_ILLUMINANCE || clusterInt == CLUSTER_POWER) {
+        String command = descMap.command?.toString()?.toUpperCase()
+
+        if (command == '0A') {
+            return handleAttributeReportPayload(clusterInt, data)
+        }
+
+        if (command == '01') {
+            return handleReadAttributeResponsePayload(clusterInt, data)
         }
     }
 
-    if (!handled && descMap?.data) {
-        handled = handleCatchallPayload(clusterInt, descMap)
-    }
-
-    if (!handled && debugEnable) {
-        log.debug "ignored unhandled message: ${descMap}"
-    }
+    return false
 }
 
 Boolean handleParsedAttribute(Integer clusterInt, Object attrId, Object value, Object encoding = null) {
@@ -277,78 +288,6 @@ Boolean handleParsedAttribute(Integer clusterInt, Object attrId, Object value, O
     }
 
     return false
-}
-
-Boolean handleCatchallPayload(Integer clusterInt, Map descMap) {
-    List data = descMap.data as List
-
-    if (!data || data.size() < 3) {
-        return false
-    }
-
-    /*
-     * Xiaomi/Aqara proprietary battery payloads may be delivered as Basic-cluster
-     * catchall data. Decode only recognized FF01/FF02/FF42 markers.
-     */
-    if (clusterInt == CLUSTER_BASIC) {
-        String hex = data.collect { normalizeHexByte(it) }.join("").toUpperCase()
-
-        if (hex.contains("FF01") || hex.contains("FF02")) {
-            return handleXiaomiStructFromPayload(hex)
-        }
-
-        if (hex.contains("FF42")) {
-            return handleXiaomiModelPayload(hex)
-        }
-
-        return false
-    }
-
-    /*
-     * Do not decode Illuminance catchall command 0x07 frames. Those are configure
-     * reporting responses, not sensor readings. Only decode standard attribute
-     * report command 0x0A or read-attribute response command 0x01 with success status.
-     */
-    if (clusterInt == CLUSTER_ILLUMINANCE || clusterInt == CLUSTER_POWER) {
-        String command = descMap.command?.toString()?.toUpperCase()
-
-        if (command == "0A") {
-            return handleAttributeReportPayload(clusterInt, data)
-        }
-
-        if (command == "01") {
-            return handleReadAttributeResponsePayload(clusterInt, data)
-        }
-    }
-
-    return false
-}
-
-Boolean handleAttributeReportPayload(Integer clusterInt, List data) {
-    Integer i = 0
-    Boolean handled = false
-
-    while (i + 2 < data.size()) {
-        Integer attrId = hexPairToInt(data[i]) + (hexPairToInt(data[i + 1]) << 8)
-        Integer dataType = hexPairToInt(data[i + 2])
-        i += 3
-
-        Integer valueLength = zigbeeTypeLength(dataType)
-
-        if (valueLength <= 0 || i + valueLength > data.size()) {
-            if (debugEnable) {
-                log.debug "stopped parsing attribute report cluster ${intToHex4(clusterInt)} attr ${intToHex4(attrId)} type ${intToHex2(dataType)} data ${data}"
-            }
-            return handled
-        }
-
-        Integer rawValue = littleEndianValue(data, i, valueLength)
-        i += valueLength
-
-        handled = handleAttributeValue(clusterInt, attrId, rawValue) || handled
-    }
-
-    return handled
 }
 
 Boolean handleReadAttributeResponsePayload(Integer clusterInt, List data) {
@@ -392,18 +331,25 @@ Boolean handleReadAttributeResponsePayload(Integer clusterInt, List data) {
     return handled
 }
 
-Boolean handleAttributeValue(Integer clusterInt, Integer attrId, Integer rawValue) {
-    if (clusterInt == CLUSTER_ILLUMINANCE && attrId == ATTR_MEASURED_VALUE) {
-        /*
-         * Only validated attribute report/read-response tuples reach this path.
-         */
-        handleIlluminance(rawValue)
-        return true
+Boolean handleXiaomiModelPayload(String value) {
+    if (!value) {
+        return false
     }
 
-    if (clusterInt == CLUSTER_POWER && attrId == ATTR_BATTERY_VOLTAGE) {
-        handleBatteryVoltage(rawValue)
-        return true
+    String data = value.toUpperCase().replaceAll('[^0-9A-F]', '')
+
+    try {
+        if (data.contains('FF42')) {
+            String batteryData = data.split('FF42', 2)[1]
+            if (batteryData.size() > 10 && batteryData[4..5] == '21') {
+                String batteryVoltage = batteryData[8..9] + batteryData[6..7]
+                handleBatteryVolts(Integer.parseInt(batteryVoltage, 16) / 100.0)
+                return true
+            }
+        }
+    }
+    catch (Exception ignored) {
+        return false
     }
 
     return false
@@ -421,8 +367,40 @@ Boolean handleXiaomiReadAttribute(Map readMap) {
         return handleXiaomiStruct(attrInt, readMap.value.toString())
     }
 
-    if (attrInt == ATTR_MODEL_ID && readMap.encoding?.toString()?.equalsIgnoreCase("42")) {
+    if (attrInt == ATTR_MODEL_ID && readMap.encoding?.toString()?.equalsIgnoreCase('42')) {
         return handleXiaomiModelPayload(readMap.value.toString())
+    }
+
+    return false
+}
+
+Boolean handleXiaomiStruct(Integer attrInt, String value) {
+    if (!value) {
+        return false
+    }
+
+    String data = value.toUpperCase().replaceAll('[^0-9A-F]', '')
+    String batteryVoltage = ''
+
+    try {
+        /*
+         * Same battery-voltage extraction pattern used by the known-working
+         * Xiaomi/Aqara driver.
+         */
+        if (attrInt == ATTR_XIAOMI_FF01 && data.size() > 10 && data[4..5] == '21') {
+            batteryVoltage = data[8..9] + data[6..7]
+        }
+        else if (attrInt == ATTR_XIAOMI_FF02 && data.size() > 14 && data[8..9] == '21') {
+            batteryVoltage = data[12..13] + data[10..11]
+        }
+    }
+    catch (Exception ignored) {
+        batteryVoltage = ''
+    }
+
+    if (batteryVoltage) {
+        handleBatteryVolts(Integer.parseInt(batteryVoltage, 16) / 100.0)
+        return true
     }
 
     return false
@@ -430,7 +408,7 @@ Boolean handleXiaomiReadAttribute(Map readMap) {
 
 Boolean handleXiaomiStructFromPayload(String hex) {
     try {
-        Integer ff01 = hex.indexOf("FF01")
+        Integer ff01 = hex.indexOf('FF01')
         if (ff01 >= 0) {
             String payload = hex.substring(ff01 + 4)
             if (handleXiaomiStruct(ATTR_XIAOMI_FF01, payload)) {
@@ -438,7 +416,7 @@ Boolean handleXiaomiStructFromPayload(String hex) {
             }
         }
 
-        Integer ff02 = hex.indexOf("FF02")
+        Integer ff02 = hex.indexOf('FF02')
         if (ff02 >= 0) {
             String payload = hex.substring(ff02 + 4)
             if (handleXiaomiStruct(ATTR_XIAOMI_FF02, payload)) {
@@ -453,60 +431,104 @@ Boolean handleXiaomiStructFromPayload(String hex) {
     return false
 }
 
-Boolean handleXiaomiStruct(Integer attrInt, String value) {
-    if (!value) {
-        return false
+void parse(String description) {
+    if (debugEnable) {
+        log.debug "parse: ${description}"
     }
 
-    String data = value.toUpperCase().replaceAll("[^0-9A-F]", "")
-    String batteryVoltage = ""
+    if (!description) {
+        return
+    }
 
-    try {
-        /*
-         * Same battery-voltage extraction pattern used by the known-working
-         * Xiaomi/Aqara driver.
-         */
-        if (attrInt == ATTR_XIAOMI_FF01 && data.size() > 10 && data[4..5] == "21") {
-            batteryVoltage = data[8..9] + data[6..7]
+    /*
+     * The working Aqara driver handles Xiaomi FF01/FF02 before the generic parser.
+     * Keep that behavior, but do not manually decode standard illuminance read-attr
+     * messages; Hubitat normalizes those values correctly.
+     */
+    if (description.startsWith('read attr -')) {
+        Map readMap = parseReadAttrDescription(description)
+        if (readMap && handleXiaomiReadAttribute(readMap)) {
+            return
         }
-        else if (attrInt == ATTR_XIAOMI_FF02 && data.size() > 14 && data[8..9] == "21") {
-            batteryVoltage = data[12..13] + data[10..11]
+    }
+
+    Map descMap = zigbee.parseDescriptionAsMap(description)
+
+    if (!descMap) {
+        if (debugEnable) {
+            log.debug 'ignored empty parse result'
         }
-    }
-    catch (Exception ignored) {
-        batteryVoltage = ""
+        return
     }
 
-    if (batteryVoltage) {
-        handleBatteryVolts(Integer.parseInt(batteryVoltage, 16) / 100.0)
-        return true
+    Integer clusterInt = parseClusterId(descMap)
+
+    if (clusterInt == null) {
+        if (debugEnable) {
+            log.debug "ignored message without cluster: ${descMap}"
+        }
+        return
     }
 
-    return false
-}
-
-Boolean handleXiaomiModelPayload(String value) {
-    if (!value) {
-        return false
+    /*
+     * Ignore known non-sensor responses:
+     * - Identify cluster messages
+     * - Configure reporting responses, command 0x07
+     * - Bind responses, cluster 0x8021
+     */
+    if (clusterInt == CLUSTER_IDENTIFY || descMap.command == '07' || clusterInt == 0x8021) {
+        if (debugEnable) {
+            log.debug "ignored non-sensor Zigbee response: ${descMap}"
+        }
+        return
     }
 
-    String data = value.toUpperCase().replaceAll("[^0-9A-F]", "")
+    Boolean handled = false
 
-    try {
-        if (data.contains("FF42")) {
-            String batteryData = data.split("FF42", 2)[1]
-            if (batteryData.size() > 10 && batteryData[4..5] == "21") {
-                String batteryVoltage = batteryData[8..9] + batteryData[6..7]
-                handleBatteryVolts(Integer.parseInt(batteryVoltage, 16) / 100.0)
-                return true
+    if (descMap?.attrId != null && descMap?.value != null) {
+        handled = handleParsedAttribute(clusterInt, descMap.attrId, descMap.value, descMap.encoding)
+    }
+
+    if (descMap?.additionalAttrs instanceof List) {
+        descMap.additionalAttrs.each { Map attrMap ->
+            if (attrMap?.attrId != null && attrMap?.value != null) {
+                handled = handleParsedAttribute(clusterInt, attrMap.attrId, attrMap.value, attrMap.encoding) || handled
             }
         }
     }
-    catch (Exception ignored) {
-        return false
+
+    if (!handled && descMap?.data) {
+        handled = handleCatchallPayload(clusterInt, descMap)
     }
 
-    return false
+    if (!handled && debugEnable) {
+        log.debug "ignored unhandled message: ${descMap}"
+    }
+}
+
+//
+//        SENSOR EVENTS
+//
+
+void handleBatteryVoltage(Integer rawValue) {
+    if (rawValue == null || rawValue <= 0 || rawValue == 0xFF) {
+        return
+    }
+
+    /*
+     * Standard Zigbee battery voltage attr 0x0020 is in tenths of a volt.
+     */
+    handleBatteryVolts(rawValue / 10.0)
+}
+
+void handleBatteryVolts(BigDecimal volts) {
+    if (volts == null || volts <= 0) {
+        return
+    }
+
+    Integer battery = Math.min(100, Math.max(1, Math.round((volts - 2.5) / 0.5 * 100)))
+
+    sendSensorEvent('battery', battery, '%')
 }
 
 void handleIlluminance(Integer rawValue) {
@@ -515,7 +537,7 @@ void handleIlluminance(Integer rawValue) {
     }
 
     if (rawValue == 0xFFFF) {
-        sendSensorEvent("illuminance", 0, "lux")
+        sendSensorEvent('illuminance', 0, 'lux')
         return
     }
 
@@ -539,28 +561,7 @@ void handleIlluminance(Integer rawValue) {
         return
     }
 
-    sendSensorEvent("illuminance", lux, "lux")
-}
-
-void handleBatteryVoltage(Integer rawValue) {
-    if (rawValue == null || rawValue <= 0 || rawValue == 0xFF) {
-        return
-    }
-
-    /*
-     * Standard Zigbee battery voltage attr 0x0020 is in tenths of a volt.
-     */
-    handleBatteryVolts(rawValue / 10.0)
-}
-
-void handleBatteryVolts(BigDecimal volts) {
-    if (volts == null || volts <= 0) {
-        return
-    }
-
-    Integer battery = Math.min(100, Math.max(1, Math.round((volts - 2.5) / 0.5 * 100)))
-
-    sendSensorEvent("battery", battery, "%")
+    sendSensorEvent('illuminance', lux, 'lux')
 }
 
 void sendSensorEvent(String name, Object value, String unit) {
@@ -582,27 +583,47 @@ void sendSensorEvent(String name, Object value, String unit) {
     )
 }
 
+//
+//        LOGGING
+//
+
 void logsOff() {
-    device.updateSetting("debugEnable", [value: "false", type: "bool"])
+    device.updateSetting('debugEnable', [value: 'false', type: 'bool'])
     log.info "${device.displayName} debug logging disabled"
 }
 
-Map parseReadAttrDescription(String description) {
-    try {
-        String body = description.replaceFirst(/^read attr - /, "")
-        return body.split(", ").collectEntries { String entry ->
-            List parts = entry.split(": ", 2)
-            if (parts.size() == 2) {
-                [(parts[0]): parts[1]]
-            }
-            else {
-                [:]
-            }
-        }
+//
+//        HELPERS
+//
+
+Integer hexPairToInt(Object value) {
+    return Integer.parseInt(normalizeHexByte(value), 16)
+}
+
+String intToHex2(Integer value) {
+    return String.format('%02X', value)
+}
+
+String intToHex4(Integer value) {
+    return String.format('%04X', value)
+}
+
+Integer littleEndianValue(List data, Integer startIndex, Integer length) {
+    Integer value = 0
+
+    for (Integer offset = 0; offset < length; offset++) {
+        value += hexPairToInt(data[startIndex + offset]) << (8 * offset)
     }
-    catch (Exception ignored) {
-        return [:]
-    }
+
+    return value
+}
+
+String normalizeHexByte(Object value) {
+    return value.toString().padLeft(2, '0').takeRight(2)
+}
+
+Integer parseAttributeId(Object attrId) {
+    return parseHexText(attrId)
 }
 
 Integer parseClusterId(Map descMap) {
@@ -623,10 +644,6 @@ Integer parseClusterId(Map descMap) {
     }
 
     return parseHexText(descMap?.clusterInt)
-}
-
-Integer parseAttributeId(Object attrId) {
-    return parseHexText(attrId)
 }
 
 Integer parseHexText(Object value) {
@@ -652,22 +669,22 @@ Integer parseHexText(Object value) {
     }
 }
 
-String normalizeHexByte(Object value) {
-    return value.toString().padLeft(2, "0").takeRight(2)
-}
-
-Integer hexPairToInt(Object value) {
-    return Integer.parseInt(normalizeHexByte(value), 16)
-}
-
-Integer littleEndianValue(List data, Integer startIndex, Integer length) {
-    Integer value = 0
-
-    for (Integer offset = 0; offset < length; offset++) {
-        value += hexPairToInt(data[startIndex + offset]) << (8 * offset)
+Map parseReadAttrDescription(String description) {
+    try {
+        String body = description.replaceFirst(/^read attr - /, '')
+        return body.split(', ').collectEntries { String entry ->
+            List parts = entry.split(': ', 2)
+            if (parts.size() == 2) {
+                [(parts[0]): parts[1]]
+            }
+            else {
+                [:]
+            }
+        }
     }
-
-    return value
+    catch (Exception ignored) {
+        return [:]
+    }
 }
 
 Integer zigbeeTypeLength(Integer dataType) {
@@ -693,12 +710,4 @@ Integer zigbeeTypeLength(Integer dataType) {
         default:
             return 0
     }
-}
-
-String intToHex2(Integer value) {
-    return String.format("%02X", value)
-}
-
-String intToHex4(Integer value) {
-    return String.format("%04X", value)
 }
