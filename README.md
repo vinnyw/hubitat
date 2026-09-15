@@ -11,9 +11,10 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/packa
 https://raw.githubusercontent.com/vinnyw/hubitat/master/DateHub/packageManifest.json
 
 ### Custom Hubitat Drivers
+Aqara Light Sensor (GZCGQ11LM)
+Candeo Scene Remote (C-ZB-SR5BR)
 Virtual Presence Sensor
 Virtual Occupancy Sensor
-Candeo Scene Remote (C-ZB-SR5BR)
 https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/packageManifest.json
 
 ### Virtual Battery
