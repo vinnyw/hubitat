@@ -111,7 +111,6 @@ Map mainPage() {
         section() {
             paragraph 'WeatherHub retrieves official Met Office Weather Site-Specific Forecast data for your Hubitat hub location and publishes the latest forecast values to a WeatherHub virtual device. The forecast location is taken automatically from the latitude and longitude configured in Settings > Hub Details.<br><br>'
             paragraph hubCoordinatesTable()
-            paragraph '<br>Use Refresh on the child device for an immediate update.'
         }
 
         if (!state?.setupComplete) {
@@ -121,6 +120,8 @@ Map mainPage() {
         }
 
         section(title: 'Settings', hideable: true, hidden: false) {
+            paragraph 'Use Refresh on the child device for an immediate update.'
+
             input(
                 name: 'pollInterval',
                 type: 'enum',
