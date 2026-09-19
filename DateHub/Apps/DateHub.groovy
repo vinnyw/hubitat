@@ -86,7 +86,6 @@ preferences {
                 defaultValue: '02:10'
 
             paragraph 'Use Clear Cache and Refresh on the child device for an immediate update.'
-
         }
 
         section(hideable: true, hidden: false, title: 'Logging') {
