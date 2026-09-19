@@ -79,13 +79,14 @@ preferences {
                   required: true,
                   defaultValue: ['england-and-wales']
 
-                paragraph 'Use Clear Cache and Refresh on the child device for an immediate update.'
+            input name: 'refreshTime',
+                type: 'time',
+                title: 'Schedule refresh ',
+                required: true,
+                defaultValue: '02:10'
 
-                input name: 'refreshTime',
-                    type: 'time',
-                    title: 'Schedule refresh ',
-                    required: true,
-                    defaultValue: '02:10'
+            paragraph 'Use Clear Cache and Refresh on the child device for an immediate update.'
+
         }
 
         section(hideable: true, hidden: false, title: 'Logging') {
