@@ -33,8 +33,8 @@ definition(
     description: 'Polls the Met Office Weather forecast API and publishes forecast attributes to one child device.',
     category: 'Convenience',
     importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/Apps/WeatherHub.groovy',
-    iconUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/resources/weatherhub.png',
-    iconX2Url: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/WeatherHub/resources/weatherhub.png',
+    iconUrl: '',
+    iconX2Url: '',
     singleInstance: true,
     singleThreaded: true,
     installOnOpen: true
@@ -120,8 +120,6 @@ Map mainPage() {
         }
 
         section(title: 'Settings', hideable: true, hidden: false) {
-            paragraph 'Use Refresh on the child device for an immediate update.'
-
             input(
                 name: 'pollInterval',
                 type: 'enum',
@@ -137,6 +135,7 @@ Map mainPage() {
                 ],
                 defaultValue: '30'
             )
+            paragraph 'Use Refresh on the child device for an immediate update.'
         }
 
         section(hideable: true, hidden: false, title: 'Logging') {
