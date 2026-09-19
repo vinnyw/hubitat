@@ -32,9 +32,9 @@ definition(
     category: 'Convenience',
     importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/DateHub/Apps/DateHub.groovy',
     documentationLink: 'https://github.com/vinnyw/hubitat/blob/master/README.md',
-    iconUrl: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
+    iconUrl: '',
+    iconX2Url: '',
+    iconX3Url: '',
     singleInstance: true,
     installOnOpen: true
 )
@@ -78,6 +78,8 @@ preferences {
                   multiple: true,
                   required: true,
                   defaultValue: ['england-and-wales']
+
+                paragraph 'Use Clear Cache and Refresh on the child device for an immediate update.'
 
                 input name: 'refreshTime',
                     type: 'time',
@@ -498,7 +500,6 @@ private void resetPublicationCacheIfChildIsEmpty() {
         logDebug('Cleared retained publication cache because the DateHub child has no published data')
     }
 }
-
 
 private void markAttributeForRepublish(String attributeName) {
     if (!attributeName) {
