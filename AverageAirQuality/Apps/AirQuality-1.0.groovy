@@ -58,7 +58,7 @@ def mainPage() {
 
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         if (!state?.setupComplete) {
-            section('Important') {
+            section() {
                 paragraph '⚠️ Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
             }
         }
@@ -253,7 +253,6 @@ private Integer configuredTrendWindowMinutes() {
     return options.containsKey(minutes.toString()) ? minutes : 30
 }
 
-
 private Integer recommendedTrendDepth() {
     Integer windowMinutes = configuredTrendWindowMinutes()
     Integer targetSamples = (int) Math.ceil(windowMinutes / 5.0d)
@@ -284,7 +283,6 @@ private String selectedUnitDisplay() {
     return selectedUnitDisplaySetting()
 }
 
-
 private Map<String, String> trendWindowOptions() {
     return [
         '5'    : '5 minutes',
@@ -311,7 +309,6 @@ private Map<String, String> airQualityUnitDisplayOptions() {
 private List<String> airQualityUnitDisplayKeys() {
     return airQualityUnitDisplayOptions().keySet() as List<String>
 }
-
 
 //
 //    LIFECYCLE
@@ -450,7 +447,6 @@ def refresh() {
 private String getStableChildDni() {
     return "AirQuality-${app?.id ?: 'pending'}"
 }
-
 
 private Boolean isManagedChildDni(String dni) {
     return dni != null && app?.id != null && dni == getStableChildDni()
