@@ -1,4 +1,4 @@
-### Average Humidity
+### Average Air Quality
 https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageAirQuality/packageManifest.json
 
 ### Average Humidity
