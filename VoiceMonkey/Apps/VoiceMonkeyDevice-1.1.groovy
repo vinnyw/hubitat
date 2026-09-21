@@ -64,7 +64,7 @@ def mainPage() {
 
     dynamicPage(name: 'mainPage', install: true, uninstall: true) {
         if (!state?.setupComplete) {
-            section('Important') {
+            section() {
                 paragraph '⚠️ Setup is not complete yet. Press <b>Done</b> to create or update the virtual device.'
             }
         }
