@@ -20,6 +20,9 @@ https://raw.githubusercontent.com/vinnyw/hubitat/master/Drivers/packageManifest.
 ### Virtual Battery
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBattery/packageManifest.json
 
+### Virtual Blind
+https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/packageManifest.json
+
 ### VoiceMonkey Integration
 https://raw.githubusercontent.com/vinnyw/hubitat/master/VoiceMonkey/packageManifest.json
 
