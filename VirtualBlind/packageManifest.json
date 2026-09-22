@@ -1,0 +1,51 @@
+{
+  "id": "802c7024",
+  "packageName": "Virtual Blind",
+  "author": "Vinny Wadding",
+  "minimumHEVersion": "2.3.0",
+  "version": "0.0.1",
+  "dateReleased": "2026-09-21",
+  "releaseNotes": "",
+  "documentationLink": "https://github.com/vinnyw/hubitat",
+  "communityLink": "",
+  "tags": "Presence & Location, Misc. Devices",
+  "drivers": [
+    {
+      "id": "802c7024-6538-4a0c-855a-2418ed6814e6",
+      "name": "VirtualBlindGroup-0.0",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/Drivers/VirtualBlindGroup-0.0.groovy",
+      "required": true
+    },
+    {
+      "id": "802c7024-e950-4941-89a2-62813ccd2590",
+      "name": "VirtualBlindDevice-0.0",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/Drivers/VirtualBlindDevice-0.0.groovy",
+      "required": true
+    }
+  ],
+  "apps": [
+    {
+      "id": "802c7024-0020-4c53-82c9-9fb8fc938de4",
+      "name": "Virtual Blind",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/Apps/VirtualBlind.groovy",
+      "required": true
+    },
+    {
+      "id": "802c7024-740d-47c1-809f-78b7e8a7e0fb",
+      "name": "VirtualBlindGroup-0.0",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/Apps/VirtualBlindGroup-0.0.groovy",
+      "required": true
+    },
+    {
+      "id": "802c7024-5460-4d82-ad24-708c8d98d78e",
+      "name": "VirtualBlindDevice-0.0",
+      "namespace": "vinnyw",
+      "location": "https://raw.githubusercontent.com/vinnyw/hubitat/master/VirtualBlind/Apps/VirtualBlindDevice-0.0.groovy",
+      "required": true
+    }
+  ]
+}
