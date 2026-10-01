@@ -5,7 +5,7 @@
   "minimumHEVersion": "2.3.0",
   "version": "1.0.5",
   "dateReleased": "2026-09-9o",
-  "releaseNotes": "Serialize app and driver execution with Hubitat singleThreaded to prevent concurrent top-level executions during clustered air-quality updates.",
+  "releaseNotes": "",
   "documentationLink": "https://github.com/vinnyw/hubitat/tree/master/AverageAirQuality",
   "communityLink": "https://community.hubitat.com/",
   "category": "Convenience",
