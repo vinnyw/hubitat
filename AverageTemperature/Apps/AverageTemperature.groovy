@@ -10,7 +10,7 @@ definition(
     iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     singleInstance: true,
-    singleThreaded: false,
+    singleThreaded: true,
     installOnOpen: true
 )
 

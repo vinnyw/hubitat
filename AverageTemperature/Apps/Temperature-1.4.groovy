@@ -2,6 +2,7 @@ definition(
     name: 'Temperature-1.4',
     namespace: 'vinnyw',
     author: 'Vinny Wadding',
+    singleThreaded: true
     description: 'Manage multiple averaged temperature virtual sensors',
     parent: 'vinnyw:Average Temperature',
     category: 'Convenience',

@@ -42,8 +42,8 @@ metadata {
     definition(
         name: 'Temperature-1.4',
         namespace: 'vinnyw',
-        author: 'Vinny Wadding'
-    ) {
+        author: 'Vinny Wadding',
+        singleThreaded: true) {
         capability 'Sensor'
         capability 'TemperatureMeasurement'
         capability 'Refresh'
