@@ -2,6 +2,7 @@ definition(
     name: 'AirQuality-1.0',
     namespace: 'vinnyw',
     author: 'Vinny Wadding',
+    singleThreaded: true
     description: 'Manage multiple averaged airQualityIndex virtual sensors',
     parent: 'vinnyw:Average Air Quality',
     category: 'Convenience',

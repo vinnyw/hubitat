@@ -39,8 +39,8 @@ metadata {
     definition(
         name: 'AirQuality-1.0',
         namespace: 'vinnyw',
-        author: 'Vinny Wadding'
-    ) {
+        author: 'Vinny Wadding',
+        singleThreaded: true) {
         capability 'Sensor'
         capability 'AirQuality'
         capability 'Refresh'
