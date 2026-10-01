@@ -2,15 +2,15 @@ definition(
     name: 'Temperature-1.4',
     namespace: 'vinnyw',
     author: 'Vinny Wadding',
-    singleThreaded: true
     description: 'Manage multiple averaged temperature virtual sensors',
     parent: 'vinnyw:Average Temperature',
     category: 'Convenience',
     importUrl: 'https://raw.githubusercontent.com/vinnyw/hubitat/master/AverageTemperature/Apps/Temperature-1.4.groovy',
     documentationLink: 'https://github.com/vinnyw/hubitat/blob/master/README.md',
-    iconUrl: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
-    iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
+    iconUrl: '',
+    iconX2Url: '',
+    iconX3Url: '',
+    singleThreaded: true
 )
 
 import groovy.transform.Field
