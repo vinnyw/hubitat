@@ -10,7 +10,7 @@
  *
  *  Description :
  *      Virtual humidity child device managed by the Humidity child app.
- *      Version 2.7.63 publishes the exact canonical decimal value supplied by the app.
+ *      Version 2.7.64 publishes the exact canonical decimal value supplied by the app.
  *
  *      Attributes:
  *          humidity         (number) : app-supplied canonical humidity value
@@ -40,7 +40,8 @@ metadata {
     definition(
         name: 'Humidity-2.7',
         namespace: 'vinnyw',
-        author: 'Vinny Wadding'
+        author: 'Vinny Wadding',
+        singleThreaded: true
     ) {
         capability 'Sensor'
         capability 'RelativeHumidityMeasurement'

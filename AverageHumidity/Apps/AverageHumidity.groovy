@@ -10,7 +10,7 @@ definition(
     iconX2Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     iconX3Url: 'https://raw.githubusercontent.com/hubitat/HubitatPublic/master/resources/images/App%20Icons/Convenience.png',
     singleInstance: true,
-    singleThreaded: false,
+    singleThreaded: true,
     installOnOpen: true
 )
 
@@ -23,7 +23,7 @@ import groovy.transform.Field
 //
 
 def getVersion() {
-    return '2.7.63'
+    return '2.7.64'
 }
 
 //
