@@ -9,7 +9,7 @@ definition(
     iconUrl: '',
     iconX2Url: '',
     iconX3Url: '',
-    singleThreaded: true
+    singleThreaded: true,
     singleInstance: true,
     installOnOpen: true
 )
