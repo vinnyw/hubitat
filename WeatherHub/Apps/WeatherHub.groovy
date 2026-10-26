@@ -880,7 +880,7 @@ private String buildSummary(Map weather) {
         parts << "${weather.temperature}°C"
     }
     if (weather.precipitationProbability != null) {
-        parts << "${weather.precipitationProbability}% precipitation"
+        parts << "${weather.precipitationProbability}% chance of precipitation"
     }
     if (weather.windSpeed != null) {
         String direction = weather.windDirectionCardinal ? "${weather.windDirectionCardinal} " : ''
