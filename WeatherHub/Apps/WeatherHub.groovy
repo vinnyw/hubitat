@@ -884,7 +884,7 @@ private String buildSummary(Map weather) {
     }
     if (weather.windSpeed != null) {
         String direction = weather.windDirectionCardinal ? "${weather.windDirectionCardinal} " : ''
-        parts << "wind ${direction}${weather.windSpeed} m/s"
+        parts << "wind blowing ${direction} at ${weather.windSpeed} m/s"
     }
 
     return parts.join(', ')
