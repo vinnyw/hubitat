@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.40
+ *  Version     : 1.3.41
  *  Date        : 2026-09-14
  *
  *  Description :
@@ -127,7 +127,7 @@ private String getDisplayVersionValue(Object versionValue) {
 }
 
 def getVersion() {
-    return '1.3.40'
+    return '1.3.41'
 }
 
 private String htmlEncode(Object value) {
@@ -442,7 +442,7 @@ private String getChildDriverType() {
 }
 
 private String childDni() {
-    return "${app.id}-datehub"
+    return "DateHub-${app.id}"
 }
 
 private Boolean createChildDeviceIfMissing() {
