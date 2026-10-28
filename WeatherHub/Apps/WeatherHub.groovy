@@ -5,7 +5,7 @@
  *
  *  Author      : Vinny Wadding
  *  Namespace   : vinnyw
- *  Version     : 1.3.14
+ *  Version     : 1.3.15
  *  Date        : 2026-08-06
  *
  *  Description :
@@ -264,7 +264,7 @@ private String htmlEncode(Object value) {
 }
 
 String getVersion() {
-    return '1.3.14'
+    return '1.3.15'
 }
 
 void installed() {
@@ -400,7 +400,7 @@ private String hubLocationSummary() {
 }
 
 private String childDeviceNetworkId() {
-    return "${app.id}-weatherhub"
+    return "WeatherHub-${app.id}"
 }
 
 private Boolean createChildDeviceIfMissing() {
