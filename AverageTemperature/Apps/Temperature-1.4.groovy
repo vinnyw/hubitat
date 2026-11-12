@@ -833,24 +833,23 @@ private Map updateTrendAndGetValues(BigDecimal roundedTemperature) {
         return [trend: null, trendDisplay: null]
     }
 
-    List<Map> history = getHistoryEntries()
-
-    BigDecimal lastValue = null
-    if (history) {
-        try {
-            lastValue = new BigDecimal(history.last().value.toString())
-        } catch (Exception ignored) {
-            lastValue = null
-        }
+    long currentTs = now()
+    long cutoff = currentTs - configuredTrendWindowMinutes().toLong() * 60000L
+    // Keep only valid observations within the requested elapsed-time window.
+    List<Map> history = getHistoryEntries().findAll {
+        (it.ts as Long) >= cutoff && (it.ts as Long) <= currentTs
     }
 
-    if (lastValue == null || lastValue.compareTo(roundedTemperature) != 0) {
-        history << [ts: now(), value: roundedTemperature.toString()]
-        while (history.size() > configuredTrendDepth()) {
-            history.remove(0)
-        }
-        saveHistoryEntries(history)
+    // Record every existing refresh, including unchanged readings, so a flat
+    // temperature can eventually be classified as steady without extra polling.
+    if (history && (history.last().ts as Long) == currentTs) {
+        history.remove(history.size() - 1)
     }
+    history << [ts: currentTs, value: roundedTemperature.toString()]
+    while (history.size() > configuredTrendDepth()) {
+        history.remove(0)
+    }
+    saveHistoryEntries(history)
 
     return calculateTrend(history, selectedTrendDisplay())
 }
@@ -889,19 +888,16 @@ private void saveHistoryEntries(List<Map> history) {
 
 private Map calculateTrend(List<Map> history, String mode) {
     if (!history || history.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
     }
 
-    long nowTs = now().intdiv(1000L)
+    long nowTs = now()
     long windowMs = configuredTrendWindowMinutes().toLong() * 60L * 1000L
     long cutoff = nowTs - windowMs
 
-    List<Map> inWindow = history.findAll { (it.ts as Long) >= cutoff }
+    List<Map> inWindow = history.findAll { (it.ts as Long) >= cutoff && (it.ts as Long) <= nowTs }
     if (inWindow.size() < 2) {
-        inWindow = history.takeRight(Math.min(history.size(), configuredTrendDepth()))
-    }
-    if (inWindow.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
     }
 
     Map firstEntry = inWindow.first()
@@ -913,12 +909,12 @@ private Map calculateTrend(List<Map> history, String mode) {
     long elapsedMs = (lastEntry.ts as Long) - (firstEntry.ts as Long)
 
     if (elapsedMs <= 0L) {
-        return [trend: 'steady', trendDisplay: 'steady']
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
     }
 
     BigDecimal elapsedHours = new BigDecimal(elapsedMs).divide(new BigDecimal(3600000L), 6, RoundingMode.HALF_UP)
     if (elapsedHours.compareTo(0G) <= 0) {
-        return [trend: 'steady', trendDisplay: 'steady']
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
     }
 
     BigDecimal ratePerHour = delta.divide(elapsedHours, 6, RoundingMode.HALF_UP)
