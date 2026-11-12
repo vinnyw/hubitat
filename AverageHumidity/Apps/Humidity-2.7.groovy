@@ -830,30 +830,32 @@ private Map updateTrendAndGetValues(BigDecimal roundedHumidity) {
         return [trend: null, trendDisplay: null]
     }
 
-    List<Map> history = getHistoryEntries()
+    // Hubitat now() and stored history timestamps are both milliseconds.
+    long nowTs = now()
+    long cutoff = nowTs - configuredTrendWindowMinutes().toLong() * 60L * 1000L
 
-    BigDecimal lastValue = null
-    if (history) {
-        try {
-            lastValue = new BigDecimal(history.last().value.toString())
-        } catch (Exception ignored) {
-            lastValue = null
-        }
+    // Keep only valid readings from the configured elapsed-time window.
+    List<Map> history = getHistoryEntries().findAll { entry ->
+        long ts = entry.ts as Long
+        ts >= cutoff && ts <= nowTs
     }
 
-    if (lastValue == null || lastValue.compareTo(roundedHumidity) != 0) {
-        history << [ts: now(), value: roundedHumidity.toString()]
-        while (history.size() > configuredTrendDepth()) {
-            history.remove(0)
-        }
-        saveHistoryEntries(history)
+    // Capture each actual average refresh, including unchanged humidity.
+    // This allows an old change to age out instead of remaining a permanent trend.
+    if (history && (history.last().ts as Long) == nowTs) {
+        history.remove(history.size() - 1)
     }
+    history << [ts: nowTs, value: roundedHumidity.toString()]
 
+    while (history.size() > configuredTrendDepth()) {
+        history.remove(0)
+    }
+    saveHistoryEntries(history)
     return calculateTrend(history, selectedTrendDisplay())
 }
 
 //
-//    TREND STORAGE
+////    TREND STORAGE
 //
 
 private List<Map> getHistoryEntries() {
@@ -885,43 +887,36 @@ private void saveHistoryEntries(List<Map> history) {
 //
 
 private Map calculateTrend(List<Map> history, String mode) {
-    if (!history || history.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
-
     long nowTs = now()
     long windowMs = configuredTrendWindowMinutes().toLong() * 60L * 1000L
     long cutoff = nowTs - windowMs
 
-    List<Map> inWindow = history.findAll { (it.ts as Long) >= cutoff }
+    List<Map> inWindow = (history ?: []).findAll { entry ->
+        long ts = entry.ts as Long
+        ts >= cutoff && ts <= nowTs
+    }.sort { a, b -> (a.ts as Long) <=> (b.ts as Long) }
+
     if (inWindow.size() < 2) {
-        inWindow = history.takeRight(Math.min(history.size(), configuredTrendDepth()))
-    }
-    if (inWindow.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
     }
 
     Map firstEntry = inWindow.first()
     Map lastEntry = inWindow.last()
+    long elapsedMs = (lastEntry.ts as Long) - (firstEntry.ts as Long)
+    if (elapsedMs <= 0L) {
+        return [trend: 'unknown', trendDisplay: 'insufficient data']
+    }
 
     BigDecimal first = new BigDecimal(firstEntry.value.toString())
     BigDecimal last = new BigDecimal(lastEntry.value.toString())
     BigDecimal delta = last - first
-    long elapsedMs = (lastEntry.ts as Long) - (firstEntry.ts as Long)
 
-    if (elapsedMs <= 0L) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
+    // Percentage points of relative humidity per hour (not AQI units/hour).
+    BigDecimal ratePerHour = delta.multiply(3600000G).divide(
+        new BigDecimal(elapsedMs), 6, RoundingMode.HALF_UP)
+    BigDecimal magnitude = ratePerHour.abs()
 
-    BigDecimal elapsedHours = new BigDecimal(elapsedMs).divide(new BigDecimal(3600000L), 6, RoundingMode.HALF_UP)
-    if (elapsedHours.compareTo(0G) <= 0) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
-
-    BigDecimal ratePerHour = delta.divide(elapsedHours, 6, RoundingMode.HALF_UP)
-    BigDecimal absRatePerHour = ratePerHour.abs()
-
-    if (absRatePerHour < 0.10G) {
+    if (magnitude < 0.10G) {
         return [trend: 'steady', trendDisplay: 'steady']
     }
 
@@ -932,20 +927,22 @@ private Map calculateTrend(List<Map> history, String mode) {
         return [trend: direction, trendDisplay: displayDirection]
     }
 
+    // Calibrated for relative humidity (%RH), retaining existing speed bands
+    // wherever possible to avoid unexpected automation text changes.
     String speed
-    if (absRatePerHour < 0.25G) {
+    if (magnitude < 0.25G) {
         speed = 'very slowly'
-    } else if (absRatePerHour < 0.50G) {
+    } else if (magnitude < 0.50G) {
         speed = 'slowly'
-    } else if (absRatePerHour < 1.00G) {
+    } else if (magnitude < 1.00G) {
         speed = 'gently'
-    } else if (absRatePerHour < 2.00G) {
+    } else if (magnitude < 2.00G) {
         speed = 'moderately'
-    } else if (absRatePerHour < 3.50G) {
+    } else if (magnitude < 3.50G) {
         speed = 'moderately fast'
-    } else if (absRatePerHour < 5.00G) {
+    } else if (magnitude < 5.00G) {
         speed = 'quickly'
-    } else if (absRatePerHour < 7.50G) {
+    } else if (magnitude < 7.50G) {
         speed = 'very quickly'
     } else {
         speed = 'sharply'
