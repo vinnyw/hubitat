@@ -156,7 +156,7 @@ def mainPage() {
                     )
                 }
 
-                paragraph 'Trend is calculated from the averaged History values inside the selected elapsed-time window.'
+                paragraph 'Trend describes improving (falling) or worsening (rising) AQI on the 0–999 TVOC-style scale, based on change per hour within the selected window. Two samples are required.'
             } else {
                 paragraph 'Trend tracking is disabled.'
             }
@@ -765,22 +765,20 @@ private Map updateTrendAndGetValues(BigDecimal roundedAirQualityIndex) {
 
     List<Map> history = getHistoryEntries()
 
-    BigDecimal lastValue = null
-    if (history) {
-        try {
-            lastValue = new BigDecimal(history.last().value.toString())
-        } catch (Exception ignored) {
-            lastValue = null
-        }
+    // Record each refresh sample, including unchanged readings, so a stable
+    // source can be distinguished from insufficient history without polling.
+    long sampleTs = now()
+    if (history && (history.last().ts as Long) == sampleTs) {
+        history.remove(history.size() - 1)
     }
+    history << [ts: sampleTs, value: roundedAirQualityIndex.toString()]
 
-    if (lastValue == null || lastValue.compareTo(roundedAirQualityIndex) != 0) {
-        history << [ts: now(), value: roundedAirQualityIndex.toString()]
-        while (history.size() > configuredTrendDepth()) {
-            history.remove(0)
-        }
-        saveHistoryEntries(history)
+    long cutoff = sampleTs - configuredTrendWindowMinutes().toLong() * 60000L
+    history = history.findAll { (it.ts as Long) >= cutoff && (it.ts as Long) <= sampleTs }
+    while (history.size() > configuredTrendDepth()) {
+        history.remove(0)
     }
+    saveHistoryEntries(history)
 
     return calculateTrend(history, selectedTrendDisplay())
 }
@@ -818,71 +816,54 @@ private void saveHistoryEntries(List<Map> history) {
 //
 
 private Map calculateTrend(List<Map> history, String mode) {
-    if (!history || history.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
+    Map insufficient = [trend: 'unknown', trendDisplay: 'insufficient data']
+    if (!history || history.size() < 2) return insufficient
 
-    long nowTs = now().intdiv(1000L)
-    long windowMs = configuredTrendWindowMinutes().toLong() * 60L * 1000L
-    long cutoff = nowTs - windowMs
-
-    List<Map> inWindow = history.findAll { (it.ts as Long) >= cutoff }
-    if (inWindow.size() < 2) {
-        inWindow = history.takeRight(Math.min(history.size(), configuredTrendDepth()))
+    long nowTs = now() // Hubitat timestamps and stored samples are milliseconds.
+    long cutoff = nowTs - configuredTrendWindowMinutes().toLong() * 60000L
+    List<Map> inWindow = history.findAll {
+        long ts = it.ts as Long
+        ts >= cutoff && ts <= nowTs
     }
-    if (inWindow.size() < 2) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
+    if (inWindow.size() < 2) return insufficient
 
     Map firstEntry = inWindow.first()
     Map lastEntry = inWindow.last()
+    long elapsedMs = (lastEntry.ts as Long) - (firstEntry.ts as Long)
+    if (elapsedMs <= 0L) return insufficient
 
     BigDecimal first = new BigDecimal(firstEntry.value.toString())
     BigDecimal last = new BigDecimal(lastEntry.value.toString())
-    BigDecimal delta = last - first
-    long elapsedMs = (lastEntry.ts as Long) - (firstEntry.ts as Long)
+    // Divide once, in milliseconds, to avoid rounding a short duration to zero.
+    BigDecimal ratePerHour = (last - first).multiply(3600000G)
+        .divide(new BigDecimal(elapsedMs), 6, RoundingMode.HALF_UP)
+    BigDecimal magnitude = ratePerHour.abs()
 
-    if (elapsedMs <= 0L) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
-
-    BigDecimal elapsedHours = new BigDecimal(elapsedMs).divide(new BigDecimal(3600000L), 6, RoundingMode.HALF_UP)
-    if (elapsedHours.compareTo(0G) <= 0) {
-        return [trend: 'steady', trendDisplay: 'steady']
-    }
-
-    BigDecimal ratePerHour = delta.divide(elapsedHours, 6, RoundingMode.HALF_UP)
-    BigDecimal absRatePerHour = ratePerHour.abs()
-
-    if (absRatePerHour < 0.10G) {
-        return [trend: 'steady', trendDisplay: 'steady']
+    if (magnitude < 3G) {
+        return [trend: 'steady', trendDisplay: 'stable']
     }
 
     String direction = ratePerHour.signum() > 0 ? 'up' : 'down'
-    String displayDirection = direction == 'up' ? 'rising' : 'lowering'
-
+    String description = direction == 'up' ? 'worsening' : 'improving'
     if (mode == 'simple') {
-        return [trend: direction, trendDisplay: displayDirection]
+        return [trend: direction, trendDisplay: description]
     }
 
-    String speed
-    if (absRatePerHour < 0.25G) {
-        speed = 'very slowly'
-    } else if (absRatePerHour < 0.50G) {
-        speed = 'slowly'
-    } else if (absRatePerHour < 1.00G) {
-        speed = 'gently'
-    } else if (absRatePerHour < 2.00G) {
-        speed = 'moderately'
-    } else if (absRatePerHour < 3.50G) {
-        speed = 'moderately fast'
-    } else if (absRatePerHour < 5.00G) {
-        speed = 'quickly'
-    } else if (absRatePerHour < 7.50G) {
-        speed = 'very quickly'
+    String intensity
+    if (magnitude < 8G) {
+        intensity = 'very slowly'
+    } else if (magnitude < 15G) {
+        intensity = 'slowly'
+    } else if (magnitude < 30G) {
+        intensity = 'gently'
+    } else if (magnitude < 60G) {
+        intensity = 'moderately'
+    } else if (magnitude < 120G) {
+        intensity = 'quickly'
+    } else if (magnitude < 250G) {
+        intensity = 'very quickly'
     } else {
-        speed = 'sharply'
+        intensity = 'sharply'
     }
-
-    return [trend: direction, trendDisplay: "${displayDirection} ${speed}"]
+    return [trend: direction, trendDisplay: "${description} ${intensity}"]
 }
